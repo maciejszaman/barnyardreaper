@@ -1,0 +1,91 @@
+{
+  "_help": {
+    "about": "Trinkets: an active item you use with F (or by tapping the trinket in the bottom left). You carry one at a time. Every character starts with its own (characters.json \"trinket\"); more are won from dungeon bosses (stages.json dungeon) and swapped at the workbench. Start an id with _ to disable it.",
+    "name / desc / icon": "Shown on the HUD, in the workbench and in tooltips. Icon names: bible, lantern, bloodlust, pocketwatch, scarecrow, fireflies, voodoo, dinnerbell, venomvial, anatheart, or any icon listed in upgrades.json.",
+    "cooldown": "Seconds before it can be used again. The trinketCdr stat (affixes, the Well-Oiled Gears blessing) makes it recover faster, and the Busy Paws talent shortens it with kills.",
+    "effect": "What it does: {\"id\": ..., plus any numbers to override}. Effects and their numbers: theMoment (buff = buff id from status_effects.json; while it lasts every hit adds a stack of holy fire worth burn x the hit per second (holy fire itself, its spreading circle and its explosions: status_effects.json dots.holy); every holy fire you inflicted with a hit in the last recent seconds heals you regenPerBurn health per second, up to regenCap), holyGround (radius, duration; burns monsters in it for burn = share of your max health per second and sets them on holy fire, and heals you regen health per second while you stand in it), buff (buff = buff id from status_effects.json), timeStop (radius; monsters in it are frozen for duration seconds, bosses for bossDuration, and shocked for shock (0.5 = +50% damage taken) while frozen; enemy shots stop in the air; buff = a buff id you get for the duration), decoy (range, duration; monsters within range chase the scarecrow instead of you, then it explodes for power x your max health in radius as elemental damage; every monster the blast kills adds perKill x your hit damage as extra elemental damage on your weapon hits, up to cap, for emberDuration seconds), fireflies (count, duration, damage = share of your hit damage dealt as elemental damage, every = seconds between zaps, range, shock = every zap shocks for this much), voodoo (radius = how far from you it looks for the monster with the most health; loss = share of that monster's health it loses over duration seconds; grip = meters around it within which tentacles grab every other monster, dealing each the same damage; curse damage is physical and nothing raises or lowers it), dinnerBell (radius, stun, push; also pulls every crystal and essence on the map to you), venom (mult = how much stronger every active poison gets, duration, radius = how far poisoned monsters spread their poisons, every half second, while it lasts), bloodBurst (every monster bleeding from your hits bursts, one after another: it dies at once and sprays its blood over everything within radius meters for share x its max health as physical damage that cannot cause bleeding; bosses and named monsters (cultists, cauldrons, ritualists, tentacles) don't die: the rest of their bleed hits them at once, bossMult times over, and their spray deals half of that).",
+    "tags": "Tags shown in the Book of Knowledge and tooltips (data.js G.TAGS: physical, poison, elemental, hit, dot, holy, explosion, lightning, shock, control, buff, heal, area, curse...)."
+  },
+  "trinkets": {
+    "bible": {
+      "name": "The Bible",
+      "icon": "bible",
+      "desc": "Grants The Moment for 8 seconds: your attacks set monsters on holy fire, and every holy fire you inflicted in the last 4 seconds heals you 3 health per second (up to 36).",
+      "cooldown": 60,
+      "effect": { "id": "theMoment", "buff": "the_moment", "burn": 0.4, "recent": 4, "regenPerBurn": 3, "regenCap": 36 },
+      "tags": ["elemental", "holy", "dot", "buff", "heal"]
+    },
+    "lantern": {
+      "name": "Holy Lantern",
+      "icon": "lantern",
+      "desc": "Sets the ground below you burning with holy fire for 8 seconds. Monsters in it burn for 50% of your max health per second and catch holy fire; you regenerate 5 health per second while you stand in it.",
+      "cooldown": 60,
+      "effect": { "id": "holyGround", "radius": 6.0, "duration": 8, "burn": 0.5, "regen": 5 },
+      "tags": ["elemental", "holy", "dot", "area", "heal"]
+    },
+    "bloodlust": {
+      "name": "Bloodlust",
+      "icon": "bloodlust",
+      "desc": "Bloodlust: +300% attack speed for 40 seconds, and every monster you kill heals 1% of your max health.",
+      "cooldown": 180,
+      "effect": { "id": "buff", "buff": "bloodlust" },
+      "tags": ["buff", "heal"]
+    },
+    "pocketwatch": {
+      "name": "Grandpa's Pocket Watch",
+      "icon": "pocketwatch",
+      "desc": "Stops time around you: every monster within 18 meters freezes for 4 seconds (bosses for 2) and is shocked for 50% while it is frozen, their shots hang in the air, and you move 50% faster while the freeze lasts.",
+      "cooldown": 90,
+      "effect": { "id": "timeStop", "radius": 18, "duration": 4, "bossDuration": 2, "shock": 0.5, "buff": "time_dilation" },
+      "tags": ["control", "shock", "buff", "movement"]
+    },
+    "scarecrow": {
+      "name": "Scarecrow Effigy",
+      "icon": "scarecrow",
+      "desc": "Plants a scarecrow. For 8 seconds every monster within 20 meters chases it instead of you, then it explodes for 1000% of your max health as elemental damage. For 30 seconds after, every monster the blast killed adds 5% of your weapon hits as extra elemental damage (up to 150%).",
+      "cooldown": 75,
+      "effect": { "id": "decoy", "range": 20, "duration": 8, "power": 10, "radius": 10, "perKill": 0.05, "cap": 1.5, "emberDuration": 30 },
+      "tags": ["control", "elemental", "explosion", "area", "buff"]
+    },
+    "fireflies": {
+      "name": "Jar of Fireflies",
+      "icon": "fireflies",
+      "desc": "Releases 12 fireflies that circle you for 20 seconds, each zapping a nearby monster for 40% of your hit damage as elemental damage twice a second. Every zap shocks for 40% (monsters take 40% more damage from everything).",
+      "cooldown": 70,
+      "effect": { "id": "fireflies", "count": 12, "duration": 20, "damage": 0.4, "every": 0.5, "range": 6, "shock": 0.4 },
+      "tags": ["elemental", "lightning", "hit", "shock"]
+    },
+    "voodoo": {
+      "name": "Voodoo Doll",
+      "icon": "voodoo",
+      "desc": "Curses the monster with the most health within 6 meters of you: it loses 50% of its health over 3 seconds, and its tentacles grip every other monster within 3 meters of it, dealing each of them the same damage. Nothing raises or lowers curse damage.",
+      "cooldown": 60,
+      "effect": { "id": "voodoo", "radius": 6, "loss": 0.5, "duration": 3, "grip": 3 },
+      "tags": ["curse", "area"]
+    },
+    "venom": {
+      "name": "Vile Vial of Volatile Venom",
+      "icon": "venomvial",
+      "desc": "Uncorks a cloud of venom: every poison already on a monster becomes three times as strong, and for 8 seconds every poisoned monster spreads all of its poisons to the monsters within 2 meters of it.",
+      "cooldown": 60,
+      "effect": { "id": "venom", "mult": 3, "duration": 8, "radius": 2 },
+      "tags": ["poison", "dot", "area"]
+    },
+    "dinnerbell": {
+      "name": "Dinner Bell",
+      "icon": "dinnerbell",
+      "desc": "Rings for supper: every crystal and essence on the map flies to you, and monsters within 9 meters are blasted back and stunned for 2 seconds.",
+      "cooldown": 45,
+      "effect": { "id": "dinnerBell", "radius": 9, "stun": 2, "push": 18 },
+      "tags": ["control", "area", "utility"]
+    },
+    "telltale": {
+      "name": "The Tell-Tale Heart",
+      "icon": "anatheart",
+      "desc": "It beats louder and louder. Squeeze it, and every monster bleeding from your wounds bursts like an overripe tick: it dies at once and sprays its blood over everything within 2.5 meters for 30% of its max health. Bosses and named monsters don't burst: the rest of their bleed hits them at once, three times over.",
+      "cooldown": 60,
+      "effect": { "id": "bloodBurst", "radius": 2.5, "share": 0.3, "bossMult": 3 },
+      "tags": ["physical", "bleed", "explosion", "area"]
+    }
+  }
+}

@@ -1,0 +1,92 @@
+{
+  "_help": {
+    "about": "Playable characters, chosen on the character selection screen before every run (the first one is the default). Entries with \"disabled\": true are skipped.",
+    "id": "Unique id.",
+    "name": "Shown in menus.",
+    "heroName": "The hero's own name, shown on the damage meter.",
+    "talents": "File in data/ that holds this character's talent tree.",
+    "weapon": "Starting weapon: an id from weapons.json.",
+    "trinket": "Starting trinket (used with F): an id from trinkets.json.",
+    "weaponName": "Name of the starting weapon item.",
+    "hat": "Hat shown when no hat is equipped: straw, cap, cowboy, or none (bare-headed).",
+    "model": "3D model: cat or goat.",
+    "epithet": "Short title on the selection screen, e.g. The Barn Cat.",
+    "specialty": "One line on the selection screen: what the character is about.",
+    "tags": "Tag ids shown as chips on the selection screen (physical, poison, bleed, holy, ... see the Book of Knowledge).",
+    "lore": "The character's story, typed out on the selection screen.",
+    "color": "The character's color: the selection screen's light, card and rings.",
+    "icon": "Pixel icon for the selection roster.",
+    "voice": "Sound played when the character is picked and in the intro (meow, bleat, ...).",
+    "reviveTitle": "Banner when an extra life saves the character.",
+    "intro": "Three captions for the intro cutscene (the cat's are used when left out).",
+    "stats": "Starting stats. Any stat left out starts at 0.",
+    "reviveBuff": "Buff from status_effects.json granted when an extra life saves you.",
+    "statKeys": "Every stat the game understands (usable here, in talents, blessings, item affixes, legendary bonuses and weapon bonuses): maxHp, moveSpeed, moveMult, dmgMult, atkSpeed, weaponCrit, critChance, critMult, projectiles, area, poisonChance, poisonDmg, bleedChance, dotDmg, blockRating, blockHeal, regen, ricochetChance, chains, explodeChance, explodePower, magnet, luck, armor, lifeOnKill, xpGain, dashCdr, bossDmg, dashStrike, extraLives, choices, rerolls, slowChance, shockChance, stunChance, rootChance, statusResist, stunnedDmg, shockedElem, slowedElem, rootedElem, acidChance, flatElem, bleedDmg, elemDmg, healTaken, dashCharges, trinketCdr, maxHpInc (increased max health), armorInc (increased armor), bleedPerHp (increased bleed damage per 100 max health), poisonPerArmor (increased poison damage per 100 armor), armorPerPoisoned (increased armor per monster infected with poison), gunDmgPerAttack / meleeDmgPerAttack (increased gun / melee damage per attack in the last 4 seconds), shockSlow (monsters you shock are slowed), and the weapon-only wDmg, wSpeed, wCrit. armor is flat armor: damage reduction = armor / (armor + 100). Fractions are percentages: 0.1 = 10%. Crit chance = (weapon base crit x (1 + the weapon's wCrit) + weaponCrit) x (1 + critChance): critChance is increased crit chance, and only weapons have base crit. Attack speed = the weapon's attacks per second x (1 + its wSpeed) x (1 + atkSpeed). Hit damage = the weapon's damage x (1 + its wDmg) x (1 + dmgMult). wDmg, wSpeed and wCrit only work as weapon affixes."
+  },
+  "characters": [
+    {
+      "id": "cat",
+      "name": "The Cat",
+      "heroName": "Clint the Cat",
+      "talents": "cat_talents.json",
+      "weapon": "shotgun",
+      "trinket": "bible",
+      "weaponName": "Trusty Shotgun",
+      "hat": "straw",
+      "model": "cat",
+      "epithet": "The Barn Cat",
+      "specialty": "Steel, holy light and nine lives",
+      "tags": ["physical", "holy", "defense"],
+      "lore": "The barn cat who kept the mice honest. When the farmer vanished and the caves opened, he found Grandpa's old scythe in the barn, put on a straw hat, and decided to stay. Somebody has to.",
+      "color": "#f2c04e",
+      "icon": "paw",
+      "voice": "meow",
+      "reviveTitle": "Nine Lives!",
+      "reviveBuff": "second_wind",
+      "stats": {
+        "maxHp": 115,
+        "moveSpeed": 6.2,
+        "critMult": 1.75,
+        "chains": 1,
+        "choices": 3,
+        "rerolls": 3
+      }
+    },
+    {
+      "id": "goat",
+      "name": "The Goat",
+      "heroName": "Gregory the Goat",
+      "talents": "goat_talents.json",
+      "weapon": "scythe",
+      "trinket": "voodoo",
+      "weaponName": "Blackened Scythe",
+      "hat": "none",
+      "model": "goat",
+      "epithet": "The Black Goat",
+      "specialty": "Dark magic, bleeding and poisons",
+      "tags": ["bleed", "poison", "dot", "elemental"],
+      "lore": "Nobody saw him arrive. One evening he was simply standing at the fence, black as a cellar, watching the caves with eyes like split coins, before anything had crawled out of them. He says he is here to help the cat. No one knows how he knew the horde was coming, or what he means to gain from it.",
+      "color": "#b86cff",
+      "icon": "goat",
+      "voice": "bleat",
+      "reviveTitle": "Not Yet.",
+      "intro": [
+        "Nobody saw him arrive…",
+        "He was already watching the caves.",
+        "…as if he knew."
+      ],
+      "reviveBuff": "black_resurrection",
+      "stats": {
+        "maxHp": 100,
+        "moveSpeed": 6.0,
+        "critMult": 1.5,
+        "chains": 1,
+        "choices": 3,
+        "rerolls": 2,
+        "poisonChance": 0.0,
+        "bleedChance": 0.1,
+        "dotDmg": 0.3
+      }
+    }
+  ]
+}

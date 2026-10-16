@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Talent Creator · Barnyard Reaper</title>
+<style>
+/* A dark workbench: the tree on the left, the talent under the knife on the right. */
+:root { --bg: #15110f; --panel: #201a17; --panel2: #2a221e; --line: #3a302a; --text: #efe6d4; --dim: #a99a84; --accent: #f2c04e; --up: #6ad87a; --down: #ff7a6a; --link: #8ff8ff; color-scheme: dark; }
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 13px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; overflow: hidden; }
+button, input, select, textarea { font: inherit; color: var(--text); }
+select { max-width: 100%; }
+.add { width: 100%; }
+input, select, textarea { background: #120e0c; border: 1px solid var(--line); border-radius: 4px; padding: 4px 6px; min-width: 0; }
+input:focus, select:focus, textarea:focus { outline: 1px solid var(--accent); border-color: var(--accent); }
+input[type=number] { width: 100%; }
+input[type=checkbox] { accent-color: var(--accent); }
+textarea { width: 100%; resize: vertical; }
+button { cursor: pointer; background: #2e241f; border: 1px solid var(--line); border-radius: 4px; padding: 4px 10px; }
+button:hover:not(:disabled) { border-color: var(--accent); }
+button:disabled { opacity: 0.45; cursor: default; }
+button.primary { background: #8f2219; border-color: #c2382b; font-weight: 600; }
+button.small, .small { padding: 1px 7px; font-size: 12px; }
+button.icon { padding: 1px 6px; min-width: 24px; }
+button.on { border-color: var(--accent); color: var(--accent); }
+button.danger:hover { border-color: var(--down); color: var(--down); }
+img.ic { width: 20px; height: 20px; image-rendering: pixelated; vertical-align: middle; }
+#loading { padding: 40px; color: var(--dim); white-space: pre-wrap; }
+#app { display: grid; grid-template-rows: auto 1fr; height: 100vh; }
+header { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; padding: 6px 10px; border-bottom: 1px solid var(--line); background: var(--panel); }
+header h1 { font-size: 16px; margin: 0 6px 0 0; color: var(--accent); white-space: nowrap; }
+header .grow { flex: 1; }
+#status { color: var(--dim); font-size: 12px; max-width: 420px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#status.bad { color: var(--down); } #status.good { color: var(--up); }
+.seg { display: inline-flex; } .seg button { border-radius: 0; } .seg button:first-child { border-radius: 4px 0 0 4px; } .seg button:last-child { border-radius: 0 4px 4px 0; } .seg button + button { border-left: 0; }
+main { display: grid; grid-template-columns: 1fr minmax(380px, 520px); min-height: 0; }
+#stage { position: relative; min-width: 0; min-height: 0; overflow: hidden; background: #110d0b; }
+#tree { width: 100%; height: 100%; display: block; touch-action: none; user-select: none; }
+#tree.panning { cursor: grabbing; }
+.hint { position: absolute; left: 8px; bottom: 8px; right: 8px; color: var(--dim); font-size: 11.5px; pointer-events: none; text-shadow: 0 1px 2px #000; }
+.hint b { color: var(--text); font-weight: 600; }
+.zoom { position: absolute; right: 8px; top: 8px; display: flex; gap: 4px; }
+.legend { position: absolute; left: 8px; top: 8px; display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 12px; color: var(--dim); background: rgba(17,13,11,.8); padding: 4px 8px; border-radius: 4px; max-width: calc(100% - 140px); }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
+/* tree drawing */
+.n-box { fill: #1c1613; stroke-width: 2.5; }
+.node.start .n-box { fill: #2a221a; }
+.node.sel .n-box { stroke: #fff !important; stroke-width: 3.5; }
+.node.multi .n-box { stroke-dasharray: 5 3; }
+.node.bad .n-box { fill: #4a1410; }
+.node.off { opacity: 0.4; }
+.node:hover .n-box { fill: #2c231e; }
+.n-rank { font: 600 10px system-ui, sans-serif; fill: #efe6d4; paint-order: stroke; stroke: #000; stroke-width: 3px; }
+.n-name { font: 11px system-ui, sans-serif; fill: #d8ccb6; paint-order: stroke; stroke: #110d0b; stroke-width: 4px; pointer-events: none; }
+.n-badge { font: 700 9px system-ui, sans-serif; paint-order: stroke; stroke: #000; stroke-width: 3px; pointer-events: none; }
+.link { stroke-width: 3; fill: none; }
+.link.all { stroke-dasharray: 7 4; }
+.link-hit { stroke: transparent; stroke-width: 14; fill: none; cursor: pointer; }
+.link.sel { stroke: #fff !important; stroke-width: 4; }
+.l-tag { font: 700 10px system-ui, sans-serif; fill: #fff; paint-order: stroke; stroke: #000; stroke-width: 3px; pointer-events: none; }
+.handle { fill: var(--link); stroke: #000; stroke-width: 1.5; cursor: crosshair; }
+.rubber { stroke: var(--link); stroke-width: 2.5; stroke-dasharray: 6 4; fill: none; pointer-events: none; }
+.box { fill: rgba(143,248,255,.08); stroke: var(--link); stroke-dasharray: 4 3; pointer-events: none; }
+.col-head { font: 600 13px system-ui, sans-serif; }
+/* side panel */
+aside { border-left: 1px solid var(--line); background: var(--panel); display: grid; grid-template-rows: auto 1fr; min-height: 0; min-width: 0; }
+.tabs { display: flex; flex-wrap: wrap; gap: 2px; padding: 6px 8px 0; border-bottom: 1px solid var(--line); }
+.tabs button { border-radius: 4px 4px 0 0; border-bottom: 0; background: transparent; }
+.tabs button.on { background: var(--panel2); color: var(--accent); border-color: var(--line); }
+#side { overflow-y: auto; overflow-x: hidden; padding: 10px 12px 60px; background: var(--panel2); }
+.empty { color: var(--dim); padding: 14px 4px; }
+.sec { margin: 14px 0 6px; padding-bottom: 3px; border-bottom: 1px solid var(--line); color: var(--accent); font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.sec .sp { flex: 1; } .sec small { color: var(--dim); font-weight: 400; }
+.grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 10px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px 10px; }
+label.f { display: grid; gap: 2px; font-size: 11.5px; color: var(--dim); min-width: 0; }
+label.f.wide { grid-column: 1 / -1; }
+label.chk { display: inline-flex; gap: 5px; align-items: center; color: var(--text); font-size: 12.5px; }
+.row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.row > .grow { flex: 1; min-width: 0; }
+.head { display: flex; gap: 10px; align-items: center; }
+.head .big-ic { width: 40px; height: 40px; image-rendering: pixelated; border: 2px solid var(--line); border-radius: 6px; padding: 2px; background: #120e0c; cursor: pointer; }
+.head .nm { font-size: 17px; font-weight: 600; } .head .id { color: var(--dim); font-size: 12px; }
+.chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.chip { display: inline-flex; align-items: center; gap: 4px; background: #120e0c; border: 1px solid var(--line); border-radius: 12px; padding: 1px 4px 1px 8px; font-size: 12px; }
+.chip button { border: 0; background: transparent; padding: 0 4px; color: var(--dim); }
+.chip button:hover { color: var(--down); }
+.chip input { width: 38px; padding: 0 3px; font-size: 11px; }
+.stat-row { display: grid; grid-template-columns: minmax(0, 1fr) 90px 24px; gap: 6px; align-items: center; margin-bottom: 4px; }
+.stat-row .fmt { grid-column: 1 / -1; color: var(--up); font-size: 11.5px; margin: -2px 0 2px; }
+.card { border: 1px solid var(--line); border-radius: 6px; background: var(--panel); padding: 8px; margin: 8px 0; }
+.card.off { opacity: 0.55; }
+.card-h { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; }
+.card-h .ttl { font-weight: 600; color: var(--accent); white-space: nowrap; }
+.part { border-left: 3px solid var(--line); padding: 4px 0 4px 8px; margin: 6px 0; }
+.part.c { border-color: #4fa6ff; } .part.a { border-color: #e0453a; } .part.t { border-color: var(--accent); }
+.part-h { display: flex; gap: 6px; align-items: center; margin-bottom: 4px; }
+.part-h select { flex: 1; min-width: 0; font-weight: 600; }
+.pgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 5px 8px; }
+.pf { display: grid; gap: 1px; font-size: 11px; color: var(--dim); min-width: 0; }
+.pf .lab { display: flex; gap: 4px; align-items: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pf .lab .rk { margin-left: auto; font-size: 10px; padding: 0 4px; border-radius: 3px; border: 1px solid var(--line); cursor: pointer; color: var(--dim); background: transparent; }
+.pf .lab .rk.on { color: var(--accent); border-color: var(--accent); }
+.pf.def input, .pf.def select { color: var(--dim); }
+.unit { position: relative; } .unit span { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); color: var(--dim); font-size: 11px; pointer-events: none; }
+.unit input { padding-right: 22px; width: 100%; }
+.pf.wide { grid-column: 1 / -1; }
+.say { margin-top: 6px; padding: 6px 8px; background: #120e0c; border-radius: 4px; color: #d8ecff; font-size: 12.5px; }
+.warn { color: var(--down); font-size: 12px; margin: 3px 0; }
+.note { color: var(--dim); font-size: 12px; margin: 4px 0; }
+.add { margin: 2px 0; }
+.multi { display: flex; flex-wrap: wrap; gap: 3px 8px; max-height: 120px; overflow-y: auto; border: 1px solid var(--line); border-radius: 4px; padding: 4px 6px; background: #120e0c; }
+.multi label { display: inline-flex; gap: 3px; align-items: center; font-size: 11.5px; color: var(--text); }
+/* in-game tooltip look */
+.tip { border: 2px solid var(--tc, var(--line)); background: #0e0a08; border-radius: 4px; padding: 8px 10px; max-width: 420px; }
+.tip h4 { margin: 0; font-size: 16px; color: var(--tc); }
+.tip .meta { color: var(--dim); font-size: 12px; margin-bottom: 4px; }
+.tip .flav { color: #c8b89a; font-style: italic; margin: 4px 0; }
+.tip ul { margin: 4px 0; padding-left: 18px; } .tip li.up { color: var(--up); } .tip li.down { color: var(--down); }
+.tip .tchips { display: flex; flex-wrap: wrap; gap: 3px; margin: 3px 0; }
+.tip .tchip { font-size: 11px; border: 1px solid var(--tc2); color: var(--tc2); border-radius: 10px; padding: 0 6px 0 3px; display: inline-flex; gap: 3px; align-items: center; }
+.tip .tchip img { width: 12px; height: 12px; image-rendering: pixelated; }
+/* lists */
+.prob { padding: 5px 6px; border-bottom: 1px solid var(--line); cursor: pointer; }
+.prob:hover { background: var(--panel); }
+.prob.err { color: var(--down); } .prob.w { color: #ffc070; }
+.idea { display: grid; grid-template-columns: 40px 1fr auto; gap: 8px; align-items: start; padding: 8px; border: 1px solid var(--line); border-radius: 6px; margin: 6px 0; background: var(--panel); }
+.idea img { width: 36px; height: 36px; image-rendering: pixelated; }
+.idea b { color: var(--accent); } .idea p { margin: 2px 0 0; color: var(--dim); font-size: 12px; }
+.grp { display: grid; grid-template-columns: 1fr 1fr 44px auto; gap: 6px; align-items: center; margin: 4px 0; }
+.sgrow { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 6px; align-items: center; margin: 4px 0; }
+.legend .lseg { cursor: pointer; color: var(--text); } .legend .lseg i { border-radius: 50%; }
+.sglow { grid-column: 1 / -1; display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 6px; align-items: center; font-size: 11.5px; color: var(--dim); margin: -2px 0 6px; }
+.sglow input { accent-color: var(--accent); padding: 0; border: 0; background: none; }
+.s-label { font: 600 10px system-ui, sans-serif; letter-spacing: 1.6px; opacity: .85; paint-order: stroke; stroke: #110d0b; stroke-width: 4px; pointer-events: none; }
+/* popups */
+#pop { position: fixed; z-index: 20; background: var(--panel); border: 1px solid var(--accent); border-radius: 6px; padding: 8px; box-shadow: 0 8px 30px #000; max-width: min(520px, calc(100vw - 16px)); }
+#pop .icons { display: grid; grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)); gap: 4px; max-height: 300px; overflow-y: auto; margin-top: 6px; }
+#pop .icons button { padding: 3px; display: grid; justify-items: center; font-size: 9px; color: var(--dim); overflow: hidden; }
+#pop .icons button img { width: 24px; height: 24px; image-rendering: pixelated; }
+#pop .icons button.on { border-color: var(--accent); }
+#toast { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); background: #2a221e; border: 1px solid var(--accent); padding: 6px 14px; border-radius: 6px; z-index: 30; pointer-events: none; opacity: 0; transition: opacity .2s; }
+#toast.show { opacity: 1; }
+.kbd { font: 11px ui-monospace, monospace; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 3px; padding: 0 4px; color: var(--text); }
+@media (max-width: 900px) {
+  body { overflow: auto; }
+  #app { height: auto; min-height: 100vh; }
+  main { grid-template-columns: 1fr; }
+  #stage { height: 60vh; }
+  .hint { display: none; }
+  aside { border-left: 0; border-top: 1px solid var(--line); }
+  #side { overflow: visible; }
+}
+</style>
+</head>
+<body>
+<div id="loading">Loading the game's data…</div>
+<div id="app" hidden>
+  <header>
+    <h1>Talent Creator</h1>
+    <select id="h-char" title="Which character's talent file"></select>
+    <span class="seg"><button id="h-tree" class="on">Tree</button><button id="h-alien">Alien talents</button></span>
+    <button id="h-undo" class="icon" title="Undo (Ctrl+Z)">↶</button><button id="h-redo" class="icon" title="Redo (Ctrl+Y)">↷</button>
+    <button id="h-new" title="New talent next to the selected one (or double-click an empty spot)">+ Talent</button>
+    <span class="grow"></span>
+    <span id="status"></span>
+    <button id="h-reload" title="Read the file from disk again">Reload</button>
+    <button id="h-play" title="Save, then open the game with the selected talents learned (god mode optional)">Play-test ▸</button>
+    <button id="h-save" class="primary" title="Write data/…_talents.json (Ctrl+S)">Save</button>
+  </header>
+  <main>
+    <div id="stage">
+      <svg id="tree"></svg>
+      <div class="legend" id="legend"></div>
+      <div class="zoom"><button class="icon" id="z-in" title="Zoom in">+</button><button class="icon" id="z-out" title="Zoom out">−</button><button id="z-fit" title="Show the whole tree (F)">Fit</button></div>
+      <div class="hint" id="hint"></div>
+    </div>
+    <aside>
+      <div class="tabs" id="tabs"></div>
+      <div id="side"></div>
+    </aside>
+  </main>
+</div>
+<div id="pop" hidden></div>
+<div id="toast"></div>
+
+<script>window.G = { noBoot: true, DATA_URL: '../../data/' };</script>
+<script src="../../js/core.js"></script>
+<script src="../../js/data.js"></script>
+<script src="../../js/talents.js"></script>
+<script src="../../js/rules.js"></script>
+<script src="../../js/ui.js"></script>
+<script src="jsonfmt.js"></script>
+<script src="ideas.js"></script>
+<script src="editor.js"></script>
+</body>
+</html>

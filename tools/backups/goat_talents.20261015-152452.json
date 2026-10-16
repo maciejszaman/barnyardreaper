@@ -1,0 +1,628 @@
+{
+  "_help": {
+    "about": "Gregory the Goat's talent tree (dark magic, bleeding and poisons). Every key works like the cat's tree: see the _help block of cat_talents.json. Placeholder talents, built from rules (no code of their own): edit them in the talent creator (python3 tools/serve.py, then /tools/talents/).",
+    "groups": "Hemomancy = bleeding, Occult = dark magic (void, curses, shadow), Venom = poisons."
+  },
+  "groups": [
+    { "id": "pact", "name": "Black Pact", "color": "#cfc6d8" },
+    { "id": "hemomancy", "name": "Hemomancy", "color": "#d0302a" },
+    { "id": "occult", "name": "Occult", "color": "#b86cff" },
+    { "id": "venom", "name": "Venom", "color": "#6ad83a" }
+  ],
+  "talents": [
+    {
+      "id": "black_pact",
+      "x": 8,
+      "y": 0,
+      "group": "pact",
+      "start": true,
+      "name": "Black Pact",
+      "icon": "goat",
+      "stats": { "maxHp": 15, "dotDmg": 0.05 },
+      "desc": "Signed in something darker than ink."
+    },
+    {
+      "id": "sanguine_rite",
+      "x": 4,
+      "y": 2,
+      "group": "hemomancy",
+      "name": "Sanguine Rite",
+      "icon": "blood",
+      "maxRank": 3,
+      "stats": { "bleedChance": 0.08 },
+      "requiresAny": ["black_pact"],
+      "desc": "A little cut, for luck."
+    },
+    {
+      "id": "opened_veins",
+      "x": 4,
+      "y": 3,
+      "group": "hemomancy",
+      "name": "Opened Veins",
+      "icon": "cripple",
+      "maxRank": 3,
+      "stats": { "bleedDmg": 0.15 },
+      "requiresAny": ["sanguine_rite"],
+      "desc": "Everything has a tap, if you know where to look."
+    },
+    {
+      "id": "blood_price",
+      "x": 3,
+      "y": 4,
+      "group": "hemomancy",
+      "name": "Blood Price",
+      "icon": "heart",
+      "requiresAny": ["opened_veins"],
+      "conditionalStats": [
+        {
+          "if": [{ "check": "myHealth", "below": 0.5 }],
+          "stats": { "bleedDmg": 0.6, "lifeOnKill": 2 }
+        }
+      ],
+      "desc": "Pay in blood. Take it back the same way."
+    },
+    {
+      "id": "crimson_tithe",
+      "x": 5,
+      "y": 4,
+      "group": "hemomancy",
+      "name": "Crimson Tithe",
+      "icon": "fang",
+      "requiresAny": ["opened_veins"],
+      "rules": [
+        {
+          "when": "kill",
+          "chance": 0.2,
+          "if": [{ "check": "targetStatus", "status": "bleeding" }],
+          "then": [{ "do": "heal", "mult": 0.01 }]
+        }
+      ],
+      "desc": "Every drop owed is a drop collected."
+    },
+    {
+      "id": "hemorrhage",
+      "x": 4,
+      "y": 5,
+      "group": "hemomancy",
+      "big": true,
+      "name": "Hemorrhage",
+      "icon": "blood",
+      "stats": { "critChance": 0.15 },
+      "requiresAny": ["blood_price", "crimson_tithe"],
+      "rules": [
+        {
+          "when": "crit",
+          "cooldown": 1.5,
+          "then": [
+            { "do": "bleed", "of": "hit", "mult": 2 },
+            { "do": "spread", "what": "bleed", "radius": 3 }
+          ]
+        }
+      ],
+      "desc": "One good cut and the whole crowd bleeds."
+    },
+    {
+      "id": "exsanguinate",
+      "x": 4,
+      "y": 6,
+      "group": "hemomancy",
+      "name": "Exsanguinate",
+      "icon": "bomb",
+      "requiresAny": ["hemorrhage"],
+      "rules": [
+        {
+          "when": "kill",
+          "chance": 0.25,
+          "if": [{ "check": "targetStatus", "status": "bleeding" }],
+          "then": [
+            {
+              "do": "explode",
+              "radius": 2.5,
+              "of": "targetMaxHp",
+              "mult": 0.3,
+              "type": "blood"
+            }
+          ]
+        }
+      ],
+      "desc": "Empty them all at once."
+    },
+    {
+      "id": "forbidden_tongue",
+      "x": 8,
+      "y": 2,
+      "group": "occult",
+      "name": "Forbidden Tongue",
+      "icon": "book",
+      "maxRank": 3,
+      "stats": { "elemDmg": 0.1, "dotDmg": 0.05 },
+      "requiresAny": ["black_pact"],
+      "desc": "Words that hurt the mouth that says them. Mostly."
+    },
+    {
+      "id": "evil_eye",
+      "x": 8,
+      "y": 3,
+      "group": "occult",
+      "name": "Evil Eye",
+      "icon": "eye",
+      "requiresAny": ["forbidden_tongue"],
+      "rules": [
+        {
+          "when": "hit",
+          "chance": 0.08,
+          "cooldown": 1,
+          "then": [
+            { "do": "status", "status": "shock", "shock": 0.3, "duration": 3 },
+            { "do": "text", "text": "CURSED", "color": "#b86cff", "size": 13 }
+          ]
+        }
+      ],
+      "desc": "He looks at you a moment too long."
+    },
+    {
+      "id": "shadow_step",
+      "x": 7,
+      "y": 4,
+      "group": "occult",
+      "name": "Shadow Step",
+      "icon": "eclipse",
+      "requiresAny": ["evil_eye"],
+      "rules": [
+        {
+          "when": "dash",
+          "then": [
+            { "do": "explode", "at": "player", "radius": 3, "style": "void" },
+            { "do": "knockback", "at": "player", "radius": 5, "strength": -8 }
+          ]
+        }
+      ],
+      "desc": "He steps through the dark and the dark comes with him."
+    },
+    {
+      "id": "soul_harvest",
+      "x": 9,
+      "y": 4,
+      "group": "occult",
+      "name": "Soul Harvest",
+      "icon": "skull",
+      "requiresAny": ["evil_eye"],
+      "conditionalStats": [
+        {
+          "if": [{ "check": "killsRecent", "count": 10, "seconds": 4 }],
+          "stats": { "dmgMult": 0.2, "moveMult": 0.1 }
+        }
+      ],
+      "desc": "The more that fall, the hungrier he gets."
+    },
+    {
+      "id": "witching_hour",
+      "x": 8,
+      "y": 5,
+      "group": "occult",
+      "big": true,
+      "name": "The Witching Hour",
+      "icon": "moon",
+      "stats": { "maxHpInc": -0.1 },
+      "requiresAny": ["shadow_step", "soul_harvest"],
+      "downside": "10% less max health.",
+      "rules": [
+        {
+          "when": "interval",
+          "seconds": 10,
+          "then": [
+            {
+              "do": "zone",
+              "kind": "void",
+              "at": "random",
+              "radius": 3.5,
+              "duration": 4,
+              "mult": 0.25
+            },
+            { "do": "sound", "sound": "whispers" }
+          ]
+        }
+      ],
+      "desc": "The holes he opens do not close right away."
+    },
+    {
+      "id": "goat_pact",
+      "x": 8,
+      "y": 6,
+      "group": "occult",
+      "name": "Pact of the Black Goat",
+      "icon": "halo",
+      "requiresAny": ["witching_hour"],
+      "rules": [
+        {
+          "when": "lowHealth",
+          "threshold": 0.3,
+          "cooldown": 90,
+          "then": [
+            { "do": "invulnerable", "seconds": 2 },
+            {
+              "do": "buff",
+              "buff": {
+                "name": "Dark Pact",
+                "icon": "goat",
+                "color": "#b86cff",
+                "duration": 6,
+                "stats": { "dmgMult": 0.5, "atkSpeed": 0.3 }
+              }
+            },
+            { "do": "flash", "color": "#6a2aa8", "strength": 0.35 }
+          ]
+        }
+      ],
+      "desc": "Someone, somewhere, is keeping count of what he owes."
+    },
+    {
+      "id": "sepsis",
+      "x": 6,
+      "y": 6,
+      "group": "hemomancy",
+      "name": "Sepsis",
+      "icon": "chain",
+      "requiresAny": ["hemorrhage", "witching_hour"],
+      "hitBonus": [
+        {
+          "if": [
+            { "check": "targetStatus", "status": "bleeding" },
+            { "check": "targetStatus", "status": "poisoned" }
+          ],
+          "more": 0.3
+        }
+      ],
+      "desc": "Blood and venom, the old way."
+    },
+    {
+      "id": "necrosis",
+      "x": 10,
+      "y": 6,
+      "group": "venom",
+      "name": "Necrosis",
+      "icon": "hourglass",
+      "requiresAny": ["witching_hour", "plague_herald"],
+      "rules": [
+        {
+          "when": "poison",
+          "chance": 0.03,
+          "cooldown": 0.5,
+          "then": [{ "do": "bleed" }]
+        }
+      ],
+      "desc": "The rot opens the skin from the inside."
+    },
+    {
+      "id": "venom_spit",
+      "x": 12,
+      "y": 2,
+      "group": "venom",
+      "name": "Venomous Spit",
+      "icon": "poison",
+      "maxRank": 3,
+      "stats": { "poisonChance": 0.12 },
+      "requiresAny": ["black_pact"],
+      "desc": "Goats will eat anything. Some things eat back."
+    },
+    {
+      "id": "blight",
+      "x": 12,
+      "y": 3,
+      "group": "venom",
+      "name": "Blight",
+      "icon": "flask",
+      "maxRank": 3,
+      "stats": { "poisonDmg": 0.15 },
+      "requiresAny": ["venom_spit"],
+      "desc": "The corn died first."
+    },
+    {
+      "id": "miasma",
+      "x": 11,
+      "y": 4,
+      "group": "venom",
+      "name": "Miasma",
+      "icon": "area",
+      "requiresAny": ["blight"],
+      "rules": [
+        {
+          "when": "interval",
+          "seconds": 4,
+          "then": [
+            {
+              "do": "zone",
+              "kind": "poison",
+              "at": "player",
+              "radius": 3,
+              "duration": 3,
+              "mult": 0.3
+            }
+          ]
+        }
+      ],
+      "desc": "Wherever he stands, the air goes green."
+    },
+    {
+      "id": "rotting_touch",
+      "x": 13,
+      "y": 4,
+      "group": "venom",
+      "name": "Rotting Touch",
+      "icon": "venomvial",
+      "requiresAny": ["blight"],
+      "hitBonus": [
+        {
+          "if": [
+            { "check": "targetStatus", "status": "poisoned", "stacks": 5 }
+          ],
+          "more": 0.25
+        }
+      ],
+      "desc": "Soft things break easier."
+    },
+    {
+      "id": "plague_herald",
+      "x": 12,
+      "y": 5,
+      "group": "venom",
+      "big": true,
+      "name": "Plague Herald",
+      "icon": "voodoo",
+      "stats": { "poisonChance": 0.1 },
+      "requiresAny": ["miasma", "rotting_touch"],
+      "rules": [
+        {
+          "when": "kill",
+          "if": [
+            { "check": "targetStatus", "status": "poisoned", "stacks": 3 }
+          ],
+          "then": [{ "do": "spread", "what": "poison", "radius": 4 }]
+        }
+      ],
+      "desc": "He brings it with him. He always has."
+    },
+    {
+      "id": "witch_brew",
+      "x": 12,
+      "y": 6,
+      "group": "venom",
+      "name": "Witch's Brew",
+      "icon": "flask",
+      "requiresAny": ["plague_herald"],
+      "rules": [
+        {
+          "when": "attack",
+          "every": 12,
+          "then": [
+            {
+              "do": "projectiles",
+              "kind": "flask",
+              "count": 4,
+              "pattern": "aimed",
+              "mult": 0.6
+            }
+          ]
+        }
+      ],
+      "desc": "Stirred with a bone. Corked with a tooth."
+    },
+    {
+      "id": "void_gaze",
+      "x": 8,
+      "y": 8,
+      "group": "pact",
+      "big": true,
+      "name": "Gaze of the Void",
+      "icon": "eclipse",
+      "minSpent": 12,
+      "requiresAny": ["exsanguinate", "goat_pact", "witch_brew"],
+      "hitBonus": [
+        { "if": [{ "check": "targetKind", "kind": "boss" }], "more": 0.25 }
+      ],
+      "rules": [
+        {
+          "when": "interval",
+          "seconds": 6,
+          "then": [
+            {
+              "do": "status",
+              "status": "shock",
+              "shock": 0.5,
+              "duration": 4,
+              "at": "strongest"
+            },
+            { "do": "lightning", "at": "strongest", "chains": 6, "mult": 0.6 }
+          ]
+        }
+      ],
+      "desc": "It looks back. Now it looks through you."
+    },
+    {
+      "id": "cat_scratch_fever",
+      "x": 16,
+      "y": 0,
+      "group": "hemomancy",
+      "name": "Cat Scratch Fever",
+      "icon": "poison",
+      "effect": { "id": "poisonMaxHp", "share": 0.01 },
+      "text": "Every poison stack you inflict also deals 1% of your max health per second.",
+      "desc": "Something nasty under the claws."
+    },
+    {
+      "id": "poisoned_chalice",
+      "x": 19,
+      "y": 0,
+      "group": "hemomancy",
+      "name": "Poisoned Chalice",
+      "icon": "flask",
+      "effect": { "id": "poisonReversal" },
+      "text": "Monsters with your poison on them cannot heal: their healing (Regenerating, Vampiric) hurts them instead.",
+      "desc": "Drink up."
+    },
+    {
+      "id": "toxic_detonation",
+      "x": 22,
+      "y": 0,
+      "group": "hemomancy",
+      "name": "Toxic Detonation",
+      "icon": "venomvial",
+      "effect": {
+        "id": "poisonBurst",
+        "mult": 2,
+        "cooldown": 20,
+        "maxRadius": 15
+      },
+      "text": "Every 20 seconds, your next hit on a poisoned monster bursts its poisons: an explosion dealing 2x the damage per second of all its poison stacks, 1 meter wide per stack (10 stacks: 10 meters).",
+      "desc": "Pop."
+    },
+    {
+      "id": "toxic_touch",
+      "x": 25,
+      "y": 0,
+      "group": "hemomancy",
+      "name": "Toxic Touch",
+      "icon": "poison",
+      "stats": { "poisonChance": 0.5 },
+      "effect": { "id": "multiPoison" },
+      "text": "Poison chance above 100% applies extra poisons with a single hit (150% = one poison, plus a 50% chance of a second).",
+      "desc": "Lick the blade. Don't ask."
+    },
+    {
+      "id": "rot_fumes",
+      "x": 28,
+      "y": 0,
+      "group": "hemomancy",
+      "name": "Rot Fumes",
+      "icon": "flask",
+      "stats": { "poisonDmg": 0.3 }
+    },
+    {
+      "id": "slow_decay",
+      "x": 31,
+      "y": 0,
+      "group": "hemomancy",
+      "name": "Slow Decay",
+      "icon": "hourglass",
+      "stats": { "dotDmg": 0.3 }
+    },
+    {
+      "id": "nightshade",
+      "x": 34,
+      "y": 0,
+      "group": "hemomancy",
+      "name": "Nightshade Whiskers",
+      "icon": "poison",
+      "stats": { "poisonChance": 0.15 }
+    },
+    {
+      "id": "plague_feast",
+      "x": 37,
+      "y": 0,
+      "group": "hemomancy",
+      "name": "Plague Feast",
+      "icon": "heart",
+      "effect": { "id": "poisonKillHeal", "perStack": 1 },
+      "text": "Killing a poisoned monster heals you 1 health for every poison stack on it.",
+      "desc": "Waste not."
+    },
+    {
+      "id": "chain_lightning",
+      "x": 40,
+      "y": 0,
+      "group": "hemomancy",
+      "big": true,
+      "name": "Chain Lightning",
+      "icon": "zigzag",
+      "cost": 1,
+      "minSpent": 3,
+      "effect": { "id": "chainLightning" },
+      "text": "Ricochets become rays of lightning that strike instantly, and each one deals 50% bonus elemental damage.",
+      "downside": "Your ricochet bounces are halved."
+    },
+    {
+      "id": "storm_caller",
+      "x": 43,
+      "y": 0,
+      "group": "hemomancy",
+      "name": "Storm Caller",
+      "icon": "zigzag",
+      "effect": {
+        "id": "lightningProc",
+        "chance": 0.05,
+        "chains": 25,
+        "damage": 0.5
+      },
+      "text": "Your attacks have a 5% chance to loose a lightning bolt that always chains, jumping between 25 monsters. Each jump deals elemental damage and shocks."
+    }
+  ],
+  "alien": {
+    "_help": "Gregory's alien talents, bought with Alien Spoons on the Alien Talents tab (Y). They work like the cat's alien talents.",
+    "groups": [
+      { "id": "void", "name": "Void", "color": "#b86cff" },
+      { "id": "flesh", "name": "Flesh", "color": "#d0302a" }
+    ],
+    "talents": [
+      {
+        "id": "void_tongue",
+        "group": "void",
+        "name": "Void Tongue",
+        "icon": "zigzag",
+        "rules": [
+          {
+            "when": "hit",
+            "chance": 0.03,
+            "then": [
+              { "do": "lightning", "chains": 5, "of": "hit", "mult": 0.5 }
+            ]
+          }
+        ],
+        "desc": "It speaks in something that is not quite sound."
+      },
+      {
+        "id": "starless_eye",
+        "group": "void",
+        "name": "Starless Eye",
+        "icon": "eye",
+        "hitBonus": [
+          { "if": [{ "check": "targetKind", "kind": "boss" }], "more": 0.2 }
+        ],
+        "rules": [
+          {
+            "when": "bossAppears",
+            "then": [{ "do": "status", "status": "stun", "duration": 2 }]
+          }
+        ],
+        "desc": "Big things flinch when it opens."
+      },
+      {
+        "id": "black_blood",
+        "group": "flesh",
+        "name": "Black Blood",
+        "icon": "blood",
+        "conditionalStats": [
+          {
+            "if": [{ "check": "myHealth", "below": 0.35 }],
+            "stats": { "lifeOnKillPct": 0.005, "bleedDmg": 0.5 }
+          }
+        ],
+        "desc": "It does not run red anymore."
+      },
+      {
+        "id": "carrion_feast",
+        "group": "flesh",
+        "name": "Carrion Feast",
+        "icon": "fang",
+        "rules": [
+          {
+            "when": "kill",
+            "chance": 0.1,
+            "if": [{ "check": "targetStatus", "status": "bleeding" }],
+            "then": [{ "do": "heal", "mult": 0.02 }]
+          }
+        ],
+        "desc": "Waste not."
+      }
+    ]
+  }
+}

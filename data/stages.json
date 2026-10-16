@@ -1,0 +1,928 @@
+{
+  "_help": {
+    "about": "Days, maps, danger stages, events, altars and spawning. A run is a series of days. Each day lasts daySeconds and is fought on one map; its danger stages change every stageSeconds (the last stage lasts until dawn). At dawn the monsters crumble and the camp opens: a workbench and a cellar trapdoor appear by the farmhouse, and the trapdoor leads to the next map. After the last map, the last map repeats and monsters keep getting stronger using the endless growth rates.",
+    "stages": "The danger stages of a day, shared by every map. name, message (optional banner subtitle), hpMult / damageMult (monster health and damage on this stage), spawnMult (multiplies the spawn rate, alive cap, horde size and pack calls; left out = same as the previous stage), sky (colors and lighting: top/horizon = sky gradient, fog, skyLight/groundLight/ambient = fill light, sun/sunIntensity/sunPosition, clouds, celestial = the sun or moon disc, playerLight and lamps = light strength, tint = [r, g, b] screen grade; missing keys are taken from the previous stage).",
+    "maps": "One entry per day, in order. name and message: the banner when the day starts. hpMult / damageMult: monster health and damage on this map, on top of the stage. itemLevel: [lowest, highest] item level that drops here (items climb from the lowest to the highest as the day goes on; items.json itemLevel says how much a level is worth). gear: themed weapons and gear that can drop here (alien, spirit, eldritch); alien gear also allows alien-only affixes (\"alienGear\": true = [\"alien\"]). ground: farm, alien, swamp or void (ground colors; void also has glowing cracks and sigils). decor: \"\", alien (crashed saucer and glowing pods), tiki (tiki totems, dead trees, candles and skull piles) or eldritch (eye stalks that watch you, giant swaying tentacles, floating monoliths, void crystals and sigils). weather: \"\", rain or motes (violet motes drifting up out of the ground, and now and then the world flickers and whispers). music: the song for the day: farm (a minor-key hoedown that rots into a broken music box), alien (theremin, whole-tone pulse, radar and static), spirit (slow and desolate: drone, wind, ghostly choir, distant drums) or madness (no key and no time: a drone cluster that never resolves, bending glass tones, a skipping music box, chanting from under the ground, a heartbeat that misses); every song gets slower, darker and more broken each minute of the day, with heartbeats, whispers and far-off screams. fog: [near, far] fog distances (default [38, 110]). warp: [at dawn, at the end of the day] how hard the screen swims, splits its colors and tears (0 = not at all, 1 = madness). shrines: \"unholy\" = every shrine on this map is an Unholy Shrine. bosses: boss enemy ids with weights for boss events. events: event weights for this map, replacing the global events.weights (see events). stages: per-stage overrides merged onto the shared stages (spawns, horde and any sky keys).",
+    "maps.stages.spawns": "Spawn tables. at = seconds into the stage when the table takes over. weights = enemy ids from enemies.json with relative chances. Left out = same as the previous stage.",
+    "maps.stages.horde": "Enemy weights for horde waves and boss pack calls. Left out = same as the previous stage.",
+    "endless": "After the last map: every extra day multiplies monster health by hpGrowth and damage by damageGrowth, and raises the item levels that drop by itemLevelGrowth (10 = a whole map's worth).",
+    "chests": "Treasure chests that turn up while a day is fought, each holding one random item. first = seconds into the day of the first chest, every = [min, max] seconds until the next, maxStanding = most unopened chests at once (a chest that would go past it is skipped). Every day starts with freeAtStart free chests right next to you (they open when you walk up to them); the first of them is a Weapon Chest that always holds a weapon of rarity weaponChest (item rarity: 0 = Common, 1 = Magic, 2 = Rare) (-1 = no weapon chest); every other chest costs essence, opened with E next to it: cost + costPerMinute x minutes into the day when the chest appeared. minRarity (0-2: Common, Magic, Rare) and luck shape the item. pickupRadius, minPlayerDistance (how far from you it may appear) and area (half-size of the square it may appear in).",
+    "barrels": "Experience barrels: they turn up at random spots while a day is fought (first, then every [min, max] seconds, at most maxStanding at once) and break open when you walk into them (pickupRadius), giving you levels levels. minPlayerDistance and area work like the chests'.",
+    "mokosh": "Mokosh, the Slavic mother goddess: a carved wooden totem rises first seconds into every day, then every [min, max] seconds (at most maxStanding at once; minPlayerDistance and area like the chests'), and sinks again after stay seconds of fighting. Press E within pickupRadius meters to ask her favour (the game waits while you choose). Each totem grants each favour once: cut a thread (ban.cost essence: one blessing never comes up again this run, so every other one comes up more often) and weave a thread twice (weave.prices essence by the blessing's rarity [common, rare, epic, legendary]: gain another copy of one of your blessings, giving up a different blessing of the same rarity). Every favour of a kind asked this run multiplies its next price by 1 + growth.",
+    "talentPoints": "The most talent points you can gain on each level (day), whatever the events: totems = Totems of Power from altars (once the day's totems are claimed or standing, no more altars rise), spoons = Alien Spoons from repelled invasions (later invasions that day give none).",
+    "experience": "Experience pacing. mult multiplies every experience gain (soul crystals from kills, bosses and invasions, and scrapping). XP needed to reach the next level from level L = (levelBase + perLevel x (L - 1) + curve x (L - 1)^curvePower) ^ exponent (2 = squared).",
+    "growth": "Steady growth on top of the stages: every monster that spawns gets +hpPerMinute health and +damagePerMinute damage for each minute of fighting so far this run (0.08 = +8% per minute, added up, not compounded).",
+    "events": "Every 'every' seconds of a day something happens, picked by weight: boss (a boss from the map's list walks out of a cave after bossWarning seconds; no more than maxBosses alive at once), rares (rares.count rare monsters from the current spawn table climb out of a cave with monster modifiers, rares.hp/damage/size/xp/essence multipliers; how many modifiers per stage of danger in rares.modifiers) invasion (see invasion; only one at a time), ritual (see ritual; only one at a time), cauldron (see cauldron), gaze (the Eldritch Gaze, see gaze; only one at a time) or darkness (The Dark, see darkness; only one at a time). Maps can set their own weights (maps[].events). The first map uses these; the Eldritch Gaze is only in the later maps' weights, The Dark only in Eldritch Madness'.",
+    "darkness": "The Dark (event kind darkness): the stars go out. A circle of light (radius meters) opens between minDistance and maxDistance meters from you and the screen darkens: you have warning seconds to get into it. Then the dark falls for dark seconds: everything outside the circle is pitch black. Out in the dark your screen goes black over grace seconds and you die, whatever your health, armor or block (an extra life still drags you back, and the dark lifts). Step back into the light in time and you live.",
+    "boss": "Bosses from events: extra health and size per boss after the first (size stops growing after maxSizeSteps).",
+    "altar": "enemy = what the altar summons (see also talentPoints, which stops altars rising once the day's totems are reached). The first summon of a run is one monster; every summon after brings summonGrowth times as many as the one before (2 = 1, 2, 4, 8...), at most maxSummons. first = seconds into the day when the first altar rises, every = seconds between altars (at 50 and every 60, a 10-minute day raises 10 altars). modifiers = how many monster modifiers the summon gets per stage of danger (last value repeats). summonDelay = seconds between taking the totem and the summon emerging. buff = buff from status_effects.json granted when you take the totem. pickupRadius, minPlayerDistance (how far from you it may appear) and area (half-size of the square it may appear in). Altars still standing at dawn can be claimed safely in camp; any left when you take the trapdoor are claimed for you.",
+    "ritual": "Demon ritual (event kind ritual): doctors (enemy id doctor, usually 4) appear in a circle of radius radius around a summoning sigil at least minPlayerDistance from you, warning seconds after the warning, and start channelling. Every stackEvery seconds they channel adds stackHp (0.1 = +10%) to the demon's health. When the last one dies (or after maxTime seconds, when any still standing crumble) the demon (enemy id demon) bursts out of the sigil with all the health it has gathered.",
+    "cauldron": "Witch's cauldron (event kind cauldron): enemy rises out of the ground at least minPlayerDistance from you and spews monsters (its summon in enemies.json) until destroyed. At most max at once.",
+    "invasion": "Alien invasion, started by events. A green light pillar lands at least minPlayerDistance away; after landDelay seconds rare monsters (regular monsters from the current spawn table with monster modifiers; how many per stage of danger in 'modifiers') climb out with rareHp/rareDamage/rareSize/rareXp multipliers: 'rares' of them on the first invasion of a run, then raresGrowth times as many as the invasion before (2 = 2, 4, 8...), at most maxRares. Until every rare is dead the pillar wanders the farm (pillar.speed, pillar.radius), burning you (pillar.playerDamage per second, scaled by stage damage) and every monster that is not green (pillar.monsterDamage = share of max health per second, pillar.bossDamage for bosses), and dropping a new green monster every pillar.spawnEvery seconds. reward: spoons (Alien Spoons for this run's talent tree), xp, items and buff.",
+    "camp": "workbench: where the workbench stands ([x, z]); it is there all day (walk up to it at dawn, press E next to it while fighting). trapdoor and dummy: where the cellar trapdoor and the training dummy (shows your damage per second) appear at dawn. shop: the workbench sells blessings for essence. offers = cards in stock (restocked at the start of a run and every dawn), prices = essence per rarity [common, rare, epic, legendary], priceGrowth = every blessing bought this run multiplies all prices by 1 + priceGrowth (0.5 = each purchase makes everything 50% dearer, compounding: x1.5, x2.25, x3.4...), reroll / rerollGrowth = essence for the first reroll of a stock and how much more each further reroll costs (back to the first price at every restock). travelTime: how many seconds you stand on the trapdoor to travel (travelTime). upgrade (Upgrade at the workbench): raise an item's level by up to levels in all, for essence: each level costs cost x (item level + 2) x rarity[the item's rarity: common, magic, rare] x (1 + growth x levels already added).",
+    "spawning": "Spawn pacing. maxEnemies: alive cap = base + perSecond x fighting time + perStage x danger, at most cap. rate: spawns per second = base + fighting time / rampSeconds (at most max), x (1 + perStage x danger), x whileBossAlive when a boss is up. Danger counts the stages of every day so far (day 2 stage 1 = danger 5). The alive cap, spawn rate, horde size and pack size are then multiplied by the stage spawnMult and by monsterMult (applies to the whole game). elites: chance after 'after' seconds. hordes: first wave time, gap range in seconds, size growth, warning seconds. packSize: monsters per cave when a boss calls its pack.",
+    "caveNames": "Names of the four caves, used in warnings.",
+    "dungeon": "Dungeons: now and then a stairway opens on the map, with random monster modifiers (monster_modifiers.json; those with \"dungeon\": false never roll here) plus the Abyssal modifier every dungeon has: every monster inside has x hpMult health and x damageMult damage. Press E at the stairs to go down; the day's clock stops while you are inside. Inside: chambers big chambers (pillars, inner walls, two or three doors between them), packs dense packs of packSize [min, max] monsters (elites of each are elite) spread over them, each asleep until you come within wakeRadius meters or hurt one of them, and a boss on a pentagram in the last chamber's sanctum. Every chamber holds chests free chests (a blue glow) with an item of at least chestMinRarity (0-2), chestLuck, chestLevelBonus item levels above the day's. Killing the boss grants a trinket you don't own yet and items, then you climb out. chance = chance per day that a dungeon opens, at a random time within appearAt [min, max] seconds into the day; it collapses after stay seconds if you don't go in. modifiers = how many modifiers it rolls, by danger stage (the last value repeats). bosses = boss ids with weights, bossHp = the boss's extra health (on top of hpMult). Rewards: items (count), itemMinRarity (0-2), itemLuck, itemLevelBonus, essence, levels (free levels for clearing it, like an experience barrel's: each one a blessing to choose). pickupRadius = how close you must be to the stairs.",
+    "gaze": "The Eldritch Gaze (event): the ground tears open into a crater (radius meters) at least minPlayerDistance from you, an orange eye peeking up through a sky of alien stars inside it. Stepping in deals damage x your max health (ignoring armor and block) and throws you out (push). Every waveEvery seconds it pulses out a wave of monsters picked from waveWeights: waveSize [first, more per wave] of them, at most waveMax; eliteChance of them are elite with monster modifiers (as many as rare monsters get, events.rares.modifiers). Every tentacle.everyWaves waves (up to tentacle.count in all) an eldritch tentacle (tentacle.enemy) bursts up near the crater: it slams where you stand (reach meters x its size, a radius circle after a wind-up of wind seconds, every every seconds, damage x its damage) and every gurgleEvery seconds lets out an Eldritch Gurgle (a gurgleWarn second warning) that stuns you for gurgleStun seconds, until it is killed. Once all of them are dead, boss.enemy rises from the crater and chases you: every boss.every seconds, when you are within reach meters, it smashes blows tentacles down around you (the first where you are heading, the rest within spread meters; each a radius circle after wind seconds, staggered by stagger, dealing damage x its damage and slowing you). Killing it closes the crater.",
+    "shrines": "Shrines of Mary: one turns up first seconds into every day, then every [min, max] seconds (at most maxStanding at once, pickupRadius, minPlayerDistance and area like the chests'). Walk into one to pray for faith.buff (status_effects.json): while it lasts, getting hit sets every monster within faith.radius meters on holy fire worth faith.burn x your hit damage per second. From danger stage nightFromStage on (night), a shrine is an Unholy Shrine with unholyChance (on maps with \"shrines\": \"unholy\", every shrine all day long): press E at it for apostasy.buff, which drains apostasy.drain of your max health per second until it has taken apostasy.total of it (it never kills you); meanwhile your bleeds deal apostasy.bleedMult x damage and every bleed you inflict cripples."
+  },
+  "daySeconds": 600,
+  "stageSeconds": 120,
+  "stages": [
+    {
+      "name": "Golden Afternoon",
+      "message": "Hold the farm. Things are crawling out of the caves.",
+      "hpMult": 1,
+      "damageMult": 1,
+      "spawnMult": 1.1,
+      "sky": {
+        "top": "#4f86c8",
+        "horizon": "#f2d9a0",
+        "fog": "#e0c08c",
+        "skyLight": "#fff3d6",
+        "groundLight": "#6a5634",
+        "ambient": 0.78,
+        "sun": "#ffe0a8",
+        "sunIntensity": 0.9,
+        "sunPosition": [-40, 70, 30],
+        "clouds": "#fff4e0",
+        "celestial": "#fff2c0",
+        "playerLight": 0,
+        "lamps": 0,
+        "tint": [1.0, 0.98, 0.94]
+      }
+    },
+    {
+      "name": "Sunset",
+      "hpMult": 2.0,
+      "damageMult": 2.0,
+      "spawnMult": 1.3,
+      "sky": {
+        "top": "#40508e",
+        "horizon": "#ff9a5a",
+        "fog": "#d88660",
+        "skyLight": "#ffc8a0",
+        "groundLight": "#5a3a2a",
+        "ambient": 0.66,
+        "sun": "#ff9a50",
+        "sunIntensity": 0.85,
+        "sunPosition": [-60, 25, 20],
+        "clouds": "#ffb08a",
+        "celestial": "#ffa860",
+        "playerLight": 0.5,
+        "lamps": 0.6,
+        "tint": [1.04, 0.95, 0.88]
+      }
+    },
+    {
+      "name": "Dusk",
+      "hpMult": 3.5,
+      "damageMult": 3.0,
+      "spawnMult": 1.6,
+      "sky": {
+        "top": "#24244e",
+        "horizon": "#8a4e7a",
+        "fog": "#5e4062",
+        "skyLight": "#b090c0",
+        "groundLight": "#3a2a3a",
+        "ambient": 0.56,
+        "sun": "#b080d0",
+        "sunIntensity": 0.45,
+        "sunPosition": [-70, 12, 10],
+        "clouds": "#7a5a8a",
+        "celestial": "#e8b0ff",
+        "playerLight": 1.1,
+        "lamps": 1.2,
+        "tint": [0.95, 0.92, 1.04]
+      }
+    },
+    {
+      "name": "Nightfall",
+      "hpMult": 5.1,
+      "damageMult": 4.0,
+      "spawnMult": 3.0,
+      "sky": {
+        "top": "#060a1a",
+        "horizon": "#1a2a4a",
+        "fog": "#15203a",
+        "skyLight": "#7088c8",
+        "groundLight": "#1a1a2a",
+        "ambient": 0.5,
+        "sun": "#9ab0ff",
+        "sunIntensity": 0.5,
+        "sunPosition": [40, 60, -20],
+        "clouds": "#2a3a5a",
+        "celestial": "#dde6ff",
+        "playerLight": 1.5,
+        "lamps": 1.6,
+        "tint": [0.92, 0.96, 1.1]
+      }
+    },
+    {
+      "name": "Blood Moon",
+      "hpMult": 9,
+      "damageMult": 7.5,
+      "spawnMult": 3.5,
+      "sky": {
+        "top": "#1a0408",
+        "horizon": "#5a1010",
+        "fog": "#3a0c0c",
+        "skyLight": "#c86060",
+        "groundLight": "#2a0a0a",
+        "ambient": 0.55,
+        "sun": "#ff6050",
+        "sunIntensity": 0.55,
+        "sunPosition": [40, 60, -20],
+        "clouds": "#4a1010",
+        "celestial": "#ff4030",
+        "playerLight": 1.5,
+        "lamps": 1.6,
+        "tint": [1.12, 0.9, 0.88]
+      }
+    }
+  ],
+  "maps": [
+    {
+      "id": "farm",
+      "music": "farm",
+      "name": "The Farm",
+      "message": "Protect your crops. Something is going terribly wrong",
+      "hpMult": 1,
+      "damageMult": 1,
+      "itemLevel": [1, 10],
+      "alienGear": false,
+      "ground": "farm",
+      "decor": "",
+      "bosses": { "golem": 1 },
+      "stages": [
+        {
+          "spawns": [
+            { "at": 0, "weights": { "dog": 1 } },
+            { "at": 40, "weights": { "dog": 0.7, "crow": 0.3 } },
+            {
+              "at": 90,
+              "weights": { "dog": 0.55, "crow": 0.25, "pumpkin": 0.2 }
+            }
+          ],
+          "horde": { "dog": 0.9, "crow": 0.1 }
+        },
+        {
+          "spawns": [
+            {
+              "at": 0,
+              "weights": { "dog": 0.5, "crow": 0.28, "pumpkin": 0.22 }
+            }
+          ],
+          "horde": { "dog": 0.85, "crow": 0.08, "pumpkin": 0.07 }
+        },
+        {
+          "spawns": [
+            {
+              "at": 0,
+              "weights": { "dog": 0.42, "crow": 0.3, "pumpkin": 0.28 }
+            }
+          ],
+          "horde": { "dog": 0.82, "crow": 0.09, "pumpkin": 0.09 }
+        },
+        {
+          "spawns": [
+            {
+              "at": 0,
+              "weights": { "dog": 0.42, "crow": 0.3, "pumpkin": 0.28 }
+            }
+          ],
+          "horde": { "dog": 0.82, "crow": 0.09, "pumpkin": 0.09 }
+        },
+        {
+          "spawns": [
+            {
+              "at": 0,
+              "weights": { "dog": 0.42, "crow": 0.3, "pumpkin": 0.28 }
+            }
+          ],
+          "horde": { "dog": 0.82, "crow": 0.09, "pumpkin": 0.09 }
+        }
+      ]
+    },
+    {
+      "id": "crash_site",
+      "music": "alien",
+      "name": "The fourth dimension",
+      "message": "Was this place always there?",
+      "hpMult": 100,
+      "damageMult": 20,
+      "itemLevel": [11, 20],
+      "alienGear": true,
+      "ground": "alien",
+      "decor": "alien",
+      "bosses": { "bigblob": 1, "mutant_deer": 1 },
+      "stages": [
+        {
+          "spawns": [
+            { "at": 0, "weights": { "mosquito": 0.5, "blob": 0.5 } },
+            {
+              "at": 40,
+              "weights": { "mosquito": 0.4, "blob": 0.35, "alien": 0.25 }
+            }
+          ],
+          "horde": { "mosquito": 0.8, "blob": 0.2 },
+          "sky": {
+            "top": "#2f7a8a",
+            "horizon": "#c8f0a0",
+            "fog": "#9ad890",
+            "skyLight": "#e8fff0",
+            "groundLight": "#3a5a4a",
+            "clouds": "#d8ffe0",
+            "celestial": "#d0ffb0",
+            "tint": [0.94, 1.04, 0.96]
+          }
+        },
+        {
+          "spawns": [
+            {
+              "at": 0,
+              "weights": {
+                "mosquito": 0.3,
+                "blob": 0.3,
+                "alien": 0.25,
+                "alienbird": 0.15
+              }
+            }
+          ],
+          "horde": { "mosquito": 0.7, "blob": 0.2, "alienbird": 0.1 },
+          "sky": {
+            "top": "#2a3a7e",
+            "horizon": "#9aff8a",
+            "fog": "#6ab88a",
+            "skyLight": "#c8ffd0",
+            "groundLight": "#2a4a3a",
+            "clouds": "#8af0a0",
+            "celestial": "#b0ff80",
+            "tint": [0.95, 1.06, 0.95]
+          }
+        },
+        {
+          "spawns": [
+            {
+              "at": 0,
+              "weights": {
+                "mosquito": 0.28,
+                "blob": 0.27,
+                "alien": 0.27,
+                "alienbird": 0.18
+              }
+            }
+          ],
+          "sky": {
+            "top": "#16204a",
+            "horizon": "#4a8a6a",
+            "fog": "#2e5a50",
+            "skyLight": "#90d0b0",
+            "groundLight": "#1a3a2a",
+            "clouds": "#3a7a5a",
+            "celestial": "#9affa0",
+            "tint": [0.9, 1.06, 1.0]
+          }
+        },
+        {
+          "spawns": [
+            {
+              "at": 0,
+              "weights": {
+                "mosquito": 0.25,
+                "blob": 0.25,
+                "alien": 0.3,
+                "alienbird": 0.2
+              }
+            }
+          ],
+          "sky": {
+            "top": "#040a14",
+            "horizon": "#0e3a2a",
+            "fog": "#0a2a20",
+            "skyLight": "#60c0a0",
+            "groundLight": "#0a1a14",
+            "clouds": "#1a4a3a",
+            "celestial": "#a0ffc8",
+            "tint": [0.88, 1.08, 1.0]
+          }
+        },
+        {
+          "spawns": [
+            {
+              "at": 0,
+              "weights": {
+                "mosquito": 0.25,
+                "blob": 0.25,
+                "alien": 0.3,
+                "alienbird": 0.2
+              }
+            }
+          ],
+          "horde": { "mosquito": 0.6, "blob": 0.25, "alienbird": 0.15 },
+          "sky": {
+            "top": "#0a1a04",
+            "horizon": "#3a6a10",
+            "fog": "#1e3a0a",
+            "skyLight": "#a0e060",
+            "groundLight": "#102008",
+            "clouds": "#2a4a10",
+            "celestial": "#c0ff40",
+            "tint": [0.96, 1.12, 0.86]
+          }
+        }
+      ],
+      "events": { "boss": 1, "rares": 2, "invasion": 1, "gaze": 0.8 }
+    },
+    {
+      "id": "unexplainable",
+      "music": "spirit",
+      "name": "The Unexplainable",
+      "message": "Am I dead?",
+      "hpMult": 1000,
+      "damageMult": 100,
+      "itemLevel": [21, 30],
+      "gear": ["alien", "spirit"],
+      "ground": "swamp",
+      "decor": "tiki",
+      "weather": "rain",
+      "fog": [16, 75],
+      "bosses": { "orc_chief": 1 },
+      "events": {
+        "boss": 1,
+        "rares": 1.5,
+        "invasion": 0.5,
+        "ritual": 1,
+        "cauldron": 1,
+        "gaze": 1
+      },
+      "stages": [
+        {
+          "spawns": [
+            {
+              "at": 0,
+              "weights": { "crow": 0.35, "ghost": 0.4, "witch_doctor": 0.25 }
+            },
+            {
+              "at": 40,
+              "weights": {
+                "crow": 0.25,
+                "ghost": 0.35,
+                "witch_doctor": 0.2,
+                "giant_snail": 0.2
+              }
+            },
+            {
+              "at": 80,
+              "weights": {
+                "crow": 0.2,
+                "ghost": 0.3,
+                "witch_doctor": 0.2,
+                "giant_snail": 0.15,
+                "shaman": 0.15
+              }
+            }
+          ],
+          "horde": { "ghost": 0.7, "crow": 0.3 },
+          "sky": {
+            "top": "#2a1a3a",
+            "horizon": "#6a4a8a",
+            "fog": "#4a3a6a",
+            "skyLight": "#b8a0d8",
+            "groundLight": "#2a1a2a",
+            "ambient": 0.55,
+            "sun": "#c8a0ff",
+            "sunIntensity": 0.45,
+            "clouds": "#4a3a5a",
+            "celestial": "#e0c8ff",
+            "playerLight": 0.8,
+            "lamps": 0.8,
+            "tint": [0.92, 0.88, 1.06]
+          }
+        },
+        {
+          "spawns": [
+            {
+              "at": 0,
+              "weights": {
+                "crow": 0.2,
+                "ghost": 0.3,
+                "witch_doctor": 0.18,
+                "giant_snail": 0.14,
+                "shaman": 0.12,
+                "cultist": 0.06
+              }
+            }
+          ],
+          "horde": { "ghost": 0.65, "crow": 0.25, "giant_snail": 0.1 },
+          "sky": {
+            "top": "#1e1230",
+            "horizon": "#5a3a7a",
+            "fog": "#3a2a5a",
+            "skyLight": "#a088c8",
+            "groundLight": "#22142a",
+            "ambient": 0.5,
+            "sun": "#b080e0",
+            "sunIntensity": 0.38,
+            "clouds": "#3a2a4a",
+            "celestial": "#d8b8ff",
+            "playerLight": 1.1,
+            "lamps": 1.1,
+            "tint": [0.9, 0.86, 1.08]
+          }
+        },
+        {
+          "spawns": [
+            {
+              "at": 0,
+              "weights": {
+                "crow": 0.18,
+                "ghost": 0.28,
+                "witch_doctor": 0.18,
+                "giant_snail": 0.14,
+                "shaman": 0.14,
+                "cultist": 0.08
+              }
+            }
+          ],
+          "sky": {
+            "top": "#140a22",
+            "horizon": "#4a2a6a",
+            "fog": "#2e1e4a",
+            "skyLight": "#9078c0",
+            "groundLight": "#1a0e22",
+            "ambient": 0.46,
+            "sunIntensity": 0.32,
+            "celestial": "#c8a8ff",
+            "playerLight": 1.4,
+            "lamps": 1.4,
+            "tint": [0.88, 0.84, 1.1]
+          }
+        },
+        {
+          "spawns": [
+            {
+              "at": 0,
+              "weights": {
+                "crow": 0.16,
+                "ghost": 0.28,
+                "witch_doctor": 0.18,
+                "giant_snail": 0.14,
+                "shaman": 0.14,
+                "cultist": 0.1
+              }
+            }
+          ],
+          "sky": {
+            "top": "#0a0616",
+            "horizon": "#2a1a4a",
+            "fog": "#22163a",
+            "skyLight": "#7a68b0",
+            "groundLight": "#120a1a",
+            "ambient": 0.44,
+            "sun": "#9a80ff",
+            "sunIntensity": 0.3,
+            "celestial": "#b8a0ff",
+            "playerLight": 1.6,
+            "lamps": 1.6,
+            "tint": [0.86, 0.84, 1.12]
+          }
+        },
+        {
+          "spawns": [
+            {
+              "at": 0,
+              "weights": {
+                "crow": 0.16,
+                "ghost": 0.28,
+                "witch_doctor": 0.18,
+                "giant_snail": 0.14,
+                "shaman": 0.14,
+                "cultist": 0.1
+              }
+            }
+          ],
+          "horde": { "ghost": 0.6, "crow": 0.2, "toxic_frog": 0.2 },
+          "sky": {
+            "top": "#12040e",
+            "horizon": "#4a1030",
+            "fog": "#2a0e2a",
+            "skyLight": "#b070b0",
+            "groundLight": "#1a0810",
+            "ambient": 0.48,
+            "sun": "#ff60a0",
+            "sunIntensity": 0.4,
+            "celestial": "#ff50a0",
+            "playerLight": 1.6,
+            "lamps": 1.6,
+            "tint": [1.0, 0.84, 1.04]
+          }
+        }
+      ]
+    },
+    {
+      "id": "madness",
+      "music": "madness",
+      "name": "Eldritch Madness",
+      "message": "The stars are wrong. Something down here is dreaming you.",
+      "hpMult": 10000,
+      "damageMult": 500,
+      "itemLevel": [31, 40],
+      "gear": ["alien", "spirit", "eldritch"],
+      "ground": "void",
+      "decor": "eldritch",
+      "weather": "motes",
+      "fog": [16, 72],
+      "warp": [0.35, 1],
+      "shrines": "unholy",
+      "bosses": { "cthulhu": 1 },
+      "events": { "boss": 1, "rares": 1.5, "gaze": 1, "darkness": 1.5 },
+      "stages": [
+        {
+          "spawns": [
+            { "at": 0, "weights": { "void_crawler": 0.7, "voidling": 0.3 } },
+            {
+              "at": 45,
+              "weights": {
+                "void_crawler": 0.6,
+                "voidling": 0.3,
+                "eldritch_eye": 0.1
+              }
+            }
+          ],
+          "horde": { "void_crawler": 0.85, "voidling": 0.15 },
+          "sky": {
+            "top": "#1a0a2a",
+            "horizon": "#4a2a5a",
+            "fog": "#2a1a36",
+            "skyLight": "#c8b0f0",
+            "groundLight": "#2a1a2a",
+            "ambient": 0.78,
+            "sun": "#c8ffb0",
+            "sunIntensity": 0.6,
+            "sunPosition": [30, 70, 40],
+            "clouds": "#2a1a3a",
+            "celestial": "#ff8a2a",
+            "playerLight": 1.1,
+            "lamps": 1.0,
+            "tint": [0.98, 0.92, 1.08]
+          }
+        },
+        {
+          "spawns": [
+            {
+              "at": 0,
+              "weights": {
+                "void_crawler": 0.55,
+                "voidling": 0.3,
+                "eldritch_eye": 0.15
+              }
+            }
+          ],
+          "horde": { "void_crawler": 0.8, "voidling": 0.2 },
+          "sky": {
+            "top": "#0a1a16",
+            "horizon": "#2a5a3a",
+            "fog": "#16302a",
+            "skyLight": "#a8e0b8",
+            "groundLight": "#1a2a1e",
+            "ambient": 0.7,
+            "sun": "#e0ff9a",
+            "sunIntensity": 0.5,
+            "clouds": "#1a3a2a",
+            "celestial": "#c8ff6a",
+            "playerLight": 1.3,
+            "lamps": 1.2,
+            "tint": [0.92, 1.06, 0.96]
+          }
+        },
+        {
+          "spawns": [
+            {
+              "at": 0,
+              "weights": {
+                "void_crawler": 0.5,
+                "voidling": 0.3,
+                "eldritch_eye": 0.2
+              }
+            }
+          ],
+          "sky": {
+            "top": "#060818",
+            "horizon": "#1a1a4a",
+            "fog": "#12143a",
+            "skyLight": "#9098e8",
+            "groundLight": "#10102a",
+            "ambient": 0.64,
+            "sun": "#a0a8ff",
+            "sunIntensity": 0.45,
+            "clouds": "#14183a",
+            "celestial": "#e8e0ff",
+            "playerLight": 1.5,
+            "lamps": 1.4,
+            "tint": [0.9, 0.92, 1.12]
+          }
+        },
+        {
+          "spawns": [
+            {
+              "at": 0,
+              "weights": {
+                "void_crawler": 0.5,
+                "voidling": 0.28,
+                "eldritch_eye": 0.22
+              }
+            }
+          ],
+          "sky": {
+            "top": "#14041a",
+            "horizon": "#4a0a3a",
+            "fog": "#2a0a2a",
+            "skyLight": "#d890d8",
+            "groundLight": "#1a0818",
+            "ambient": 0.62,
+            "sun": "#ff7ab0",
+            "sunIntensity": 0.5,
+            "clouds": "#2a0a24",
+            "celestial": "#ff3a8a",
+            "playerLight": 1.6,
+            "lamps": 1.6,
+            "tint": [1.06, 0.86, 1.06]
+          }
+        },
+        {
+          "spawns": [
+            {
+              "at": 0,
+              "weights": {
+                "void_crawler": 0.5,
+                "voidling": 0.28,
+                "eldritch_eye": 0.22
+              }
+            }
+          ],
+          "horde": {
+            "void_crawler": 0.7,
+            "voidling": 0.2,
+            "eldritch_eye": 0.1
+          },
+          "sky": {
+            "top": "#0a0004",
+            "horizon": "#3a0408",
+            "fog": "#200408",
+            "skyLight": "#e07070",
+            "groundLight": "#160406",
+            "ambient": 0.6,
+            "sun": "#ff4a3a",
+            "sunIntensity": 0.55,
+            "clouds": "#24060a",
+            "celestial": "#ff2a1a",
+            "playerLight": 1.7,
+            "lamps": 1.7,
+            "tint": [1.14, 0.84, 0.9]
+          }
+        }
+      ]
+    }
+  ],
+  "ritual": {
+    "doctor": "ritualist",
+    "demon": "demon",
+    "doctors": 4,
+    "radius": 6,
+    "stackEvery": 3,
+    "stackHp": 0.1,
+    "maxTime": 90,
+    "minPlayerDistance": 16,
+    "warning": 2
+  },
+  "cauldron": { "enemy": "cauldron", "max": 3, "minPlayerDistance": 12 },
+  "gaze": {
+    "radius": 6,
+    "damage": 0.25,
+    "push": 22,
+    "minPlayerDistance": 14,
+    "waveEvery": 8,
+    "waveSize": [8, 2],
+    "waveMax": 30,
+    "waveWeights": { "voidling": 0.8, "eldritch_eye": 0.2 },
+    "eliteChance": 0.12,
+    "tentacle": {
+      "enemy": "eldritch_tentacle",
+      "everyWaves": 3,
+      "count": 3,
+      "reach": 6,
+      "radius": 2.6,
+      "wind": 0.9,
+      "every": 1.8,
+      "damage": 1.4
+    },
+    "gurgleEvery": 8,
+    "gurgleWarn": 3,
+    "gurgleStun": 0.5,
+    "boss": {
+      "enemy": "cthulhu",
+      "reach": 16,
+      "every": 2.4,
+      "blows": 4,
+      "wind": 0.8,
+      "stagger": 0.15,
+      "spread": 3.5,
+      "radius": 2.2,
+      "damage": 0.9
+    }
+  },
+  "darkness": {
+    "radius": 6,
+    "warning": 7,
+    "dark": 5,
+    "grace": 1.2,
+    "minDistance": 10,
+    "maxDistance": 20
+  },
+  "endless": { "hpGrowth": 2.5, "damageGrowth": 1.6, "itemLevelGrowth": 10 },
+  "chests": {
+    "first": 25,
+    "every": [55, 85],
+    "maxStanding": 3,
+    "freeAtStart": 2,
+    "weaponChest": 1,
+    "cost": 20,
+    "costPerMinute": 20,
+    "minRarity": 0,
+    "luck": 25,
+    "pickupRadius": 1.8,
+    "minPlayerDistance": 8,
+    "area": 31
+  },
+  "mokosh": {
+    "first": 100,
+    "every": [130, 200],
+    "maxStanding": 1,
+    "stay": 15,
+    "pickupRadius": 2.6,
+    "minPlayerDistance": 8,
+    "area": 30,
+    "ban": { "cost": 100, "growth": 0.5 },
+    "weave": { "prices": [80, 160, 320, 640], "growth": 0.5 }
+  },
+  "barrels": {
+    "first": 70,
+    "every": [100, 160],
+    "maxStanding": 2,
+    "levels": 1,
+    "pickupRadius": 1.6,
+    "minPlayerDistance": 10,
+    "area": 31
+  },
+  "shrines": {
+    "first": 45,
+    "every": [90, 150],
+    "maxStanding": 1,
+    "pickupRadius": 1.8,
+    "minPlayerDistance": 8,
+    "area": 31,
+    "unholyChance": 0.5,
+    "nightFromStage": 3,
+    "faith": { "buff": "empowered_faith", "radius": 2, "burn": 0.4 },
+    "apostasy": {
+      "buff": "apostasy",
+      "drain": 0.05,
+      "total": 0.9,
+      "bleedMult": 2
+    }
+  },
+  "dungeon": {
+    "chance": 0.75,
+    "appearAt": [90, 360],
+    "stay": 150,
+    "modifiers": [2, 2, 2, 3, 3, 3, 4],
+    "chambers": 3,
+    "packs": 10,
+    "packSize": [55, 80],
+    "elites": 3,
+    "wakeRadius": 14,
+    "hpMult": 3,
+    "damageMult": 3,
+    "bosses": { "golem": 1, "bigblob": 1, "mutant_deer": 1, "orc_chief": 1 },
+    "bossHp": 1,
+    "items": 3,
+    "itemMinRarity": 1,
+    "itemLuck": 60,
+    "itemLevelBonus": 2,
+    "essence": 60,
+    "levels": 1,
+    "chests": 1,
+    "chestMinRarity": 0,
+    "chestLuck": 30,
+    "chestLevelBonus": 2,
+    "pickupRadius": 2.4
+  },
+  "talentPoints": { "totems": 5, "spoons": 1 },
+  "experience": {
+    "mult": 0.5,
+    "levelBase": 3,
+    "perLevel": 1,
+    "curve": 0.12,
+    "curvePower": 2.6,
+    "exponent": 2
+  },
+  "growth": { "hpPerMinute": 0.08, "damagePerMinute": 0.04 },
+  "events": {
+    "every": 30,
+    "weights": { "boss": 1, "rares": 2, "invasion": 1 },
+    "bossWarning": 6,
+    "maxBosses": 2,
+    "rares": {
+      "count": 2,
+      "hp": 10,
+      "damage": 1.4,
+      "size": 1.35,
+      "xp": 15,
+      "essence": 10,
+      "modifiers": [1, 1, 2, 2, 2, 3]
+    }
+  },
+  "boss": { "hpPerBoss": 0.25, "sizePerBoss": 0.08, "maxSizeSteps": 4 },
+  "altar": {
+    "enemy": "rare_golem",
+    "summonGrowth": 2,
+    "maxSummons": 32,
+    "first": 50,
+    "every": 60,
+    "modifiers": [1, 2, 2, 3, 3, 4],
+    "summonDelay": 1.8,
+    "buff": "power_surge",
+    "pickupRadius": 1.8,
+    "minPlayerDistance": 14,
+    "area": 31
+  },
+  "invasion": {
+    "minPlayerDistance": 14,
+    "landDelay": 2.5,
+    "rares": 2,
+    "raresGrowth": 2,
+    "maxRares": 32,
+    "modifiers": [2, 2, 2, 3, 3, 4],
+    "rareHp": 14,
+    "rareDamage": 1.5,
+    "rareSize": 1.6,
+    "rareXp": 25,
+    "pillar": {
+      "radius": 2.6,
+      "speed": 3.2,
+      "playerDamage": 14,
+      "monsterDamage": 0.6,
+      "bossDamage": 0.02,
+      "spawnEvery": 2.2
+    },
+    "reward": {
+      "spoons": 1,
+      "xp": 60,
+      "items": [{ "minRarity": 2, "luck": 60 }],
+      "buff": "alien_adrenaline"
+    }
+  },
+  "camp": {
+    "workbench": [22, -18.5],
+    "trapdoor": [28.5, -17],
+    "dummy": [-25, -37.4],
+    "travelTime": 1.5,
+    "shop": {
+      "offers": 4,
+      "prices": [60, 120, 240, 480],
+      "priceGrowth": 0.5,
+      "reroll": 20,
+      "rerollGrowth": 20
+    },
+    "upgrade": { "levels": 3, "cost": 12, "rarity": [1, 2, 3.5], "growth": 0.5 }
+  },
+  "spawning": {
+    "monsterMult": 3,
+    "maxEnemies": { "base": 60, "perSecond": 0.2, "perStage": 12, "cap": 220 },
+    "rate": {
+      "base": 0.7,
+      "rampSeconds": 55,
+      "max": 7,
+      "perStage": 0.1,
+      "whileBossAlive": 0.55
+    },
+    "elites": { "after": 50, "chance": 0.02, "perStage": 0.006 },
+    "hordes": {
+      "first": 40,
+      "every": [28, 40],
+      "size": 8,
+      "sizePerStage": 4,
+      "sizePerMinute": 1,
+      "maxSize": 40,
+      "warning": 2.4
+    },
+    "packSize": { "base": 4, "perStage": 2 }
+  },
+  "caveNames": [
+    "the Old Mine",
+    "Bramble Hollow",
+    "Coyote Den",
+    "the Bone Cellar"
+  ]
+}

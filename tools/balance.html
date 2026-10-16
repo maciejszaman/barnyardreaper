@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Balance Lab · Barnyard Reaper</title>
+<style>
+/* A plain dark workbench: settings on top, then the tables. Numbers line up (tabular figures). */
+:root { --bg: #15110f; --panel: #201a17; --line: #3a302a; --text: #efe6d4; --dim: #a99a84; --accent: #f2c04e; --up: #6ad87a; --down: #ff7a6a; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; }
+#app { max-width: 1500px; margin: 0 auto; padding: 16px; }
+h1 { font-size: 22px; margin: 0 0 4px; color: var(--accent); }
+h2 { font-size: 17px; margin: 28px 0 8px; color: var(--accent); border-bottom: 1px solid var(--line); padding-bottom: 4px; }
+h3 { font-size: 14px; margin: 18px 0 6px; color: var(--text); }
+p.lead, p.note { color: var(--dim); margin: 4px 0 10px; max-width: 980px; }
+p.note { font-size: 12.5px; }
+#loading { padding: 40px; color: var(--dim); }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 12px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px 14px; }
+label.f { display: grid; gap: 3px; font-size: 12.5px; color: var(--dim); }
+label.f.wide { grid-column: span 2; }
+input, select { font: inherit; color: var(--text); background: #120e0c; border: 1px solid var(--line); border-radius: 4px; padding: 5px 7px; }
+#f-weapons { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 10px; }
+#f-weapons label { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; }
+#f-weapons img, td.wn img { width: 22px; height: 22px; image-rendering: pixelated; vertical-align: middle; }
+.bar-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px; }
+button { font: inherit; cursor: pointer; color: var(--text); background: #2e241f; border: 1px solid var(--line); border-radius: 4px; padding: 6px 12px; }
+button:hover:not(:disabled) { border-color: var(--accent); }
+button.primary { background: #8f2219; border-color: #c2382b; font-weight: 600; }
+button:disabled { opacity: 0.45; cursor: default; }
+#estimate, #status { color: var(--dim); font-size: 12.5px; }
+#progress { margin-top: 10px; }
+.track { height: 6px; background: #0e0b0a; border-radius: 3px; overflow: hidden; }
+#bar { height: 100%; width: 0; background: var(--accent); transition: width 0.2s; }
+#warnings { margin-top: 10px; color: var(--down); font-size: 12.5px; }
+.scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; font-size: 13px; }
+th, td { padding: 4px 8px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; vertical-align: top; }
+th { color: var(--dim); font-weight: 500; position: sticky; top: 0; background: var(--bg); }
+th small, td small { display: block; color: var(--dim); font-size: 11px; }
+td.n, th.n { text-align: right; }
+td small { display: inline; }
+table.dps td.n small { display: block; }
+tr.foot td { color: var(--dim); border-top: 2px solid var(--line); }
+td.wn small { display: inline; margin-left: 4px; }
+td.na { opacity: 0.45; }
+.d { display: block; font-size: 11px; color: var(--dim); }
+.up { color: var(--up); } .down { color: var(--down); }
+.kpis { display: flex; flex-wrap: wrap; gap: 10px; margin: 6px 0 12px; }
+.kpi { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 8px 12px; display: grid; gap: 2px; min-width: 200px; }
+.kpi b { font-size: 22px; color: var(--accent); font-variant-numeric: tabular-nums; }
+.kpi span { color: var(--dim); font-size: 12px; max-width: 260px; }
+canvas.engine { display: none; }
+</style>
+</head>
+<body>
+<div id="loading">Loading the game…</div>
+<div id="app" hidden>
+  <h1>Balance Lab</h1>
+  <p class="lead">The real game, without its menus: every number below comes from <code>data/*.json</code> and the game's own combat code. Change the JSON, press <b>Reload game data</b>, run again, and compare against a pinned baseline.</p>
+
+  <div class="panel">
+    <div class="grid" id="settings">
+      <label class="f wide">Characters: level @ minute of the run, comma separated
+        <input id="f-rows" spellcheck="false"></label>
+      <label class="f wide">Monster table minutes
+        <input id="f-minutes" spellcheck="false"></label>
+      <label class="f">Pack sizes (common monster)
+        <input id="f-targets" spellcheck="false"></label>
+      <label class="f">Boss fight
+        <span><input id="f-boss" type="checkbox"> one target with the boss's health</span></label>
+      <label class="f">Targets
+        <select id="f-mode"><option value="dummy">Training dummies (sustained DPS)</option><option value="pack">Live pack (real health, replaced as they die)</option></select></label>
+      <label class="f">Characters per weapon per level (samples)
+        <input id="f-samples" type="number" min="1" max="20"></label>
+      <label class="f">Warm-up seconds (not measured)
+        <input id="f-warmup" type="number" min="0" step="1"></label>
+      <label class="f">Measured seconds
+        <input id="f-measure" type="number" min="1" step="1"></label>
+      <label class="f">Weapon rarity
+        <select id="f-wrar"><option value="0">Common</option><option value="1">Magic</option><option value="2">Rare</option></select></label>
+      <label class="f">Other gear (hat, body, boots, charm)
+        <select id="f-gear"><option value="-1">None</option><option value="0">Common</option><option value="1">Magic</option><option value="2">Rare</option></select></label>
+      <label class="f">Random seed
+        <input id="f-seed" type="number" step="1"></label>
+    </div>
+    <div id="f-weapons"></div>
+    <div class="bar-row">
+      <button class="primary" id="b-run">Run</button>
+      <button id="b-stop" disabled>Stop</button>
+      <button id="b-reload" title="Reload the page, reading data/*.json again (settings and the baseline are kept)">Reload game data</button>
+      <button id="b-reset">Default settings</button>
+      <span id="estimate"></span>
+    </div>
+    <div id="progress" hidden><div class="track"><div id="bar"></div></div><div id="status"></div></div>
+    <div id="warnings" hidden></div>
+  </div>
+
+  <h2>Monsters by minute of the run</h2>
+  <div class="scroll" id="out-enemies"></div>
+
+  <h2>Leveling</h2>
+  <div class="scroll" id="out-levels"></div>
+
+  <section id="results" hidden>
+    <h2>Weapon balance</h2>
+    <p class="note" id="res-meta"></p>
+    <div class="bar-row">
+      <button id="b-pin" title="Remember these numbers; later runs show the change against them">Pin as baseline</button>
+      <button id="b-unpin">Clear baseline</button>
+      <button id="b-csv">Download CSV</button>
+      <button id="b-json">Download JSON</button>
+    </div>
+    <div class="scroll" id="out-summary"></div>
+    <h2>Damage per second</h2>
+    <p class="note">Each cell: the mean over the row's characters, its share of the median weapon at that level, and (with a baseline pinned) the change since then. Hover a cell for the lowest and highest character.</p>
+    <div class="scroll" id="out-dps"></div>
+    <h2>The characters</h2>
+    <div class="scroll" id="out-chars"></div>
+    <h2>Matchups</h2>
+    <div class="scroll" id="out-match"></div>
+  </section>
+</div>
+<canvas id="gl" class="engine"></canvas>
+<canvas id="ov" class="engine"></canvas>
+
+<script>window.G = { noBoot: true, DATA_URL: '../data/' };</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="../js/core.js"></script>
+<script src="../js/data.js"></script>
+<script src="../js/talents.js"></script>
+<script src="../js/models.js"></script>
+<script src="../js/world.js"></script>
+<script src="../js/fx.js"></script>
+<script src="../js/entities.js"></script>
+<script src="../js/combat.js"></script>
+<script src="../js/talentfx.js"></script>
+<script src="../js/rules.js"></script>
+<script src="../js/trinkets.js"></script>
+<script src="../js/altars.js"></script>
+<script src="../js/chests.js"></script>
+<script src="../js/mokosh.js"></script>
+<script src="../js/invasion.js"></script>
+<script src="../js/mechanics.js"></script>
+<script src="../js/ritual.js"></script>
+<script src="../js/dungeon.js"></script>
+<script src="../js/gaze.js"></script>
+<script src="../js/darkness.js"></script>
+<script src="../js/day.js"></script>
+<script src="../js/intro.js"></script>
+<script src="../js/debug.js"></script>
+<script src="../js/ui.js"></script>
+<script src="../js/book.js"></script>
+<script src="../js/main.js"></script>
+<script src="balance.js"></script>
+</body>
+</html>

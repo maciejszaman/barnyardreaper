@@ -1,0 +1,420 @@
+{
+  "_help": {
+    "about": "Weapons. The key is the weapon id. Start an id with _ to disable it.",
+    "name": "Base name. Item prefixes from items.json are added in front.",
+    "desc": "Shown on the item.",
+    "damage": "[min, max] damage per hit of a common weapon at danger stage 1: every hit rolls a number in between. Both ends must stay within 0.7x and 1.3x of the middle value. Each item rolls its own range around this (still within 0.7x-1.3x), then rarity, danger stage, item level and the weapon's own increased damage scale it.",
+    "attackSpeed": "Attacks per second. Every attack speed bonus you collect multiplies it, so speed stacks best on fast weapons (scythe 1.0, shotgun 0.5, sword 1.5, MP5 3.0).",
+    "crit": "Base critical strike chance (0.05 = 5%). This is the only source of base crit: increased crit chance from the weapon's own affix multiplies it first, then increased crit chance from everything else.",
+    "dropWeight": "How often it drops compared with other weapons. 0 = never drops.",
+    "model": "3D model: scythe, sword, shotgun, revolver, flask, flamethrower, mp5, blowgun, obsidian, dagger, fan, tome (an open spellbook) or screamskull (a screaming skull on a bone handle).",
+    "pose": "How the cat holds it: scythe, sword, shotgun (two-handed gun), revolver, flask or tome (held open in both paws, cast forward).",
+    "aimRange": "Distance at which it picks a target to face.",
+    "sound": "Attack sound: swing, shot, shotgun, throw, flame, smg, dart, fireball or shriek.",
+    "muzzle": "Guns only: distance from the hand to the muzzle flash.",
+    "shake": "Screen shake per shot.",
+    "melee": "Optional sweep around the cat: arc (degrees), range, color (swing trail), pitch (swing sound).",
+    "projectile.kind": "Projectile behaviour: scythe (homing spinner), wave (piercing arc), pellet (spread cone), bullet (fast, long range), flask (lobbed, poisons and leaves a puddle), flame (short-range gout of fire that passes through monsters), dart (fast thin dart, like a bullet), knife (spinning thrown knife), fireball (a ball of fire that bursts on the first monster it touches or at the end of its range, hitting everything within splash meters), nova (no projectile: you burst, hitting everything within range meters of you and hurling it away by knockback; every extra projectile adds an echo at half strength).",
+    "projectile.fields": "count, speed, range, pierce (enemies passed through), damageMult (share of hit damage), knockback, spread (pellet and flame cone width in radians), jitter (random aim error for bullets, radians), splash (flask and fireball blast radius) and puddle (flask puddle seconds).",
+    "perProjectile": "Projectiles added per +1 projectile stat.",
+    "bonus": "Optional extra stats the weapon grants while equipped (most weapons now put theirs in the implicit instead).",
+    "alwaysPoison": "Every hit poisons.",
+    "damageType": "physical (default) or elemental. Weapon hits are physical: they can poison and cause bleeding. An elemental weapon's hits are elemental instead: they can shock, but never poison or bleed.",
+    "alien": "true = same as \"tag\": \"alien\".",
+    "tag": "Themed weapon: alien, spirit or eldritch. It only drops on maps that list the tag in their \"gear\" (stages.json).",
+    "projectile.ring": "true = the projectiles fly out in a ring all around you instead of at a target (fan of knives).",
+    "implicit": "The weapon type's fixed modifier: on every item of that type, never rolled, never removed. text = the line shown on the item. stats = stats it grants (keys in characters.json). effect = {\"id\": ..., plus numbers}: bleedExplode (share = share of the monster's max health, radius: bleeding monsters explode when they die; this damage cannot cause bleeding), holyEvery (every: after every Nth attack the next attack sets monsters on holy fire), burstFire (every, shots, gap: every Nth attack fires shots times in a row, gap seconds apart), poisonDeathSpread (radius: monsters killed by your poison spread their poisons), dashBuff (buff from status_effects.json when you dash), bleedKillBuff (buff, duration, cooldown: killing a bleeding monster grants the buff), projChains (chains: every projectile jumps on to this many more monsters), pyroblast (every, mult, size, stun, bounces: the weapon fires one projectile at a time and every extra projectile gives it bounces more bounces instead; every Nth cast is a Greater Pyroblast with mult x the damage and size x the blast, stunning everything it hits for stun seconds; fireball weapons only), holyReaper (holy: holy fire you inflict while wielding it deals this many times the damage; faith: Empowered Faith from shrines lasts this many times as long; push: knockback of its melee slash). stacks: {\"buff\": id, \"falloff\": share}: while you wield it, that buff stacks instead of refreshing, each stack after the first falloff weaker than the one before (0.1 = 100%, 90%, 80%...).",
+    "class": "Weapon class: melee (scythes, swords, daggers, knives), firearm (shotguns, revolvers, the MP5, the flamethrower) or magic (flasks, blowguns, the Tome of Fireball, the Shrieking Scream). Its hits are tagged with it: melee hits are raised by Melee damage, firearm hits by Firearm damage, magic hits by Magic damage, and every weapon hit by Weapon damage and Damage bonus.",
+    "block": "Block rating every item of this weapon has (it grows with item level). Weapons that swing (melee) default to 100; firearms, magic and thrown weapons have none. Block chance = 0.75 x rating / (rating + 100): 100 = 37.5%."
+  },
+  "weapons": {
+    "scythe": {
+      "name": "Scythe",
+      "class": "melee",
+      "desc": "Sweeps around you and throws spinning scythes.",
+      "implicit": {
+        "text": "Holy fire you inflict while wielding it deals double damage, and Empowered Faith lasts twice as long. Its slash hurls monsters back (its thrown scythes don't).",
+        "effect": { "id": "holyReaper", "holy": 2, "faith": 2, "push": 7 }
+      },
+      "damage": [15, 25],
+      "attackSpeed": 1.0,
+      "crit": 0.05,
+      "dropWeight": 1,
+      "model": "scythe",
+      "pose": "scythe",
+      "aimRange": 16,
+      "sound": "swing",
+      "melee": { "arc": 150, "range": 3.1, "color": "#e8f4ff", "pitch": 1 },
+      "projectile": {
+        "kind": "scythe",
+        "count": 1,
+        "speed": 15,
+        "range": 13,
+        "pierce": 2,
+        "damageMult": 0.7
+      },
+      "perProjectile": 1,
+      "block": 100
+    },
+    "sword": {
+      "name": "Sword",
+      "class": "melee",
+      "desc": "Fast slashes that send out piercing waves.",
+      "implicit": {
+        "text": "Attacks always ricochet.",
+        "stats": { "ricochetChance": 1 }
+      },
+      "damage": [6, 10],
+      "attackSpeed": 1.5,
+      "crit": 0.1,
+      "dropWeight": 2,
+      "model": "sword",
+      "pose": "sword",
+      "aimRange": 16,
+      "sound": "swing",
+      "melee": { "arc": 115, "range": 3.5, "color": "#a8dcff", "pitch": 1.3 },
+      "projectile": {
+        "kind": "wave",
+        "count": 1,
+        "speed": 19,
+        "range": 9,
+        "pierce": 4,
+        "damageMult": 0.55
+      },
+      "perProjectile": 1,
+      "block": 100
+    },
+    "shotgun": {
+      "name": "Shotgun",
+      "class": "firearm",
+      "desc": "A cone of pellets with heavy knockback. Each extra projectile adds 2 pellets.",
+      "implicit": {
+        "text": "Every fifth attack, your next attack sets every monster it hits on holy fire.",
+        "effect": { "id": "holyEvery", "every": 5 }
+      },
+      "damage": [78, 82],
+      "attackSpeed": 0.5,
+      "crit": 0.06,
+      "dropWeight": 2,
+      "model": "shotgun",
+      "pose": "shotgun",
+      "aimRange": 16,
+      "sound": "shotgun",
+      "muzzle": 1.15,
+      "shake": 0.1,
+      "projectile": {
+        "kind": "pellet",
+        "count": 6,
+        "spread": 0.62,
+        "speed": 45,
+        "range": 11,
+        "pierce": 1,
+        "damageMult": 1,
+        "knockback": 2.6
+      },
+      "perProjectile": 2
+    },
+    "revolver": {
+      "name": "Revolver",
+      "class": "firearm",
+      "desc": "Fast long-range shots with a high base crit chance.",
+      "implicit": {
+        "text": "Every sixth attack, you fire six times in rapid succession.",
+        "effect": { "id": "burstFire", "every": 6, "shots": 6, "gap": 0.08 }
+      },
+      "damage": [40, 69],
+      "attackSpeed": 1.6,
+      "crit": 0.2,
+      "dropWeight": 2,
+      "model": "revolver",
+      "pose": "revolver",
+      "aimRange": 24,
+      "sound": "shot",
+      "muzzle": 0.7,
+      "projectile": {
+        "kind": "bullet",
+        "count": 1,
+        "speed": 30,
+        "range": 24,
+        "pierce": 1,
+        "damageMult": 1
+      },
+      "perProjectile": 1
+    },
+    "flask": {
+      "name": "Poison Flask",
+      "class": "magic",
+      "desc": "Lobbed flasks that leave toxic puddles.",
+      "implicit": {
+        "text": "+100% chance to poison. Monsters killed by your poison spread their poisons to everything within 1.5 meters.",
+        "stats": { "poisonChance": 1 },
+        "effect": { "id": "poisonDeathSpread", "radius": 1.5 }
+      },
+      "damage": [11, 19],
+      "attackSpeed": 0.8,
+      "crit": 0.01,
+      "dropWeight": 2,
+      "model": "flask",
+      "pose": "flask",
+      "aimRange": 16,
+      "sound": "throw",
+      "projectile": {
+        "kind": "flask",
+        "count": 1,
+        "speed": 12,
+        "range": 11,
+        "splash": 2.4,
+        "puddle": 3,
+        "damageMult": 1
+      },
+      "perProjectile": 1
+    },
+    "flamethrower": {
+      "name": "Flamethrower",
+      "class": "firearm",
+      "desc": "A short-range gout of alien fire that passes through everything. Deals elemental damage.",
+      "implicit": {
+        "text": "Your trinket has 2 charges and recharges twice as fast.",
+        "stats": { "trinketCharges": 1, "trinketCdr": 1 }
+      },
+      "damageType": "elemental",
+      "damage": [90, 100],
+      "attackSpeed": 3.0,
+      "crit": 0.05,
+      "dropWeight": 2,
+      "alien": true,
+      "model": "flamethrower",
+      "pose": "shotgun",
+      "aimRange": 9,
+      "sound": "flame",
+      "muzzle": 1.05,
+      "projectile": {
+        "kind": "flame",
+        "count": 2,
+        "spread": 0.45,
+        "speed": 13,
+        "range": 6.5,
+        "pierce": 99,
+        "damageMult": 0.5,
+        "knockback": 0.2
+      },
+      "perProjectile": 1
+    },
+    "mp5": {
+      "name": "MP5",
+      "class": "firearm",
+      "desc": "Sprays fast bullets with a little kick.",
+      "implicit": {
+        "text": "Dashing grants Trigger Happy: +100% attack speed for 3 seconds.",
+        "effect": { "id": "dashBuff", "buff": "trigger_happy" }
+      },
+      "damage": [1, 128],
+      "attackSpeed": 3.0,
+      "crit": 0.09,
+      "dropWeight": 2,
+      "alien": true,
+      "model": "mp5",
+      "pose": "shotgun",
+      "aimRange": 20,
+      "sound": "smg",
+      "muzzle": 0.95,
+      "projectile": {
+        "kind": "bullet",
+        "count": 1,
+        "speed": 70,
+        "range": 20,
+        "pierce": 1,
+        "damageMult": 1,
+        "jitter": 0.07
+      },
+      "perProjectile": 1
+    },
+    "blowgun": {
+      "name": "Poison Dart Blower",
+      "class": "magic",
+      "desc": "Fast poison darts that bounce from monster to monster.",
+      "implicit": {
+        "text": "+100% chance to poison, and always ricochets.",
+        "stats": { "poisonChance": 1, "ricochetChance": 1 }
+      },
+      "damage": [16, 26],
+      "attackSpeed": 1.5,
+      "crit": 0.05,
+      "dropWeight": 2,
+      "tag": "spirit",
+      "model": "blowgun",
+      "pose": "revolver",
+      "aimRange": 20,
+      "sound": "dart",
+      "muzzle": 0.95,
+      "projectile": {
+        "kind": "dart",
+        "count": 1,
+        "speed": 25,
+        "range": 20,
+        "pierce": 1,
+        "damageMult": 1,
+        "jitter": 0.03
+      },
+      "perProjectile": 1
+    },
+    "obsidian": {
+      "name": "Obsidian Blade",
+      "class": "melee",
+      "desc": "Volcanic glass: wide slashes and shards that cut through crowds, with a very high base crit chance.",
+      "implicit": {
+        "text": "Killing a bleeding monster grants Bloodlust for 2 seconds (5 second cooldown). While you wield it your Bloodlust stacks: the second stack is 90% as strong, the third 80%, and so on.",
+        "effect": {
+          "id": "bleedKillBuff",
+          "buff": "bloodlust",
+          "duration": 2,
+          "cooldown": 5
+        },
+        "stacks": { "buff": "bloodlust", "falloff": 0.1 }
+      },
+      "damage": [20, 32],
+      "attackSpeed": 1.2,
+      "crit": 0.15,
+      "dropWeight": 2,
+      "tag": "spirit",
+      "model": "obsidian",
+      "pose": "sword",
+      "aimRange": 16,
+      "sound": "swing",
+      "melee": { "arc": 140, "range": 3.6, "color": "#c08aff", "pitch": 0.85 },
+      "projectile": {
+        "kind": "wave",
+        "count": 1,
+        "speed": 18,
+        "range": 8,
+        "pierce": 5,
+        "damageMult": 0.5
+      },
+      "perProjectile": 1,
+      "block": 100
+    },
+    "dagger": {
+      "name": "Serrated Dagger",
+      "class": "melee",
+      "desc": "Quick stabs that open wounds, and a thrown knife with each one.",
+      "implicit": {
+        "text": "Always causes bleeding. Bleeding monsters explode when they die, dealing 50% of their max health to everything within 1.2 meters.",
+        "stats": { "bleedChance": 1 },
+        "effect": { "id": "bleedExplode", "share": 0.5, "radius": 1.2 }
+      },
+      "damage": [33, 66],
+      "attackSpeed": 3.0,
+      "crit": 0.08,
+      "dropWeight": 2,
+      "tag": "spirit",
+      "model": "dagger",
+      "pose": "sword",
+      "aimRange": 14,
+      "sound": "swing",
+      "melee": { "arc": 100, "range": 2.7, "color": "#ffd0c8", "pitch": 1.5 },
+      "projectile": {
+        "kind": "knife",
+        "count": 1,
+        "speed": 22,
+        "range": 8,
+        "pierce": 1,
+        "damageMult": 0.4
+      },
+      "perProjectile": 1,
+      "block": 100
+    },
+    "fan": {
+      "name": "Fan of Knives",
+      "class": "melee",
+      "desc": "Throws a ring of knives in every direction. Each extra projectile adds 2 knives.",
+      "implicit": {
+        "text": "+5 projectile chains: every knife jumps on to 5 more monsters.",
+        "effect": { "id": "projChains", "chains": 5 }
+      },
+      "damage": [12, 18],
+      "attackSpeed": 0.9,
+      "crit": 0.07,
+      "dropWeight": 2,
+      "tag": "spirit",
+      "model": "fan",
+      "pose": "flask",
+      "aimRange": 14,
+      "sound": "throw",
+      "projectile": {
+        "kind": "knife",
+        "count": 8,
+        "ring": true,
+        "speed": 18,
+        "range": 10,
+        "pierce": 2,
+        "damageMult": 1
+      },
+      "perProjectile": 2
+    },
+    "tome": {
+      "name": "Tome of Fireball",
+      "class": "magic",
+      "damageType": "elemental",
+      "desc": "Hurls fireballs that burst on the first monster they touch, burning everything around it. Deals elemental damage.",
+      "implicit": {
+        "text": "Fires one fireball at a time: every extra projectile gives it 3 more bounces instead, leaping from blast to blast. Every fifth cast hurls a Greater Pyroblast: twice the damage, a blast almost twice as wide, and it stuns everything it hits for 0.5 seconds. It bounces like any fireball.",
+        "effect": {
+          "id": "pyroblast",
+          "every": 5,
+          "mult": 2,
+          "size": 1.8,
+          "stun": 0.5,
+          "bounces": 3
+        }
+      },
+      "damage": [120, 186],
+      "attackSpeed": 1.0,
+      "crit": 0.06,
+      "dropWeight": 2,
+      "tag": "eldritch",
+      "model": "tome",
+      "pose": "tome",
+      "aimRange": 18,
+      "sound": "fireball",
+      "muzzle": 0.55,
+      "projectile": {
+        "kind": "fireball",
+        "count": 1,
+        "speed": 15,
+        "range": 18,
+        "pierce": 1,
+        "damageMult": 1,
+        "splash": 8.0,
+        "knockback": 1.5
+      },
+      "perProjectile": 1
+    },
+    "shriek": {
+      "name": "Shrieking Scream",
+      "class": "magic",
+      "desc": "You burst with a scream: a shockwave that hits everything within 5.5 meters and hurls it away. Each extra projectile adds an echo at half strength.",
+      "implicit": {
+        "text": "Every scream slows everything it hits.",
+        "stats": { "slowChance": 1 }
+      },
+      "damage": [50, 80],
+      "attackSpeed": 0.6,
+      "crit": 0.05,
+      "dropWeight": 2,
+      "tag": "eldritch",
+      "model": "screamskull",
+      "pose": "flask",
+      "aimRange": 7,
+      "sound": "shriek",
+      "projectile": {
+        "kind": "nova",
+        "count": 1,
+        "range": 5.5,
+        "pierce": 99,
+        "damageMult": 1,
+        "knockback": 6
+      },
+      "perProjectile": 1
+    }
+  }
+}

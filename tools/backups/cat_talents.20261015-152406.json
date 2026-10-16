@@ -1,0 +1,1141 @@
+{
+  "_help": {
+    "about": "The Cat's talent tree. It starts at the top and grows downward: from the start node four paths lead down (Witchcraft = poison, bleed and lightning; Nine Lives = health, block and healing; Prowler = trinkets, movement and luck; Reaper = weapon damage, crits and stuns), and every talent unlocks from the row above it. Talents last for one run only: the tree resets when a run ends. Entries with \"disabled\": true are skipped.",
+    "currencies": "totem = Totem of Power (one per altar claimed, at most 5 per level). spoon = Alien Spoon (one per alien invasion repelled, at most 1 per level); spoons buy the alien talents in the \"alien\" section below. Each talent costs one currency.",
+    "groups": "Colors and names for areas of the tree: id, name, color. Purely visual; points spent per group are shown at the top.",
+    "talents.id": "Unique id.",
+    "talents.x / y": "Position on the tree grid (x grows right, y grows down). The start node sits at the top; keep every talent below the ones it requires so the tree reads top to bottom. Any whole numbers work; the view sizes itself to fit.",
+    "talents.group": "Group id (sets the color).",
+    "talents.start": "true = the free starting node. It is always learned and its stats always apply.",
+    "talents.big": "true = a big talent: drawn larger. Big talents usually carry an effect with a downside.",
+    "talents.currency": "totem (default) or spoon.",
+    "talents.cost": "Currency per rank. Every talent costs 1 (a Totem of Power, or an Alien Spoon for alien talents).",
+    "talents.maxRank": "How many times it can be learned (default 1).",
+    "talents.stats": "Stats gained per rank. Stat keys are listed in characters.json.",
+    "talents.effect": "Optional special effect: {\"id\": ..., plus any numbers to override}. Effects and their numbers: ragingBull (chance, buff, extend, bleedMult; you can never poison), experiencedPrecision (doublecritMult; crits cannot cause bleeding), livingFlesh (maxHpMult, regen = share of max health per second), bombBattalion (power = explosion damage as a multiple of your max health, radius, blockCap), chainLightning (chainsMult, elemental = bonus elemental damage per ricochet, beam = seconds the ray stays on screen), dashBuff (buff granted when you dash), slowAura (radius, power), lastStand (threshold = share of max health, radius, stun seconds, cooldown), rareShield (share of max health, duration), rootPoison (stacks), bleedBlock (near, radius, cooldown), healBurst (share, mult, radius), doubleStrike (every), trinketOnKill (seconds, cooldown), multiPoison (poison chance above 100% applies extra poisons), hitShield (share of max health, duration, cooldown), hitTrinketHaste (mult = extra trinket recovery, duration, cooldown), trinketCdBuff (move, armor = increased armor while the trinket recharges), blockBloodlust (buff, duration, cooldown), bleedCrit, killFrenzy (kills, recent, move, attackSpeed), fifthStrike (every, mult), hitBlock (recent, block), trinketEndBlast (radius, damage and burn as shares of your hit damage), speedCrit, lightningProc (chance, chains, damage = share of the hit per jump), meleeShield (share of max health, duration, every), bossKillBloodlust (kills, window, buff, duration), swordBlock (per kill, cap, recent, weapons = weapon ids that count as swords), lowHpTimeStop (threshold, cooldown, trinket = the trinket whose effect goes off), crowdArmor (count, radius, armor = increased armor), festeringBleed (duration = bleed duration multiplier, ramp = damage multiplier in a bleed's last second, rising every second), poisonBurst (mult, cooldown, maxRadius), fifthRicochet (every, bounces), fishFeast (more = extra fish healing), holyLeech (share of holy damage turned into a shield, cap = largest shield as a share of max health, duration), ccShield (share, duration, cooldown), trinketInvuln (duration), freeUpgrade (every = seconds of fighting per free workbench upgrade), trinketBlast (mult, radius, cooldown), dungeonShield (share, duration), fifthCrit (every), bossBleedSpread (range), poisonMaxHp (share = share of your max health added to every poison stack's damage per second), poisonKillHeal (perStack = health healed per poison stack on a monster you kill), poisonReversal (healing on a poisoned monster damages it instead), riposte (mult = damage multiplier, area = added area, slow = attack speed lost for that attack, cooldown). Alien talents: baneOfLegends (more, execute), thirst (heal, cooldown), zealotry (perKill, cap, recently, cooldown), unendingZealotry (cap, thirstCdr), burningBridges (damage = share of max health per tick, tick, every, life, radius), fortitude, infusedFlesh (share), divineShield (threshold, radius, duration, cooldown), savageHits, phlebotomist (chance, radius), experimenting, crippling (chance, slow, trail). Buff ids are in status_effects.json.",
+    "talents.text": "What the effect does, shown in the tooltip.",
+    "talents.downside": "The effect's drawback, shown in red in the tooltip.",
+    "talents.icon": "Pixel icon. The list is in upgrades.json.",
+    "talents.requiresAny": "Learn at least one of these first. This is how the tree connects: link each node to its neighbours.",
+    "talents.requires": "Learn all of these first, e.g. [\"sharp_claws\"], or {\"id\": \"sharp_claws\", \"rank\": 3} for a higher rank.",
+    "talents.minSpent": "Points (of any currency) that must already be spent in the tree this run.",
+    "talents.desc": "Flavor text.",
+    "lines": "A line is drawn from every talent listed in requires or requiresAny.",
+    "talents.rules": "Talents made without code (the talent creator: tools/talents, served by python3 tools/serve.py). A list of {\"when\": trigger, \"chance\", \"every\" (every Nth time), \"cooldown\", \"if\": [conditions], \"then\": [actions]}. A condition is {\"check\": id, \"not\": true to flip it, ...its numbers}, an action {\"do\": id, ...its numbers}. Any number can be a list with one value per rank ([1, 1.5, 2]). Triggers: hit, crit, kill, attack, damaged, block, lowHealth (threshold), heal, dash, trinket, levelUp, bleed, poison, status (status), interval (seconds), still (seconds), distance (meters), dayStart, dawn, bossAppears. Conditions: targetStatus, targetKind, targetHealth, targetEnemy, targetDistance, wasCrit, myHealth, myShield, myBuff, myStatus, moving, enemiesNear, weaponClass, weapon, damageType, trinketReady, dashReady, killsRecent, hitRecently, bossAlive, level, map, dayTime, inDungeon, darkness, chance. Actions: explode, strike, lightning, projectiles, status, poison, bleed, holyFire, spread, zone, knockback, execute, heal, shield, buff (an id, or a new buff written in place: {name, icon, color, duration, stats}), invulnerable, cleanse, dashCharge, dash, trinketCooldown, trinketEffect, extraAttack, empower, resetCooldowns, drop, gain, magnet, text, sound, flash, shake, ring. Every number and its default is listed in js/rules.js; the talent creator shows them all.",
+    "talents.conditionalStats": "Stats that only count while conditions hold: [{\"if\": [conditions], \"stats\": {stat: value per rank}}]. Checked five times a second.",
+    "talents.hitBonus": "More damage on weapon hits that pass conditions: [{\"if\": [conditions], \"more\": 0.3}] (0.3 = 30% more, multiplying everything else).",
+    "talents.text (rules)": "Talents with rules and no text get one written from their rules."
+  },
+  "groups": [
+    { "id": "core", "name": "Legacy", "color": "#f1e6cf" },
+    { "id": "witchcraft", "name": "Defiled", "color": "#b86cff" },
+    { "id": "ninelives", "name": "Nine Lives", "color": "#f2c04e" },
+    { "id": "prowler", "name": "Ingenuity", "color": "#4fa6ff" },
+    { "id": "reaper", "name": "Claws", "color": "#e0453a" },
+    { "id": "chain", "name": "Collateral", "color": "#ed790e" }
+  ],
+  "talents": [
+    {
+      "id": "stray_cat",
+      "x": 8,
+      "y": 0,
+      "group": "core",
+      "start": true,
+      "name": "Stray Cat",
+      "icon": "paw",
+      "stats": { "maxHp": 25 },
+      "desc": "Where every barn cat begins."
+    },
+    {
+      "id": "stout_heart",
+      "x": 4,
+      "y": 0,
+      "group": "ninelives",
+      "name": "Stout Heart",
+      "icon": "shield",
+      "stats": { "maxHp": 50 },
+      "requiresAny": ["stray_cat"],
+      "effect": {
+        "id": "hitShield",
+        "share": 0.05,
+        "duration": 5,
+        "cooldown": 7
+      },
+      "text": "When you are hit, gain a shield worth 5% of your max health for 5 seconds. 7 second cooldown."
+    },
+    {
+      "id": "adrenaline_rush",
+      "x": 3,
+      "y": 6,
+      "group": "prowler",
+      "name": "Adrenaline Rush",
+      "icon": "pocketwatch",
+      "requiresAny": ["restless_waiting"],
+      "effect": {
+        "id": "hitTrinketHaste",
+        "mult": 1,
+        "duration": 3,
+        "cooldown": 5
+      },
+      "text": "When you are hit, your trinket recharges 100% faster for 3 seconds. 5 second cooldown."
+    },
+    {
+      "id": "flurry",
+      "x": 8,
+      "y": 2,
+      "group": "reaper",
+      "name": "Flurry",
+      "icon": "blades",
+      "requiresAny": ["stray_cat"],
+      "effect": { "id": "doubleStrike", "every": 5 },
+      "text": "Every 5th attack strikes twice.",
+      "desc": "Paw, paw, paw, paw, PAW PAW."
+    },
+    {
+      "id": "open_wounds",
+      "x": 14,
+      "y": 6,
+      "group": "witchcraft",
+      "name": "Open Wounds",
+      "icon": "blood",
+      "requiresAny": ["raging_bull"],
+      "effect": { "id": "bleedCrit" },
+      "text": "Your hits always crit against bleeding monsters."
+    },
+    {
+      "id": "battle_fury",
+      "x": 0,
+      "y": -1,
+      "group": "ninelives",
+      "name": "Battle Fury",
+      "icon": "bloodlust",
+      "requiresAny": ["barn_reflexes"],
+      "effect": {
+        "id": "blockBloodlust",
+        "buff": "bloodlust",
+        "duration": 3,
+        "cooldown": 10
+      },
+      "text": "Blocking grants you Bloodlust for 3 seconds. 10 second cooldown."
+    },
+    {
+      "id": "restless_waiting",
+      "x": 4,
+      "y": 7,
+      "group": "prowler",
+      "name": "Restless Waiting",
+      "icon": "boot",
+      "requiresAny": ["tinkerer"],
+      "effect": { "id": "trinketCdBuff", "move": 0.2, "armor": 0.3 },
+      "text": "While your trinket is recharging: +20% movement speed and +30% increased armor."
+    },
+    {
+      "id": "killing_spree",
+      "x": 6,
+      "y": 5,
+      "group": "prowler",
+      "name": "Killing Spree",
+      "icon": "paw",
+      "requiresAny": ["light_step"],
+      "effect": {
+        "id": "killFrenzy",
+        "kills": 5,
+        "recent": 4,
+        "move": 0.1,
+        "attackSpeed": 0.1
+      },
+      "text": "While you have killed at least 5 monsters in the last 4 seconds: +10% movement speed and +10% attack speed."
+    },
+    {
+      "id": "reapers_harvest",
+      "x": 7,
+      "y": 3,
+      "group": "reaper",
+      "name": "Reaper's Harvest",
+      "icon": "blades",
+      "cost": 1,
+      "maxRank": 2,
+      "stats": { "projectiles": 1 },
+      "requiresAny": ["flurry"],
+      "desc": "One more blade for the field."
+    },
+    {
+      "id": "crushing_blow",
+      "x": 13,
+      "y": 4,
+      "group": "reaper",
+      "name": "Crushing Blow",
+      "icon": "pickaxe",
+      "requiresAny": ["restless_paws", "killer_instinct"],
+      "effect": { "id": "fifthStrike", "every": 5, "mult": 2 },
+      "text": "Every 5th attack, your next hit always stuns and deals double damage."
+    },
+    {
+      "id": "barbed_claws",
+      "x": 13,
+      "y": 2,
+      "group": "witchcraft",
+      "name": "Barbed Claws",
+      "icon": "blood",
+      "stats": { "bleedChance": 0.15 },
+      "requiresAny": ["flurry"]
+    },
+    {
+      "id": "bad_omen",
+      "x": 15,
+      "y": 9,
+      "group": "chain",
+      "name": "Bad Omen",
+      "icon": "zigzag",
+      "stats": { "ricochetChance": 0.25 },
+      "requiresAny": ["yarn_ball"],
+      "desc": "Black cat crossing. Twice."
+    },
+    {
+      "id": "raging_bull",
+      "x": 15,
+      "y": 4,
+      "group": "witchcraft",
+      "big": true,
+      "name": "Raging Bull",
+      "icon": "blood",
+      "cost": 1,
+      "requiresAny": ["barbed_claws", "crushing_blow"],
+      "minSpent": 3,
+      "effect": { "id": "ragingBull" },
+      "text": "Killing a bleeding monster has a 30% chance to grant Raging Bull for 10 seconds: every bleed you have inflicted lasts 5 seconds longer, and bleeds deal double damage.",
+      "downside": "You can never poison."
+    },
+    {
+      "id": "thorned_guard",
+      "x": 16,
+      "y": 6,
+      "group": "witchcraft",
+      "name": "Thorned Guard",
+      "icon": "blood",
+      "requiresAny": ["raging_bull", "festering_wounds"],
+      "effect": { "id": "bleedBlock", "near": 3, "radius": 5, "cooldown": 15 },
+      "text": "Blocking an attack takes the strongest bleed on a monster within 3 meters of you and spreads it to every monster within 5 meters of that one. 15 second cooldown."
+    },
+    {
+      "id": "chain_lightning",
+      "x": 17,
+      "y": 13,
+      "group": "witchcraft",
+      "big": true,
+      "name": "Chain Lightning",
+      "icon": "zigzag",
+      "cost": 1,
+      "minSpent": 3,
+      "effect": { "id": "chainLightning" },
+      "text": "Ricochets become rays of lightning that strike instantly, and each one deals 50% bonus elemental damage.",
+      "downside": "Your ricochet bounces are halved."
+    },
+    {
+      "id": "witchs_familiar",
+      "x": 16,
+      "y": 11,
+      "group": "chain",
+      "name": "Witch's Familiar",
+      "icon": "chain",
+      "cost": 1,
+      "stats": { "chains": 2, "ricochetChance": 0.25 },
+      "requiresAny": ["bad_omen"],
+      "minSpent": 5
+    },
+    {
+      "id": "thick_fur",
+      "x": -6,
+      "y": 3,
+      "group": "ninelives",
+      "name": "Thick Fur",
+      "icon": "heart",
+      "stats": { "maxHpInc": 0.2 },
+      "requiresAny": ["barn_reflexes"],
+      "desc": "Winter coat, all year round."
+    },
+    {
+      "id": "guarded",
+      "x": 2,
+      "y": 2,
+      "group": "ninelives",
+      "name": "Guarded",
+      "icon": "door",
+      "requiresAny": ["barn_reflexes"],
+      "effect": { "id": "hitBlock", "recent": 4, "block": 0.1 },
+      "text": "If you were hit in the last 4 seconds: +10% block chance."
+    },
+    {
+      "id": "barn_reflexes",
+      "x": 0,
+      "y": 1,
+      "group": "ninelives",
+      "name": "Barn Cat Reflexes",
+      "icon": "door",
+      "stats": { "blockRating": 40 },
+      "requiresAny": ["stout_heart"]
+    },
+    {
+      "id": "hearthside_nap",
+      "x": -2,
+      "y": 4,
+      "group": "ninelives",
+      "name": "Hearthside Nap",
+      "icon": "moon",
+      "stats": { "regen": 5 },
+      "requiresAny": ["thick_fur", "barn_reflexes"],
+      "desc": "Five minutes. Just five."
+    },
+    {
+      "id": "tough_hide",
+      "x": -1,
+      "y": 4,
+      "group": "ninelives",
+      "name": "Tough Hide",
+      "icon": "shield",
+      "stats": { "armorInc": 0.4 },
+      "requiresAny": ["barn_reflexes", "hearthside_nap"]
+    },
+    {
+      "id": "curl_up",
+      "x": -2,
+      "y": 0,
+      "group": "ninelives",
+      "name": "Curl Up",
+      "icon": "shieldheal",
+      "stats": { "blockHeal": 0.05 },
+      "requiresAny": ["barn_reflexes"]
+    },
+    {
+      "id": "saucer_of_cream",
+      "x": -3,
+      "y": 6,
+      "group": "ninelives",
+      "name": "Saucer of Cream",
+      "icon": "milk",
+      "stats": { "lifeOnKill": 1 },
+      "requiresAny": ["hearthside_nap"],
+      "requires": ["living_flesh"]
+    },
+    {
+      "id": "tangleroot",
+      "x": 0,
+      "y": 4,
+      "group": "ninelives",
+      "name": "Tangleroot",
+      "icon": "root",
+      "stats": { "rootChance": 0.2 },
+      "requiresAny": ["barn_reflexes"],
+      "desc": "The garden fights for you."
+    },
+    {
+      "id": "unshakeable",
+      "x": -3,
+      "y": 10,
+      "group": "ninelives",
+      "name": "Unshakeable",
+      "icon": "anchor",
+      "stats": { "statusResist": 0.4 },
+      "requiresAny": ["warm_milk", "hiss"],
+      "desc": "Cats land on their feet."
+    },
+    {
+      "id": "living_flesh",
+      "x": -8,
+      "y": 5,
+      "group": "ninelives",
+      "big": true,
+      "name": "Living Flesh",
+      "icon": "heart",
+      "cost": 1,
+      "requires": ["thick_fur"],
+      "minSpent": 3,
+      "effect": { "id": "livingFlesh" },
+      "text": "You regenerate 10% of your max health every second.",
+      "downside": "Your max health is cut in half."
+    },
+    {
+      "id": "bomb_battalion",
+      "x": -1,
+      "y": 13,
+      "group": "ninelives",
+      "big": true,
+      "name": "Bomb Battalion",
+      "icon": "bomb",
+      "cost": 1,
+      "requiresAny": ["matted_fur"],
+      "minSpent": 3,
+      "effect": { "id": "bombBattalion" },
+      "text": "Every time you block, you explode for 1000% of your max health in a huge radius.",
+      "downside": "Your block chance cannot exceed 25%."
+    },
+    {
+      "id": "hiss",
+      "x": -2,
+      "y": 8,
+      "group": "ninelives",
+      "name": "Hiss!",
+      "icon": "stars",
+      "requiresAny": ["trophy_hunter"],
+      "effect": {
+        "id": "lastStand",
+        "threshold": 0.5,
+        "radius": 5,
+        "stun": 5,
+        "cooldown": 120
+      },
+      "text": "When you fall below 50% health, every monster within 5 meters is stunned for 5 seconds. 2 minute cooldown."
+    },
+    {
+      "id": "warm_milk",
+      "x": -4,
+      "y": 8,
+      "group": "ninelives",
+      "name": "Warm Milk",
+      "icon": "milk",
+      "stats": { "healTaken": 0.3 },
+      "requiresAny": ["saucer_of_cream", "catch_of_the_day"],
+      "desc": "Straight from the barn."
+    },
+    {
+      "id": "trophy_hunter",
+      "x": -1,
+      "y": 6,
+      "group": "ninelives",
+      "name": "Trophy Hunter",
+      "icon": "shield",
+      "requiresAny": ["tough_hide", "thick_fur"],
+      "effect": { "id": "rareShield", "share": 0.2, "duration": 10 },
+      "text": "Killing a rare monster (elite, rare, invader or rare golem) shields you for 20% of your max health for 10 seconds, or until the shield breaks."
+    },
+    {
+      "id": "nettle_snare",
+      "x": 0,
+      "y": 5,
+      "group": "ninelives",
+      "name": "Nettle Snare",
+      "icon": "root",
+      "requiresAny": ["tangleroot"],
+      "effect": { "id": "rootPoison", "stacks": 5 },
+      "text": "Rooting a monster instantly poisons it 5 times, each stack based on your weapon damage."
+    },
+    {
+      "id": "purring_wrath",
+      "x": -6,
+      "y": 6,
+      "group": "ninelives",
+      "name": "Purring Wrath",
+      "icon": "heart",
+      "requiresAny": ["well_fed", "living_flesh"],
+      "effect": { "id": "healBurst", "share": 0.1, "mult": 10, "radius": 3 },
+      "text": "10% of the healing you receive is multiplied by 10 and dealt to every monster within 3 meters of you."
+    },
+    {
+      "id": "ninth_life",
+      "x": -4,
+      "y": 15,
+      "group": "ninelives",
+      "big": true,
+      "name": "Ninth Life",
+      "icon": "skull",
+      "cost": 1,
+      "stats": { "extraLives": 1 },
+      "requiresAny": ["matted_fur"],
+      "minSpent": 5,
+      "desc": "Once per run, a killing blow leaves you at half health instead."
+    },
+    {
+      "id": "light_step",
+      "x": 5,
+      "y": 6,
+      "group": "prowler",
+      "name": "Light Step",
+      "icon": "boot",
+      "stats": { "moveMult": 0.15 },
+      "requiresAny": ["restless_waiting"]
+    },
+    {
+      "id": "divine_finale",
+      "x": 1,
+      "y": 6,
+      "group": "prowler",
+      "name": "Divine Finale",
+      "icon": "holycross",
+      "requiresAny": ["busy_paws"],
+      "effect": {
+        "id": "trinketEndBlast",
+        "radius": 5,
+        "damage": 1,
+        "burn": 1
+      },
+      "text": "When your trinket's effect ends, you explode in a 5 meter radius, setting every monster hit on holy fire."
+    },
+    {
+      "id": "feline_swiftness",
+      "x": 4,
+      "y": 12,
+      "group": "prowler",
+      "name": "Feline Swiftness",
+      "icon": "feather",
+      "requiresAny": ["restless_waiting"],
+      "effect": { "id": "dashBuff", "buff": "feline_swiftness" },
+      "text": "Dashing grants Feline Swiftness for 5 seconds: +15% movement speed."
+    },
+    {
+      "id": "hunters_momentum",
+      "x": 6,
+      "y": 11,
+      "group": "prowler",
+      "big": true,
+      "name": "Hunter's Momentum",
+      "icon": "feather",
+      "requiresAny": ["feline_focus", "feline_swiftness"],
+      "effect": { "id": "speedCrit" },
+      "text": "Your bonus movement speed also counts as increased crit chance (+20% movement speed = +20% increased crit chance)."
+    },
+    {
+      "id": "shadow_leap",
+      "x": 5,
+      "y": 8,
+      "group": "prowler",
+      "name": "Shadow Leap",
+      "icon": "paw",
+      "maxRank": 2,
+      "stats": { "dashStrike": 1.5 },
+      "requiresAny": ["feline_swiftness", "light_step"],
+      "desc": "Dashing through monsters claws them on the way past."
+    },
+    {
+      "id": "second_thoughts",
+      "x": 4,
+      "y": 14,
+      "group": "prowler",
+      "name": "Second Thoughts",
+      "icon": "dice",
+      "stats": { "rerolls": 3 },
+      "requiresAny": ["feline_swiftness"]
+    },
+    {
+      "id": "quick_study",
+      "x": 3,
+      "y": 14,
+      "group": "prowler",
+      "name": "Quick Study",
+      "icon": "star",
+      "stats": { "xpGain": 0.2 },
+      "requiresAny": ["feline_swiftness", "second_thoughts"]
+    },
+    {
+      "id": "cold_shoulder",
+      "x": 2,
+      "y": 12,
+      "group": "ninelives",
+      "name": "Cold Shoulder",
+      "icon": "snail",
+      "requiresAny": ["feline_swiftness"],
+      "effect": { "id": "slowAura", "radius": 5, "power": 0.1 },
+      "text": "Monsters near you are slowed by 10%.",
+      "desc": "A cold stare that sticks."
+    },
+    {
+      "id": "lucky_paw",
+      "x": 5,
+      "y": 14,
+      "group": "prowler",
+      "name": "Lucky Paw",
+      "icon": "clover",
+      "stats": { "luck": 25 },
+      "requiresAny": ["second_thoughts", "feline_swiftness"]
+    },
+    {
+      "id": "busy_paws",
+      "x": 2,
+      "y": 6,
+      "group": "prowler",
+      "name": "Busy Paws",
+      "icon": "pocketwatch",
+      "requiresAny": ["adrenaline_rush"],
+      "effect": { "id": "trinketOnKill", "seconds": 1, "cooldown": 2 },
+      "text": "Each monster you kill takes 1 second off your trinket's cooldown (at most once every 2 seconds).",
+      "desc": "Always fiddling with something."
+    },
+    {
+      "id": "double_pounce",
+      "x": 6,
+      "y": 7,
+      "group": "prowler",
+      "big": true,
+      "name": "Double Pounce",
+      "icon": "boot",
+      "stats": { "dashCharges": 1 },
+      "requiresAny": ["shadow_leap"],
+      "desc": "Why jump once?"
+    },
+    {
+      "id": "curiosity",
+      "x": 4,
+      "y": 16,
+      "group": "prowler",
+      "big": true,
+      "name": "Curiosity",
+      "icon": "cards",
+      "cost": 1,
+      "stats": { "choices": 1 },
+      "requiresAny": ["quick_study", "second_thoughts", "lucky_paw"],
+      "minSpent": 5,
+      "desc": "Every level up shows one more blessing."
+    },
+    {
+      "id": "sharp_claws",
+      "x": 9,
+      "y": 4,
+      "group": "reaper",
+      "name": "Sharp Claws",
+      "icon": "sword",
+      "stats": { "dmgMult": 0.2 },
+      "requiresAny": ["flurry"],
+      "desc": "The fence post out back has seen better days."
+    },
+    {
+      "id": "restless_paws",
+      "x": 11,
+      "y": 3,
+      "group": "reaper",
+      "name": "Restless Paws",
+      "icon": "bolt",
+      "stats": { "atkSpeed": 0.2 },
+      "requiresAny": ["flurry"],
+      "desc": "Never still, never bored."
+    },
+    {
+      "id": "feline_focus",
+      "x": 7,
+      "y": 9,
+      "group": "reaper",
+      "name": "Feline Focus",
+      "icon": "crosshair",
+      "stats": { "weaponCrit": 0.05 },
+      "requiresAny": ["precise_kitten"],
+      "desc": "Stare. Wiggle. Strike."
+    },
+    {
+      "id": "golem_breaker",
+      "x": 11,
+      "y": 7,
+      "group": "reaper",
+      "name": "Golem Breaker",
+      "icon": "pickaxe",
+      "stats": { "bossDmg": 0.5 },
+      "requiresAny": ["sharp_claws"],
+      "desc": "Stone cracks like any other bone."
+    },
+    {
+      "id": "go_for_the_throat",
+      "x": 9,
+      "y": 10,
+      "group": "reaper",
+      "name": "Go for the Throat",
+      "icon": "burst",
+      "stats": { "critMult": 0.5 },
+      "requiresAny": ["feline_focus", "open_wounds", "killer_instinct"]
+    },
+    {
+      "id": "experienced_precision",
+      "x": 8,
+      "y": 11,
+      "group": "reaper",
+      "big": true,
+      "name": "Experienced Precision",
+      "icon": "crosshair",
+      "cost": 1,
+      "requiresAny": ["feline_focus"],
+      "minSpent": 3,
+      "effect": { "id": "experiencedPrecision" },
+      "text": "Crit chance above 100% becomes the chance to Doublecrit, dealing your crit damage twice.",
+      "downside": "Your critical strikes cannot cause bleeding."
+    },
+    {
+      "id": "kick_while_down",
+      "x": 12,
+      "y": 6,
+      "group": "reaper",
+      "name": "Kick Them While They're Down",
+      "icon": "stars",
+      "stats": { "stunnedDmg": 0.25 },
+      "requiresAny": ["crushing_blow"],
+      "desc": "Cats don't fight fair."
+    },
+    {
+      "id": "storm_caller",
+      "x": 15,
+      "y": 13,
+      "group": "witchcraft",
+      "name": "Storm Caller",
+      "icon": "zigzag",
+      "requiresAny": ["chain_lightning", "springy_paws", "witchs_familiar"],
+      "effect": {
+        "id": "lightningProc",
+        "chance": 0.05,
+        "chains": 25,
+        "damage": 0.5
+      },
+      "text": "Your attacks have a 5% chance to loose a lightning bolt that always chains, jumping between 25 monsters. Each jump deals elemental damage and shocks."
+    },
+    {
+      "id": "iron_hide",
+      "x": 7,
+      "y": 5,
+      "group": "ninelives",
+      "name": "Iron Hide",
+      "icon": "shield",
+      "requiresAny": ["knighthood"],
+      "effect": {
+        "id": "meleeShield",
+        "share": 0.1,
+        "duration": 3,
+        "every": 10
+      },
+      "text": "While you wield a melee weapon, every 10 seconds you gain a shield worth 10% of your max health for 3 seconds."
+    },
+    {
+      "id": "giant_slayer",
+      "x": 12,
+      "y": 12,
+      "group": "reaper",
+      "name": "Giant Slayer's Frenzy",
+      "icon": "bloodlust",
+      "requiresAny": ["golem_breaker"],
+      "effect": {
+        "id": "bossKillBloodlust",
+        "kills": 3,
+        "window": 2,
+        "buff": "bloodlust",
+        "duration": 5
+      },
+      "text": "When you kill more than 2 bosses within 2 seconds, gain Bloodlust for 5 seconds."
+    },
+    {
+      "id": "swordsmans_guard",
+      "x": 7,
+      "y": 6,
+      "group": "ninelives",
+      "name": "Swordsman's Guard",
+      "icon": "sword",
+      "requiresAny": ["knighthood"],
+      "effect": {
+        "id": "swordBlock",
+        "per": 0.01,
+        "cap": 0.25,
+        "recent": 4,
+        "weapons": ["sword", "obsidian"]
+      },
+      "text": "While you wield a sword, +1% block chance for every monster you killed in the last 4 seconds, up to +25%."
+    },
+    {
+      "id": "borrowed_time",
+      "x": 2,
+      "y": 10,
+      "group": "prowler",
+      "name": "Borrowed Time",
+      "icon": "pocketwatch",
+      "requiresAny": ["sacred_ward", "pent_up_fury"],
+      "effect": {
+        "id": "lowHpTimeStop",
+        "threshold": 0.2,
+        "cooldown": 600,
+        "trinket": "pocketwatch"
+      },
+      "text": "When you fall below 20% health, Grandpa's Pocket Watch goes off on its own: time stops around you. 10 minute cooldown."
+    },
+    {
+      "id": "thick_of_it",
+      "x": -1,
+      "y": 10,
+      "group": "ninelives",
+      "name": "In the Thick of It",
+      "icon": "shield",
+      "requiresAny": ["trophy_hunter", "unshakeable"],
+      "effect": { "id": "crowdArmor", "count": 50, "radius": 5, "armor": 0.25 },
+      "text": "While at least 50 monsters are within 5 meters of you: +25% increased armor."
+    },
+    {
+      "id": "festering_wounds",
+      "x": 15,
+      "y": 7,
+      "group": "witchcraft",
+      "name": "Festering Wounds",
+      "icon": "blood",
+      "stats": { "bleedChance": 0.2 },
+      "requiresAny": ["open_wounds"],
+      "effect": { "id": "festeringBleed", "duration": 2, "ramp": 3 },
+      "text": "+20% bleed chance. Your bleeds last twice as long, and every second they hurt more: up to 3x damage in their last second.",
+      "desc": "It never closes. It only gets worse."
+    },
+    {
+      "id": "yarn_ball",
+      "x": 13,
+      "y": 8,
+      "group": "chain",
+      "name": "Ball of Yarn",
+      "icon": "zigzag",
+      "effect": { "id": "fifthRicochet", "every": 5, "bounces": 10 },
+      "text": "After every 5th attack, your next attack always ricochets, with +10 bounces.",
+      "desc": "Round and round it goes.",
+      "requiresAny": ["skilled_sniper"]
+    },
+    {
+      "id": "springy_paws",
+      "x": 14,
+      "y": 11,
+      "group": "chain",
+      "name": "Springy Paws",
+      "icon": "chain",
+      "stats": { "chains": 2 },
+      "requiresAny": ["bad_omen"],
+      "desc": "Everything bounces off a cat."
+    },
+    {
+      "id": "well_fed",
+      "x": -3,
+      "y": 3,
+      "group": "ninelives",
+      "name": "Well Fed",
+      "icon": "heart",
+      "stats": { "maxHpInc": 0.1 },
+      "requires": ["living_flesh", "thick_fur"],
+      "desc": "Second breakfast, third breakfast."
+    },
+    {
+      "id": "matted_fur",
+      "x": -3,
+      "y": 13,
+      "group": "ninelives",
+      "name": "Matted Fur",
+      "icon": "shield",
+      "stats": { "armorInc": 0.5 },
+      "requiresAny": ["thick_of_it", "unshakeable", "unbreakable"],
+      "desc": "Tangled, filthy, and surprisingly hard to bite through."
+    },
+    {
+      "id": "catch_of_the_day",
+      "x": -5,
+      "y": 1,
+      "group": "prowler",
+      "name": "Catch of the Day",
+      "icon": "fish",
+      "requiresAny": ["thick_fur"],
+      "effect": { "id": "fishFeast", "more": 0.5 },
+      "text": "Fish heal you for 50% more.",
+      "desc": "Fresh from the trough."
+    },
+    {
+      "id": "sanctified_hide",
+      "x": 0,
+      "y": 8,
+      "group": "ninelives",
+      "name": "Sanctified Hide",
+      "icon": "holycross",
+      "requiresAny": ["divine_finale", "trophy_hunter", "saucer_of_cream"],
+      "effect": { "id": "holyLeech", "share": 0.1, "cap": 0.25, "duration": 4 },
+      "text": "10% of the holy damage you deal (holy fire, holy explosions, holy ground) becomes a shield, up to 25% of your max health. It fades 4 seconds after you last feed it.",
+      "desc": "The light looks after its own."
+    },
+    {
+      "id": "unbreakable",
+      "x": -2,
+      "y": 14,
+      "group": "ninelives",
+      "name": "Unbreakable",
+      "icon": "shieldheal",
+      "requiresAny": ["hiss"],
+      "effect": {
+        "id": "ccShield",
+        "share": 0.3,
+        "duration": 6,
+        "cooldown": 60
+      },
+      "text": "Getting stunned or rooted gives you a shield of 30% of your max health for 6 seconds (1 minute cooldown).",
+      "desc": "Pin a cat down. See what happens."
+    },
+    {
+      "id": "plague_feast",
+      "x": 12,
+      "y": -2,
+      "group": "witchcraft",
+      "name": "Plague Feast",
+      "icon": "heart",
+      "effect": { "id": "poisonKillHeal", "perStack": 1 },
+      "text": "Killing a poisoned monster heals you 1 health for every poison stack on it.",
+      "desc": "Waste not."
+    },
+    {
+      "id": "riposte",
+      "x": 7,
+      "y": 7,
+      "group": "reaper",
+      "name": "Riposte",
+      "icon": "sword",
+      "requiresAny": ["knighthood"],
+      "effect": {
+        "id": "riposte",
+        "mult": 3,
+        "area": 1.5,
+        "slow": 0.5,
+        "cooldown": 15
+      },
+      "text": "Blocking charges your next attack: 3x damage and +150% area, but 50% less attack speed for it. 15 second cooldown.",
+      "desc": "Parry, then the reply."
+    },
+    {
+      "id": "sacred_ward",
+      "x": 1,
+      "y": 10,
+      "group": "prowler",
+      "name": "Sacred Ward",
+      "icon": "halo",
+      "requiresAny": ["like_clockwork"],
+      "effect": { "id": "trinketInvuln", "duration": 2 },
+      "text": "Using your trinket makes you invulnerable for 2 seconds.",
+      "desc": "Grandpa's things still protect you."
+    },
+    {
+      "id": "tinkerer",
+      "x": 4,
+      "y": 5,
+      "group": "prowler",
+      "name": "Tinkerer",
+      "icon": "hammer",
+      "effect": { "id": "freeUpgrade", "every": 120 },
+      "text": "Every 2 minutes of fighting you earn a free item level upgrade at the workbench.",
+      "desc": "Idle paws are the workbench's playthings.",
+      "requiresAny": ["stray_cat"]
+    },
+    {
+      "id": "pent_up_fury",
+      "x": 3,
+      "y": 10,
+      "group": "prowler",
+      "name": "Pent-Up Fury",
+      "icon": "burst",
+      "requiresAny": ["like_clockwork"],
+      "effect": {
+        "id": "trinketBlast",
+        "mult": 5,
+        "radius": 3,
+        "cooldown": 30
+      },
+      "text": "Using your trinket charges your next hit: it explodes for 500% of its damage around the monster (30 second cooldown).",
+      "desc": "Wound tight, let loose."
+    },
+    {
+      "id": "dungeon_delver",
+      "x": 1,
+      "y": 14,
+      "group": "prowler",
+      "name": "Dungeon Delver",
+      "icon": "stairs",
+      "requiresAny": ["trophy_hunter"],
+      "effect": { "id": "dungeonShield", "duration": 30, "share": 0.5 },
+      "text": "Going down into a dungeon gives you a shield of 50% of your max health for 30 seconds.",
+      "desc": "Cats are made for dark places."
+    },
+    {
+      "id": "killer_instinct",
+      "x": 11,
+      "y": 5,
+      "group": "reaper",
+      "name": "Killer Instinct",
+      "icon": "fang",
+      "requiresAny": ["restless_paws"],
+      "effect": { "id": "fifthCrit", "every": 5 },
+      "text": "Every 5th attack is always a critical hit.",
+      "desc": "Wait for it."
+    },
+    {
+      "id": "blood_inheritance",
+      "x": 13,
+      "y": 11,
+      "group": "reaper",
+      "name": "Blood Inheritance",
+      "icon": "bloodlust",
+      "requiresAny": ["golem_breaker", "open_wounds"],
+      "effect": { "id": "bossBleedSpread", "range": 30 },
+      "text": "When a boss dies bleeding, its bleed passes on to the nearest monster.",
+      "desc": "The big ones always leave something behind."
+    },
+    {
+      "id": "achieved_prey",
+      "x": 5,
+      "y": 10,
+      "group": "reaper",
+      "name": "Achieved Prey",
+      "icon": "blood",
+      "requiresAny": [{ "id": "shadow_leap", "rank": 2 }]
+    },
+    {
+      "id": "like_clockwork",
+      "x": 2,
+      "y": 8,
+      "group": "prowler",
+      "big": true,
+      "name": "Like Clockwork",
+      "icon": "hourglass",
+      "stats": { "trinketCharges": 1, "trinketCdr": 0.3 },
+      "requiresAny": ["divine_finale", "adrenaline_rush"]
+    },
+    {
+      "id": "knighthood",
+      "x": 8,
+      "y": 6,
+      "group": "reaper",
+      "name": "Knighthood",
+      "icon": "sword",
+      "requiresAny": ["sharp_claws"]
+    },
+    {
+      "id": "skilled_sniper",
+      "x": 10,
+      "y": 10,
+      "group": "chain",
+      "name": "Skilled sniper",
+      "icon": "gun",
+      "requiresAny": ["sharp_claws"]
+    },
+    {
+      "id": "precise_kitten",
+      "x": 9,
+      "y": 8,
+      "group": "reaper",
+      "name": "Precise kitten",
+      "icon": "zigzag",
+      "stats": { "critChance": 0.4 },
+      "requiresAny": ["sharp_claws"]
+    }
+  ],
+  "alien": {
+    "_help": "Alien talents: powerful talents with no tree, bought with Alien Spoons on the Alien Talents tab of the inventory (I). Pick them in any order; requires lists talents that must be learned first. group sets the column (weapon, survival, bleeding). effect, text, downside, icon and desc work like the tree's talents; effect numbers can be overridden here.",
+    "groups": [
+      { "id": "weapon", "name": "Weapon", "color": "#ffb05a" },
+      { "id": "survival", "name": "Survival", "color": "#8fd0ff" },
+      { "id": "bleeding", "name": "Bleeding", "color": "#ff5a4a" }
+    ],
+    "talents": [
+      {
+        "id": "bane_of_legends",
+        "group": "weapon",
+        "name": "Bane of Legends",
+        "icon": "crown",
+        "effect": { "id": "baneOfLegends", "more": 0.2, "execute": 0.1 },
+        "text": "20% more damage to bosses. Bosses that fall below 10% health are executed."
+      },
+      {
+        "id": "otherworldly_thirst",
+        "group": "weapon",
+        "name": "Otherworldly Thirst",
+        "icon": "fang",
+        "effect": { "id": "thirst", "heal": 0.1, "cooldown": 30 },
+        "text": "Your next attack heals you for 10% of your max health. 30 second cooldown."
+      },
+      {
+        "id": "zealotry",
+        "group": "weapon",
+        "name": "Zealotry",
+        "icon": "halo",
+        "effect": {
+          "id": "zealotry",
+          "perKill": 0.1,
+          "cap": 1,
+          "recently": 4,
+          "cooldown": 10
+        },
+        "text": "+10% attack speed for every monster you killed in the last 4 seconds, up to +100%.",
+        "downside": "Taking damage resets it and puts Zealotry on a 10 second cooldown."
+      },
+      {
+        "id": "unending_zealotry",
+        "group": "weapon",
+        "name": "Unending Zealotry",
+        "icon": "halo",
+        "requires": ["zealotry", "otherworldly_thirst"],
+        "effect": { "id": "unendingZealotry", "cap": 2, "thirstCdr": 0.5 },
+        "text": "Zealotry also grants the same amount of increased crit chance, and its cap rises to +200%. While Zealotry is active, Otherworldly Thirst recharges twice as fast."
+      },
+      {
+        "id": "burning_bridges",
+        "group": "survival",
+        "name": "Burning Bridges",
+        "icon": "flame",
+        "effect": { "id": "burningBridges", "damage": 0.06 },
+        "text": "You set the ground behind you on fire. Monsters in it burn for 6% of your max health 4 times a second, as elemental damage that cannot poison or bleed."
+      },
+      {
+        "id": "fortitude",
+        "group": "survival",
+        "name": "Fortitude",
+        "icon": "shield",
+        "effect": { "id": "fortitude" },
+        "text": "Your block chance also increases your max health by the same percentage."
+      },
+      {
+        "id": "infused_flesh",
+        "group": "survival",
+        "name": "Infused Flesh",
+        "icon": "heart",
+        "effect": { "id": "infusedFlesh", "share": 0.05 },
+        "text": "Your weapon deals 5% of your max health as extra elemental damage with every hit."
+      },
+      {
+        "id": "divine_shield",
+        "group": "survival",
+        "name": "Divine Shield",
+        "icon": "shieldheal",
+        "effect": {
+          "id": "divineShield",
+          "threshold": 0.2,
+          "radius": 3,
+          "duration": 5,
+          "cooldown": 6
+        },
+        "text": "Blocking a hit that would have taken more than 20% of your max health wreathes you in holy fire for 5 seconds: every second it deals the blocked damage to monsters within 3 meters. 6 second cooldown."
+      },
+      {
+        "id": "savage_hits",
+        "group": "bleeding",
+        "name": "Savage Hits",
+        "icon": "blood",
+        "effect": { "id": "savageHits" },
+        "text": "Your bleeds deal damage multiplied by your crit multiplier.",
+        "downside": "Only critical strikes can cause bleeding."
+      },
+      {
+        "id": "phlebotomist",
+        "group": "bleeding",
+        "name": "Phlebotomist",
+        "icon": "burst",
+        "effect": { "id": "phlebotomist", "chance": 0.1, "radius": 5 },
+        "text": "Bleeding monsters have a 10% chance to burst in a violent spray of blood when they die, spreading their bleed to every monster within 5 meters."
+      },
+      {
+        "id": "experimenting_on_humans",
+        "group": "bleeding",
+        "name": "Experimenting on Humans",
+        "icon": "flask",
+        "effect": { "id": "experimenting" },
+        "text": "Monsters that are both bleeding and poisoned are rooted until one of them wears off."
+      },
+      {
+        "id": "bleeding_from_the_ears",
+        "group": "bleeding",
+        "name": "Bleeding from the Ears",
+        "icon": "cripple",
+        "effect": {
+          "id": "crippling",
+          "chance": 0.1,
+          "slow": 0.7,
+          "trail": 0.1
+        },
+        "text": "Your bleeds have a 10% chance to cripple: the monster is slowed by 70% and leaves a trail of blood for as long as it bleeds. The trail hurts monsters in it for 10% of the bleed's damage."
+      }
+    ]
+  }
+}

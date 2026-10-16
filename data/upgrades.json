@@ -1,0 +1,304 @@
+{
+  "_help": {
+    "about": "Blessings offered on level up. Entries with \"disabled\": true are skipped.",
+    "id": "Unique id.",
+    "name": "Card title.",
+    "icon": "Pixel icon: poison, blood, flask, hourglass, heart, milk, door, shieldheal, blades, zigzag, chain, crosshair, burst, bomb, bolt, boot, sword, area, magnet, clover, totem, paw, skull, moon, dice, cards, shield, star, pickaxe, feather, snail, stars, root, anchor, ufo, spoon, crown, fang, halo, flame, cripple, bible, lantern, bloodlust, pocketwatch, scarecrow, fireflies, voodoo, dinnerbell.",
+    "stat": "The stat it raises. Stat keys are listed in characters.json.",
+    "values": "Amount per rarity: [common, rare, epic, legendary].",
+    "also": "Optional fixed stats added on every pick, whatever the rarity.",
+    "until": "Optional caps: only offered while each listed stat is below its value. Keen Eyes (critChance) is also held back once your crit chance reaches 100% (200% with Experienced Precision).",
+    "requiresAny": "Optional: only offered once at least one listed stat is above 0. weaponPoison counts as a stat here.",
+    "weight": "How often it is offered compared with others (default 1, 0 = never).",
+    "desc": "Card text. {v} = the value, {pct} = the value as a percentage, {s} = 's' unless the value is 1.",
+    "weaponClass": "Optional: only offered while you wield a weapon of this class (melee, firearm or magic; weapons.json \"class\")."
+  },
+  "blessings": [
+    {
+      "id": "poison",
+      "name": "Rusted blades",
+      "icon": "poison",
+      "stat": "poisonChance",
+      "values": [0.08, 0.1, 0.15, 0.25],
+      "until": { "poisonChance": 1 },
+      "desc": "Hits gain +{pct} chance to poison. Poison stacks and ticks for 4 seconds."
+    },
+    {
+      "id": "poisondmg",
+      "name": "Toxic Fertilizer",
+      "icon": "flask",
+      "stat": "poisonDmg",
+      "values": [0.1, 0.15, 0.2, 0.3],
+      "requiresAny": ["poisonChance", "weaponPoison"],
+      "desc": "+{pct} poison damage."
+    },
+    {
+      "id": "dot",
+      "name": "Lingering Rot",
+      "icon": "hourglass",
+      "stat": "dotDmg",
+      "values": [0.1, 0.15, 0.2, 0.3],
+      "requiresAny": ["poisonChance", "bleedChance", "weaponPoison"],
+      "desc": "+{pct} damage over time from poison and bleed."
+    },
+    {
+      "id": "bleed",
+      "name": "Serrated Edge",
+      "icon": "blood",
+      "stat": "bleedChance",
+      "values": [0.1, 0.2, 0.3, 0.4],
+      "until": { "bleedChance": 1 },
+      "desc": "Hits gain +{pct} chance to cause bleeding: heavy damage over 3 seconds."
+    },
+    {
+      "id": "hp",
+      "name": "Hearty Breakfast",
+      "icon": "heart",
+      "stat": "maxHp",
+      "values": [20, 40, 60, 100],
+      "desc": "+{v} max health, and heal that much right away."
+    },
+    {
+      "id": "regen",
+      "name": "Warm Milk",
+      "icon": "milk",
+      "stat": "regen",
+      "values": [3, 6, 9, 15],
+      "desc": "Regenerate +{v} health every 5 seconds.",
+      "weight": 0.3
+    },
+    {
+      "id": "block",
+      "name": "Barn Door Guard",
+      "icon": "door",
+      "stat": "blockRating",
+      "values": [15, 30, 45, 75],
+      "desc": "+{v} block rating. A block cancels the whole hit. Diminishing returns, capped at 75%.",
+      "weight": 0.3
+    },
+    {
+      "id": "blockheal",
+      "name": "Catnap Reflex",
+      "icon": "shieldheal",
+      "stat": "blockHeal",
+      "values": [0.02, 0.04, 0.06, 0.1],
+      "requiresAny": ["blockRating"],
+      "desc": "Each block heals {pct} of your max health.",
+      "weight": 0.1
+    },
+    {
+      "id": "proj",
+      "name": "Scythe Juggler",
+      "icon": "blades",
+      "stat": "projectiles",
+      "values": [1, 1, 2, 3],
+      "desc": "+{v} projectile{s} with every attack.",
+      "weight": 0.1
+    },
+    {
+      "id": "ricochet",
+      "name": "Rebound",
+      "icon": "zigzag",
+      "stat": "ricochetChance",
+      "values": [0.1, 0.2, 0.3, 0.5],
+      "until": { "ricochetChance": 1 },
+      "desc": "+{pct} chance for a projectile to ricochet between enemies."
+    },
+    {
+      "id": "chains",
+      "name": "Chain Harvest",
+      "icon": "chain",
+      "stat": "chains",
+      "values": [1, 2, 3, 4],
+      "requiresAny": ["ricochetChance"],
+      "desc": "Ricochets bounce {v} more time{s}.",
+      "weight": "0.7"
+    },
+    {
+      "id": "crit",
+      "name": "Keen Eyes",
+      "icon": "crosshair",
+      "stat": "critChance",
+      "values": [0.1, 0.15, 0.3, 0.4],
+      "desc": "+{pct} increased critical strike chance. It multiplies your weapon's base crit chance."
+    },
+    {
+      "id": "critmult",
+      "name": "Pounce",
+      "icon": "burst",
+      "stat": "critMult",
+      "values": [0.1, 0.15, 0.3, 0.5],
+      "desc": "+{pct} critical strike multiplier."
+    },
+    {
+      "id": "atkspd",
+      "name": "Quick Paws",
+      "icon": "bolt",
+      "stat": "atkSpeed",
+      "values": [0.05, 0.1, 0.15, 0.2],
+      "desc": "+{pct} attack speed.",
+      "weight": 0.3
+    },
+    {
+      "id": "movespd",
+      "name": "Zoomies",
+      "icon": "boot",
+      "stat": "moveMult",
+      "values": [0.06, 0.12, 0.18, 0.3],
+      "until": { "moveMult": 1.5 },
+      "desc": "+{pct} movement speed."
+    },
+    {
+      "id": "dmg",
+      "name": "Whetstone",
+      "icon": "sword",
+      "stat": "dmgMult",
+      "values": [0.1, 0.2, 0.3, 0.5],
+      "desc": "+{pct} damage."
+    },
+    {
+      "id": "area",
+      "name": "Long Handle",
+      "icon": "area",
+      "stat": "area",
+      "values": [0.1, 0.2, 0.3, 0.5],
+      "until": { "area": 2 },
+      "desc": "+{pct} swing reach and splash size."
+    },
+    {
+      "id": "magnet",
+      "name": "Curious Whiskers",
+      "icon": "magnet",
+      "stat": "magnet",
+      "values": [0.25, 0.5, 0.75, 1.25],
+      "weight": 0.6,
+      "until": { "magnet": 4 },
+      "desc": "+{pct} pickup radius."
+    },
+    {
+      "id": "luck",
+      "name": "Four-Leaf Clover",
+      "icon": "clover",
+      "stat": "luck",
+      "values": [10, 20, 30, 50],
+      "weight": 0.6,
+      "desc": "+{v} luck. Rarer blessings and better loot show up more often."
+    },
+    {
+      "id": "slow",
+      "name": "Frost Whiskers",
+      "icon": "snail",
+      "stat": "slowChance",
+      "values": [0.1, 0.2, 0.3, 0.5],
+      "until": { "slowChance": 1 },
+      "desc": "Hits gain +{pct} chance to slow the monster."
+    },
+    {
+      "id": "shock",
+      "name": "Static Fur",
+      "icon": "bolt",
+      "stat": "shockChance",
+      "values": [0.08, 0.16, 0.24, 0.4],
+      "until": { "shockChance": 1 },
+      "desc": "Hits gain +{pct} chance to shock: the monster takes more damage from everything."
+    },
+    {
+      "id": "stun",
+      "name": "Thunder Paw",
+      "icon": "stars",
+      "stat": "stunChance",
+      "values": [0.04, 0.08, 0.12, 0.2],
+      "until": { "stunChance": 1 },
+      "desc": "Hits gain +{pct} chance to stun the monster for a moment."
+    },
+    {
+      "id": "root",
+      "name": "Tangleroot",
+      "icon": "root",
+      "stat": "rootChance",
+      "values": [0.06, 0.12, 0.18, 0.3],
+      "until": { "rootChance": 1 },
+      "desc": "Hits gain +{pct} chance to root the monster in place."
+    },
+    {
+      "id": "trinketcdr",
+      "name": "Well-Oiled Gears",
+      "icon": "pocketwatch",
+      "stat": "trinketCdr",
+      "values": [0.1, 0.2, 0.3, 0.5],
+      "weight": 0.8,
+      "desc": "Your trinket (F) recharges {pct} faster."
+    },
+    {
+      "id": "elemdmg",
+      "name": "Storm in a Bottle",
+      "icon": "bolt",
+      "stat": "elemDmg",
+      "values": [0.1, 0.2, 0.3, 0.5],
+      "desc": "+{pct} elemental damage."
+    },
+    {
+      "id": "weapondmg",
+      "name": "Whetstone",
+      "icon": "sword",
+      "stat": "weaponDmgInc",
+      "values": [0.08, 0.16, 0.24, 0.4],
+      "desc": "+{pct} increased weapon damage: your weapon's own damage per hit goes up."
+    },
+    {
+      "id": "dashcdr",
+      "name": "Spring in Your Step",
+      "icon": "boot",
+      "stat": "dashCdr",
+      "values": [0.08, 0.16, 0.24, 0.4],
+      "until": { "dashCdr": 0.6 },
+      "desc": "Your dash recharges {pct} faster."
+    },
+    {
+      "id": "essence",
+      "name": "Essence Siphon",
+      "icon": "essence",
+      "stat": "essenceGain",
+      "values": [0.15, 0.3, 0.45, 0.75],
+      "also": { "rerollDiscount": 0.1 },
+      "weight": 0.8,
+      "desc": "+{pct} essence from monsters, and workbench rerolls cost 10% less."
+    },
+    {
+      "id": "xp",
+      "name": "Night School",
+      "icon": "star",
+      "stat": "xpGain",
+      "values": [0.1, 0.2, 0.3, 0.5],
+      "weight": 0.8,
+      "desc": "+{pct} experience gained."
+    },
+    {
+      "id": "firearmdmg",
+      "name": "Gunsmith's Oil",
+      "icon": "crosshair",
+      "stat": "firearmDmg",
+      "values": [0.12, 0.24, 0.36, 0.6],
+      "weaponClass": "firearm",
+      "desc": "+{pct} damage with firearms."
+    },
+    {
+      "id": "magicdmg",
+      "name": "Hex Ink",
+      "icon": "flask",
+      "stat": "magicDmg",
+      "values": [0.12, 0.24, 0.36, 0.6],
+      "weaponClass": "magic",
+      "desc": "+{pct} damage with magical weapons."
+    },
+    {
+      "id": "meleedmg",
+      "name": "Grindstone",
+      "icon": "blades",
+      "stat": "meleeDmg",
+      "values": [0.12, 0.24, 0.36, 0.6],
+      "weaponClass": "melee",
+      "desc": "+{pct} damage with melee weapons."
+    }
+  ]
+}

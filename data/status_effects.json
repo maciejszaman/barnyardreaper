@@ -1,0 +1,171 @@
+{
+  "_help": {
+    "about": "Status effects, damage over time and temporary buffs.",
+    "statuses": "Crowd control. Monsters inflict them on you through \"inflicts\" (monster_modifiers.json or enemies.json). You inflict slow, stun and root on monsters with your weapon hits (slowChance, stunChance, rootChance) and shock only with elemental hits (shockChance, or abilities that always shock). Applying one again refreshes its duration; they never stack. The four ids are fixed (slow, shock, stun, root); everything inside them is tunable.",
+    "statuses.duration": "Seconds on a monster.",
+    "statuses.playerDuration": "Seconds on you, before your statusResist stat shortens it.",
+    "statuses.bossDuration": "Duration multiplier on bosses (0 = bosses are immune).",
+    "statuses.power": "slow: share of movement speed lost (0.4 = 40% slower). shock: extra damage YOU take while shocked (0.25 = +25%). stun and root ignore it.",
+    "statuses.immunity": "Seconds after it wears off before it can hit you again (stops stun-locks).",
+    "statuses.icon / color": "Shown in the status bar (top right) and over monsters. Icon names are listed in upgrades.json.",
+    "dots.poison": "Each poison is its own stack, without limit unless maxStacks is set, lasting duration seconds. A stack deals maxHpPerSecond of the monster's max health per second (0.01 = 1%), plus damage x the inflicting hit if damage is above 0. Poison is inflicted by physical hits. The training dummy counts as having dummyHp x the map's health multiplier. Raised by Damage bonus, Poison damage and DoT damage.",
+    "dots.holy": "Holy fire, from any source (The Bible, the Holy Lantern, the shotgun's empowered shots, Divine Finale). Every application is its own stack, without limit, ticking every half second as elemental damage. damage = share of the inflicting hit dealt per second by a stack (where there is no hit, a share of your hit damage), duration = seconds per stack. Every burning monster has a golden circle of auraRadius meters that every half second adds a stack worth spread x its strongest stack to every monster in it. A monster that dies with at least explodeAt stacks explodes with holy energy for explode x its max health within explodeRadius (the explosion itself sets nothing on holy fire).",
+    "dots.bleed": "Physical damage over time. damage = share of the inflicting physical hit dealt every second (1.5 = 150%), for duration seconds. One bleed per monster: a new bleed only replaces the current one when it is stronger. Raised by Bleed damage and DoT damage (the hit's own bonuses are already in it).",
+    "playerDots": "Damage over time on you: poison and bleed. Monsters put them on you through \"inflicts\" (toxic frogs, the Jagged Claws modifier) and purple hex shots (witch doctors, shamans, the Shamanic modifier). damage = share of the inflicting hit dealt per second, duration in seconds (shortened by statusResist). Getting it again refreshes it, keeping the stronger one. Ignores block and dodge; shields soak it.",
+    "buffs": "Temporary buffs on you. stats are added while the buff lasts (stat keys are listed in characters.json). They are triggered by: catnip (items.json pickups.catnipBuff), claiming a totem (stages.json altar.buff), an extra life saving you (characters.json reviveBuff) and repelling an invasion (stages.json invasion.reward.buff), talent effects (cat_talents.json: Raging Bull, dashing with Feline Swiftness) and trinkets (trinkets.json: The Bible, Bloodlust). Getting a buff again refreshes its duration.",
+    "statuses.shock": "On monsters, shock makes them take more damage from every source: between minEffect and maxEffect, depending on the elemental hit that shocked it: maxEffect x sqrt(hit / (fullAt x the monster's max health)), so a hit worth fullAt of its max health (0.2 = 20%) shocks for the full maxEffect. A new shock keeps the stronger effect while the old one lasts."
+  },
+  "statuses": {
+    "slow": {
+      "name": "Slowed",
+      "desc": "Moves slower.",
+      "icon": "snail",
+      "color": "#7fd0ff",
+      "duration": 3,
+      "playerDuration": 2,
+      "bossDuration": 0.5,
+      "power": 0.4
+    },
+    "shock": {
+      "name": "Shocked",
+      "desc": "Takes 10-50% more damage from everything, depending on the elemental hit that shocked it.",
+      "icon": "bolt",
+      "color": "#ffe14a",
+      "duration": 2,
+      "playerDuration": 3,
+      "bossDuration": 1,
+      "power": 0.25,
+      "minEffect": 0.1,
+      "maxEffect": 0.5,
+      "fullAt": 0.2
+    },
+    "stun": {
+      "name": "Stunned",
+      "desc": "Cannot move, dash or attack.",
+      "icon": "stars",
+      "color": "#ffb070",
+      "duration": 1.2,
+      "playerDuration": 0.7,
+      "bossDuration": 0.3,
+      "immunity": 2
+    },
+    "root": {
+      "name": "Rooted",
+      "desc": "Cannot move or dash, but can still attack.",
+      "icon": "root",
+      "color": "#8fd46a",
+      "duration": 2.5,
+      "playerDuration": 1.2,
+      "bossDuration": 0.4,
+      "immunity": 1
+    }
+  },
+  "dots": {
+    "poison": { "damage": 0, "maxHpPerSecond": 0.01, "duration": 4, "maxStacks": 0, "dummyHp": 1000 },
+    "bleed": { "damage": 1.5, "duration": 5 },
+    "holy": { "damage": 0.4, "duration": 3, "auraRadius": 1.0, "spread": 0.1, "explodeAt": 5, "explode": 0.5, "explodeRadius": 4.5 }
+  },
+  "playerDots": {
+    "poison": { "name": "Poisoned", "desc": "Losing health over time.", "icon": "poison", "color": "#8aef4a", "damage": 0.25, "duration": 4 },
+    "bleed": { "name": "Bleeding", "desc": "Losing health over time.", "icon": "blood", "color": "#ff5a4a", "damage": 0.35, "duration": 3 }
+  },
+  "buffs": {
+    "trigger_happy": {
+      "name": "Trigger Happy",
+      "desc": "The MP5 after a dash: +100% attack speed.",
+      "icon": "bolt",
+      "color": "#ffd04a",
+      "duration": 3,
+      "stats": { "atkSpeed": 1 }
+    },
+    "the_moment": {
+      "name": "The Moment",
+      "desc": "Your attacks set monsters on holy fire, and every holy fire you inflicted in the last 4 seconds heals you 3 health per second (up to 36).",
+      "icon": "halo",
+      "color": "#ffe080",
+      "duration": 8,
+      "stats": {}
+    },
+    "bloodlust": {
+      "name": "Bloodlust",
+      "desc": "The drums of war: +300% attack speed, and every kill heals 1% of your max health.",
+      "icon": "bloodlust",
+      "color": "#ff4a2a",
+      "duration": 40,
+      "stats": { "atkSpeed": 3, "lifeOnKillPct": 0.01 }
+    },
+    "catnip_frenzy": {
+      "name": "Catnip Frenzy",
+      "desc": "Wired on catnip.",
+      "icon": "clover",
+      "color": "#8af060",
+      "duration": 8,
+      "stats": { "atkSpeed": 0.25, "moveMult": 0.15 }
+    },
+    "power_surge": {
+      "name": "Power Surge",
+      "desc": "The totem's power still hums in your fur.",
+      "icon": "totem",
+      "color": "#8ff8ff",
+      "duration": 15,
+      "stats": { "dmgMult": 0.2 }
+    },
+    "second_wind": {
+      "name": "Second Wind",
+      "desc": "Back on your paws.",
+      "icon": "paw",
+      "color": "#ffe08a",
+      "duration": 3,
+      "stats": { "moveMult": 0.3, "armorInc": 1 }
+    },
+    "alien_adrenaline": {
+      "name": "Alien Adrenaline",
+      "desc": "Whatever was in that spoon, it works.",
+      "icon": "spoon",
+      "color": "#7dff6a",
+      "duration": 30,
+      "stats": { "dmgMult": 0.3, "atkSpeed": 0.2, "moveMult": 0.1 }
+    },
+    "raging_bull": { "name": "Raging Bull", "desc": "Your bleeds deal double damage.", "icon": "blood", "color": "#ff3a2a", "duration": 10, "stats": {} },
+    "feline_swiftness": {
+      "name": "Feline Swiftness",
+      "desc": "Light on your paws after a dash.",
+      "icon": "feather",
+      "color": "#9fd8ff",
+      "duration": 5,
+      "stats": { "moveMult": 0.15 }
+    },
+    "time_dilation": {
+      "name": "Time Dilation",
+      "desc": "The world stands still. You don't.",
+      "icon": "pocketwatch",
+      "color": "#c8e0ff",
+      "duration": 4,
+      "stats": { "moveMult": 0.5 }
+    },
+    "empowered_faith": {
+      "name": "Empowered Faith",
+      "desc": "Mary watches over you. Getting hit sets the monsters around you on holy fire.",
+      "icon": "holycross",
+      "color": "#ffe080",
+      "duration": 30,
+      "stats": { "armorMult": 1, "moveMult": 0.1 }
+    },
+    "apostasy": {
+      "name": "Apostasy",
+      "desc": "You have turned your back on the light. It costs you your health, and your bleeds tear harder and cripple.",
+      "icon": "skull",
+      "color": "#e0302a",
+      "duration": 18,
+      "stats": { "atkSpeed": 0.3, "armorMult": -0.5 }
+    },
+    "black_resurrection": {
+      "name": "Black Resurrection",
+      "desc": "Gregory gets back up. Something answered him, and it is still close.",
+      "icon": "goat",
+      "color": "#b86cff",
+      "duration": 4,
+      "stats": { "moveMult": 0.3, "armorInc": 1, "dotDmg": 0.5 }
+    }
+  }
+}
