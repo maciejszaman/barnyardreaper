@@ -18,6 +18,7 @@ urls() {
   echo "  Game:            http://localhost:$PORT/"
   echo "  Talent creator:  http://localhost:$PORT/tools/talents/"
   echo "  Balance lab:     http://localhost:$PORT/tools/balance.html"
+  echo "  Showcase:        http://localhost:$PORT/tools/showcase/"
 }
 start() {
   if running; then echo "Already running (pid $(cat "$PIDFILE"))."; urls; return 0; fi

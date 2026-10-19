@@ -1,6 +1,8 @@
 'use strict';
 // Entities: the player, enemies (instanced rendering + AI), bosses, monster modifiers, enemy shots
 // and hazards, and the spawner.
+// Names (CLAUDE.md): a monster's `essence` is the Embers it drops; e.alien / e.invader mark green invasion
+// monsters (nothing to do with the Miracles, which were once "alien talents").
 (function () {
   const T = THREE, U = G.U, M = G.M, F = G.fx, A = G.audio, W = G.world;
 
@@ -20,6 +22,7 @@
     tome: { rest: [[-0.24, -0.2, 0.44], [0, 0, 0]], gun: true, twoHanded: true },
   };
 
+  PS.POSE = POSE;   // the showcase tool poses characters with these
   PS.create = function () {
     P.model = M.hero(G.CHAR.model); P.root = P.model.root;
     G.scene.add(P.root);
@@ -37,7 +40,7 @@
   };
   PS.reset = function () {
     Object.assign(P, { x: 0, z: 0, vx: 0, vz: 0, kbx: 0, kbz: 0, yaw: 0, aimYaw: 0, moving: 0, phase: 0, dashCd: 0, dashCdMax: 0, dashT: 0, dashX: 0, dashZ: 1, dashHits: [], invuln: 0,
-      regenT: 0, charges: 1, dots: {}, dotT: 0, atkT: 0, atkDur: 0.25, recoil: 0, hurtT: 0, dead: false, deathT: 0, t: 0, hp: G.stats ? G.stats.maxHp : 100,
+      regenT: 0, charges: 1, dots: {}, dotT: 0, atkT: 0, atkDur: 0.25, spinT: 0, spinDur: 0, recoil: 0, hurtT: 0, dead: false, deathT: 0, t: 0, hp: G.stats ? G.stats.maxHp : 100,
       status: {}, immune: {}, buffs: {} });
     P.root.position.set(0, 0, 0); P.root.rotation.set(0, 0, 0); P.root.visible = true;
     P.model.swing.rotation.set(0, 0, 0);
@@ -63,6 +66,8 @@
   };
   // Called by combat when an attack fires.
   PS.attackAnim = function (yaw, dur) { P.aimYaw = yaw; P.atkDur = dur; P.atkT = dur; P.recoil = 1; P.aimHold = dur + 0.15; };
+  // The axe's whirl: the whole body turns a full circle over dur seconds (PS.update).
+  PS.spin = function (dur) { P.spinT = P.spinDur = Math.max(0.05, dur); };
   PS.weaponTip = function (dist = 1.1) {
     const v = new T.Vector3(0, 0.08, dist);
     P.model.holder.localToWorld(v);
@@ -97,11 +102,13 @@
     if (!cur && (id === 'stun' || id === 'root')) G.tfx.onCC();   // Unbreakable
   };
   // Poison or bleed on you (status_effects.json playerDots): hit = the damage of the hit that caused it.
-  // Getting it again refreshes it, keeping the stronger one.
-  PS.addDot = function (id, hit) {
+  // Getting it again refreshes it, keeping the stronger one. own: { dps, t } instead of the hit's share and the
+  // dot's own duration (Venom Mirror: your poisons reflected onto you).
+  PS.addDot = function (id, hit, own) {
     const D = G.PDOTS[id];
-    if (!D || P.dead || hit <= 0) return;
-    const d = D.duration * (1 - U.clamp(G.stats.statusResist, 0, 0.8)), dps = hit * D.damage, cur = P.dots[id];
+    if (!D || P.dead || (!own && hit <= 0)) return;
+    const d = (own ? own.t : D.duration) * (1 - U.clamp(G.stats.statusResist, 0, 0.8)), dps = own ? own.dps : hit * D.damage, cur = P.dots[id];
+    if (!(dps > 0) || d <= 0) return;
     if (!cur) { F.num(P.x, 3, P.z, D.name.toUpperCase(), D.color, 12); A.play(id === 'bleed' ? 'bleed' : 'poison'); }
     P.dots[id] = { dps: Math.max(dps, cur ? cur.dps : 0), t: Math.max(d, cur ? cur.t : 0), max: Math.max(d, cur ? cur.max : 0) };
   };
@@ -331,6 +338,7 @@
     m.armR.rotation.x = U.damp(m.armR.rotation.x, armR, P.atkT > 0 ? 40 : 12, dt);
     m.armL.rotation.x = U.damp(m.armL.rotation.x, armL, 12, dt);
     P.root.position.set(P.x, 0, P.z); P.root.rotation.y = P.yaw;
+    if (P.spinT > 0) { P.spinT -= dt; const k = 1 - Math.max(0, P.spinT) / P.spinDur; P.root.rotation.y = P.yaw + (1 - Math.pow(1 - k, 2)) * Math.PI * 2; }   // the axe's whirl
     const hurt = P.hurtT > 0 ? 0.7 : 0, blink = P.invuln > 0.15 && P.dashT <= 0 ? 0.25 : 0;
     m.mat.emissive.setRGB(hurt + blink, blink * 0.8, blink * 0.5);
     statusFx(P.x, 0, P.z, 0.6, P.status, dt);
@@ -1019,6 +1027,17 @@
     F.shadowEnd();
   };
 
+  // A health bar's colour, tinted green while the monster is poisoned and red while it bleeds (both: both).
+  const tintCol = (hex, e) => {
+    const p = e.poison.length > 0, b = e.bleed.length > 0;
+    if (!p && !b) return hex;
+    const n = parseInt(hex.slice(1), 16), m = (c, t, k) => Math.round(c + (t - c) * k);
+    let r = (n >> 16) & 255, g = (n >> 8) & 255, bl = n & 255;
+    if (p) { r = m(r, 70, 0.45); g = m(g, 230, 0.45); bl = m(bl, 60, 0.45); }
+    if (b) { r = m(r, 235, 0.45); g = m(g, 30, 0.45); bl = m(bl, 30, 0.45); }
+    return `rgb(${r},${g},${bl})`;
+  };
+  ES.hpTint = tintCol;
   // Over monsters: a nameplate (name, modifiers, health bar) for bosses, rare golems, elites, rare
   // monsters and invaders, and above it
   // a row of icons for everything on the monster (G.ui.monsterFx): poison stacks, bleed, crippled and
@@ -1043,7 +1062,7 @@
         // bosses get a wider, taller bar; colors: alien green, rare blue, elite gold, boss orange.
         // The bar eases down, with a pale chunk trailing behind for the damage just taken.
         const big = e.boss, w = (big ? 86 : 52) * dpr, h = (big ? 7 : 5) * dpr, x0 = s.x - w / 2;
-        const col = e.invader ? '#7dff6a' : e.rare || e.rareMob ? G.RARITY[1].color : big ? '#ff8a3a' : e.def.plate ? '#c08aff' : '#e8b030';
+        const col = tintCol(e.invader ? '#7dff6a' : e.rare || e.rareMob ? G.RARITY[1].color : big ? '#ff8a3a' : e.def.plate ? '#c08aff' : '#e8b030', e);
         c.fillStyle = '#120a06'; c.fillRect(x0 - dpr, y - h - dpr, w + 2 * dpr, h + 2 * dpr);
         c.fillStyle = '#3a1410'; c.fillRect(x0, y - h, w, h);
         c.fillStyle = '#ffe8c0'; c.fillRect(x0, y - h, w * U.clamp(e.hpL ?? 1, 0, 1), h);

@@ -1,10 +1,12 @@
 'use strict';
-// Days (data/stages.json): a run is a series of days, each fought on one map. A day's danger stages
-// change every STAGE_SECONDS; every EVENTS.every seconds a boss, rare monsters or an alien invasion
-// arrives. The workbench by the farmhouse (scrap loot, upgrade item levels with essence) stands all
-// run long. At dawn the monsters crumble and the camp opens: a training dummy behind the barn that
-// measures your damage per second, and a cellar trapdoor that leads to the next map.
-//   G.phase: 'fight' or 'camp'. G.day: day index (0 = first). G.dayT: seconds into the day.
+// Days (data/stages.json): a run is a series of days (5 minutes each), each fought on one map. A day's
+// danger stages change every STAGE_SECONDS; every EVENTS.every seconds an event (a boss, rare monsters, an
+// alien invasion, the Eldritch Gaze...) arrives. The workbench by the farmhouse (scrap loot, upgrade item
+// levels with Embers) stands all run long. When the day ends the monsters crumble and night falls (the pause
+// between days, "camp" in the code): lamps light up by the house, the barn, the training dummy (it measures
+// your damage per second) and the workbench, and the bonfire burns in the middle of the farm (bonfire.js).
+// Praying at the bonfire is the only way to the next day, on the next map.
+//   G.phase: 'fight' or 'camp' (= night). G.day: day index (0 = first). G.dayT: seconds into the day.
 //   G.tier: stage of the day. G.danger: stages fought over the whole run (day x stages + tier).
 (function () {
   const U = G.U, M = G.M, F = G.fx, A = G.audio, W = G.world, P = G.player, ES = G.enemySys, SP = G.spawner, PK = G.pickups;
@@ -20,6 +22,11 @@
     G.phase = 'fight'; G.dayT = 0; G.tier = 0; setDanger();
     DY.nextEvent = G.EVENTS.every; DY.pending.length = 0;
     G.talents.newDay(); G.altars.newDay(); G.chests.newDay(); G.mokosh.newDay(); G.dungeon.newDay();
+    // where the day started, for the bonfire's summary of it (bonfire.js)
+    const r = G.run;
+    r.dayStart = { day: G.day, time: G.time, kills: r.kills, level: G.level, picks: G.pickList ? G.pickList.length : 0, embers: r.essenceTotal, dealt: r.dealt, taken: r.taken,
+      totems: r.totems, chests: r.chests || 0, items: r.items || 0, bosses: r.bosses, invasions: r.invasions, peak: 0 };
+    r.bonfireLit = false;
   }
   const setDanger = () => { G.danger = G.day * G.STAGES.length + G.tier; };
 
@@ -43,7 +50,7 @@
     G.ui.banner(`Danger ${U.roman(t)}: ${st.name}`, sub, '#ff7a5a');
   }
   DY.forceEvent = (kind) => { if (G.phase === 'fight') event(kind); };
-  // Debug: end the day now and go down the cellar to the next map.
+  // Debug: end the day now and wake on the next map (no prayer needed).
   DY.skipDay = function () {
     if (G.phase === 'fight') { G.time += G.DAY_SECONDS - G.dayT; G.dayT = G.DAY_SECONDS; dawn(); }
     if (G.phase === 'camp') travel();
@@ -96,11 +103,12 @@
     }
   }
 
-  // ---------- dawn and the camp ----------
+  // ---------- nightfall: the pause between days ----------
+  // (named dawn() from when the camp opened at dawn; the rules trigger is still 'dawn')
   function dawn() {
     G.phase = 'camp';
     G.run.days++;
-    // the monsters crumble in the morning light (no loot)
+    // the monsters crumble as the night falls (no loot)
     for (const e of ES.list) {
       if (e.dead) continue;
       e.dead = true; e.hp = 0; e.dying = e.boss ? 1.2 : 0.3;
@@ -110,12 +118,11 @@
     SP.bursts.length = 0; DY.pending.length = 0;
     for (const c of W.caves) c.warn = 0;
     PK.magnetAll();
-    W.setPhaseTarget(0); A.setIntensity(0);
-    buildCamp();
+    W.setNight(true); A.setIntensity(0);
+    buildCamp(); G.bonfire.build();
     G.progress.restock();
-    F.flash('#fff3c4', 0.6); A.play('dawn');
-    const next = G.mapAt(G.day + 1);
-    G.ui.banner(`Dawn · Day ${G.day + 1} survived`, `The monsters crumble and the workbench has new stock. Test your damage on the dummy behind the barn, then take the cellar trapdoor to ${next.name}.`, '#ffe08a');
+    F.flash('#1a1430', 0.6); A.play('dawn');
+    G.ui.banner(`Night falls · Day ${G.day + 1} survived`, 'The monsters crumble. The workbench has new stock and the dummy waits behind the barn. Warm yourself at the bonfire (E), then pray to wake on the next day.', '#ffd27a');
   }
   function prop(m, x, z) {
     const g = new THREE.Group();
@@ -139,21 +146,24 @@
     unprop(DY.bench.g); uncollide(DY.bench.col);
     DY.bench = null;
   }
-  // Dawn: the cellar trapdoor and the training dummy.
+  // Nightfall: the training dummy, and lamp posts by the house, the barn, the dummy and the workbench (their
+  // lights are world.js's, made at start and lit by the night).
   function buildCamp() {
-    const C = G.CAMP, [tx, tz] = C.trapdoor, [dx, dz] = C.dummy;
+    const C = G.CAMP, [dx, dz] = C.dummy;
     const dummy = ES.spawn('training_dummy', dx, dz);
     Object.assign(dummy, { dummy: true, maxHp: 1e12, hp: 1e12, yaw: Math.PI / 2, lockYaw: true });
     const col = { t: 0, x: dx, z: dz, r: 0.5 };
     W.colliders.push(col);
     F.dust(dx, dz, 10);
-    DY.camp = { door: { x: tx, z: tz, g: prop(M.trapdoor(), tx, tz), hold: 0 }, dummy, col, t: 0 };
+    const lamps = C.night.lamps.map(([x, z]) => { const c2 = { t: 0, x, z, r: 0.3 }; W.colliders.push(c2); return { g: prop(M.lampParts(), x, z), col: c2 }; });
+    DY.camp = { dummy, col, lamps, t: 0 };
     DY.dps = { log: [], start: 0, last: -99, best: 0 };
   }
   function clearCamp() {
     const c = DY.camp;
     if (!c) return;
-    unprop(c.door.g); uncollide(c.col);
+    uncollide(c.col);
+    for (const l of c.lamps) { unprop(l.g); uncollide(l.col); }
     const i = ES.list.indexOf(c.dummy);
     if (i >= 0) ES.list.splice(i, 1);
     DY.camp = null;
@@ -182,7 +192,7 @@
     const b = DY.bench;
     if (!b) return;
     b.g.position.y = U.damp(b.g.position.y, 0, 4, dt);
-    // at dawn, walking up to the workbench opens it (once per visit)
+    // at night, walking up to the workbench opens it (once per visit)
     const db = Math.hypot(P.x - b.x, P.z - b.z);
     if (db < 2.4 && !b.near) { b.near = true; if (G.phase === 'camp' && !P.dead) G.openBench(); }
     else if (db > 3.4) b.near = false;
@@ -191,35 +201,31 @@
     const c = DY.camp;
     if (!c || P.dead) return;
     c.t += dt;
-    c.door.g.position.y = U.damp(c.door.g.position.y, 0, 4, dt);
+    for (const l of c.lamps) l.g.position.y = U.damp(l.g.position.y, 0, 4, dt);
     const d = DY.dps, now = dpsNow();
     d.best = Math.max(d.best, c.t - d.start >= 2 ? now : 0);
-    // stand on the trapdoor to climb down to the next map
-    if (Math.hypot(P.x - c.door.x, P.z - c.door.z) < 1.3) {
-      c.door.hold += dt;
-      if (Math.random() < dt * 20) F.rise(c.door.x + U.rnd(-1, 1), 0.1, c.door.z + U.rnd(-1, 1), 0xffb050, 1, 0.3, 2, 0.12, 0.6);
-      if (c.door.hold >= G.CAMP.travelTime) travel();
-    } else c.door.hold = 0;
-    if (Math.random() < dt * 3) F.rise(c.door.x, 0.1, c.door.z, 0xffd27a, 1, 1.6, 1.4, 0.1, 0.8);
+    G.bonfire.update(dt);
   }
-  // Down the cellar: the next day begins on the next map.
+  // The next day (bonfire.js calls it once a prayer has turned the screen white): you wake on the next map
+  // in the morning light.
   function travel() {
     const left = G.altars.claimAll();
-    clearCamp(); G.chests.clear(); G.mokosh.clear(); G.ritual.clear(); G.trinkets.clear(); PK.clear(); G.combat.reset(true); F.clear();
+    clearCamp(); G.bonfire.clear(); G.chests.clear(); G.mokosh.clear(); G.ritual.clear(); G.trinkets.clear(); PK.clear(); G.combat.reset(true); F.clear();
     G.day++;
     startDay();
-    W.setMap(G.map()); W.phase = 0; W.setPhaseTarget(0);
+    W.setMap(G.map()); W.phase = 0; W.setPhaseTarget(0); W.setNight(false, true);
     SP.acc = 0; SP.hordeT = G.SPAWNING.hordes.first; SP.bursts.length = 0;
     P.x = 0; P.z = 0; P.vx = P.vz = P.kbx = P.kbz = 0;
     W.updateCamera(0, P.x, P.z, true);
-    F.flash('#000000', 0.9); A.play('trapdoor'); A.play('bell');
+    A.play('bell');
     const m = G.map(), extra = G.extraDays();
-    G.ui.banner(`Day ${G.day + 1}: ${m.name}${extra ? ' ' + U.roman(extra) : ''}`, m.message || 'Hold out until dawn.', '#f2c04e');
+    G.ui.banner(`Day ${G.day + 1}: ${m.name}${extra ? ' ' + U.roman(extra) : ''}`, m.message || 'Hold out until nightfall.', '#f2c04e');
     if (left) G.ui.toast(`${left} unclaimed Totem${left === 1 ? '' : 's'} of Power came with you`, '#6ff0ff');
   }
-  DY.clear = function () { clearCamp(); clearBench(); };
+  DY.travel = travel;
+  DY.clear = function () { clearCamp(); clearBench(); G.bonfire.clear(); };
 
-  // Labels for the workbench, and at dawn arrows to the camp and the dummy's DPS readout.
+  // Labels for the workbench, and at night arrows to the dummy (with its DPS readout) and the bonfire.
   DY.drawOverlay = function (c, dpr) {
     const cp = DY.camp, b = DY.bench, camp = cp && G.phase === 'camp';
     const box = (s, txt, col, size) => {
@@ -239,7 +245,7 @@
       label(b.x, b.z, 3, near && !camp ? 'E · Workbench' : 'Workbench', '#ffd27a', camp);
     }
     if (!camp) return;
-    label(cp.door.x, cp.door.z, 2.8, cp.door.hold > 0 ? `Descending… ${Math.max(0, G.CAMP.travelTime - cp.door.hold).toFixed(1)}s` : `Cellar to ${G.mapAt(G.day + 1).name}`, '#ffb050', true);
+    G.bonfire.drawOverlay(c, dpr, box);
     const dm = cp.dummy;
     if (!F.pointer(c, dpr, dm.x, dm.z, '#ff8a6a', 'DUMMY')) return;
     const s = F.project(dm.x, 3.1, dm.z);

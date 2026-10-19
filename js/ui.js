@@ -1,5 +1,7 @@
 'use strict';
 // UI: HUD, level-up cards, inventory + character ledger, workbench, menus, toasts and generated pixel icons.
+// Names (CLAUDE.md): the 'alien' tab and renderAlien() show the Miracles; 'spoon' is the Miracle currency;
+// 'essence' (G.run.essence, icon 'essence') is Embers.
 (function () {
   const U = G.U, A = G.audio;
   const UI = G.ui = { boss: null, sel: null, choices: [] };
@@ -130,10 +132,26 @@
       g.fillStyle = '#c6ced6'; g.beginPath(); g.ellipse(8, 9, 7, 2.6, 0, 0, Math.PI * 2); g.fill();
       rect(g, 3, 8.6, 1.5, 1.2, '#ffe14a'); rect(g, 7.3, 9.6, 1.5, 1.2, '#ffe14a'); rect(g, 11.5, 8.6, 1.5, 1.2, '#ffe14a');
     },
+    // Embers (the key is left from when they were Essence): a small flame over a glowing coal, two sparks
     essence: (g) => {
-      poly(g, [[8, 0.8], [13.2, 6.5], [8, 15.2], [2.8, 6.5]], '#b86cff'); poly(g, [[8, 0.8], [13.2, 6.5], [8, 8.4]], '#e0b0ff');
-      poly(g, [[2.8, 6.5], [8, 8.4], [8, 15.2]], '#7a3ac0'); rect(g, 6.4, 3.6, 1.4, 2.4, '#ffffff');
+      poly(g, [[8, 2.6], [11.4, 8.4], [11, 11.6], [8, 13.4], [5, 11.6], [4.6, 8.4], [6.6, 9]], '#ff7a1a');
+      poly(g, [[8, 6.6], [9.8, 10.4], [8, 12.6], [6.2, 10.4]], '#ffd040');
+      rect(g, 4, 13, 8, 2, '#c8401a'); rect(g, 5.4, 13.4, 2, 1, '#ffb040');
+      rect(g, 12.6, 3.4, 1.4, 1.4, '#ffd040'); rect(g, 2.4, 5.2, 1.2, 1.2, '#ff9a3a');
     },
+    // a Miracle (and the Miracles tab): the sun, rays all around
+    sun: (g) => {
+      for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2, c = Math.cos(a), s2 = Math.sin(a); poly(g, [[8 + c * 7.6, 8 + s2 * 7.6], [8 + Math.cos(a + 0.32) * 4.4, 8 + Math.sin(a + 0.32) * 4.4], [8 + Math.cos(a - 0.32) * 4.4, 8 + Math.sin(a - 0.32) * 4.4]], i % 2 ? '#ffb030' : '#ffd84a'); }
+      circle(g, 8, 8, 4.4, '#ffd84a'); circle(g, 8, 8, 3, '#fff4c0'); rect(g, 6.2, 6, 1.4, 1.4, '#ffffff');
+    },
+    // the bonfire: logs crossed under a tall flame
+    bonfire: (g) => {
+      line(g, [[2.5, 14.5], [13.5, 11]], 2.2, '#6a4020'); line(g, [[2.5, 11], [13.5, 14.5]], 2.2, '#8a5a2b');
+      poly(g, [[8, 0.8], [12.6, 8], [11.6, 12.4], [8, 13.6], [4.4, 12.4], [3.4, 8], [6, 8.6]], '#ff6a1a'); poly(g, [[8, 5.2], [10.4, 10], [8, 12.8], [5.6, 10]], '#ffd040');
+    },
+    // a wooden cross
+    cross: (g) => { rect(g, 6.8, 1, 2.6, 14, '#8a5a2b'); rect(g, 2.6, 4.2, 11, 2.4, '#8a5a2b'); rect(g, 7.4, 1.6, 1, 12.8, '#a8763a'); rect(g, 3.2, 4.8, 9.8, 0.9, '#a8763a'); },
+    axe: (g) => { line(g, [[3, 14.5], [11.5, 3]], 1.8, '#8a5a2b'); poly(g, [[8.6, 1.4], [14.6, 3.2], [14.4, 9.6], [10.6, 7]], '#c6ced6'); poly(g, [[14.6, 3.2], [14.4, 9.6], [13.4, 8.6], [13.6, 4]], '#f4f8ff'); },
     spoon: (g) => {
       line(g, [[2.6, 14], [9.5, 6.6]], 2, '#c6ced6');
       g.save(); g.translate(11, 4.6); g.rotate(-0.85);
@@ -169,7 +187,7 @@
   };
 
   // ---------- screens ----------
-  const SCREENS = ['scr-title', 'scr-select', 'scr-level', 'scr-inv', 'scr-bench', 'scr-mokosh', 'scr-debug', 'scr-pause', 'scr-over', 'scr-book'];
+  const SCREENS = ['scr-title', 'scr-select', 'scr-level', 'scr-inv', 'scr-bench', 'scr-mokosh', 'scr-bonfire', 'scr-debug', 'scr-pause', 'scr-over', 'scr-book'];
   UI.show = function (id) { for (const s of SCREENS) $(s).hidden = s !== id; };
 
   UI.init = function () {
@@ -200,7 +218,7 @@
       if (!b.dataset.armed) { b.dataset.armed = '1'; b.textContent = 'CONFIRM RESET'; return; }
       G.talents.reset(); UI.renderTalents();
     });
-    $('tot-img').src = UI.icon('totem'); $('spn-img').src = UI.icon('spoon'); $('ess-img').src = UI.icon('essence');
+    $('tot-img').src = UI.icon('totem'); $('spn-img').src = UI.icon(G.CURRENCIES.spoon.icon); $('ess-img').src = UI.icon('essence');
     click('b-bench-close', () => G.resume());
     click('b-dbg-close', () => G.resume());
     click('b-scrap-down', () => {
@@ -269,16 +287,16 @@
     set('lv', 'text', 'LV ' + G.level);
     set('timer', 'text', U.fmtTime(G.time));
     const camp = G.phase === 'camp', ne = G.days.nextEventIn(), dg = G.dungeon.status();
-    set('danger', 'text', dg ? dg.title : camp ? `DAY ${G.day + 1} · DAWN` : `DAY ${G.day + 1} · DANGER ${U.roman(G.tier)}`);
-    set('nexts', 'text', dg ? dg.sub : camp ? 'Camp: workbench and cellar trapdoor by the house, training dummy behind the barn'
-      : `Dawn in ${U.fmtTime(G.DAY_SECONDS - G.dayT)}${ne != null ? ` · Next event in ${U.fmtTime(ne)}` : ''}`);
+    set('danger', 'text', dg ? dg.title : camp ? `DAY ${G.day + 1} · NIGHT` : `DAY ${G.day + 1} · DANGER ${U.roman(G.tier)}`);
+    set('nexts', 'text', dg ? dg.sub : camp ? 'Night: warm yourself at the bonfire (E) and pray to wake on the next day'
+      : `Night in ${U.fmtTime(G.DAY_SECONDS - G.dayT)}${ne != null ? ` · Next event in ${U.fmtTime(ne)}` : ''}`);
     const es = Math.floor(G.run.essence);
-    set('ess-n', 'text', `${es} ESSENCE`);
+    set('ess-n', 'text', `${es} EMBER${es === 1 ? '' : 'S'}`);
     set('kills', 'text', `${G.run.kills} KILLS`);
     const pts = G.talents.points('totem'), sp = G.talents.points('spoon');
     set('tot-n', 'text', `${pts} TOTEM${pts === 1 ? '' : 'S'}`);
     set('spn', 'display', G.run.spoons > 0 ? '' : 'none');
-    set('spn-n', 'text', `${sp} SPOON${sp === 1 ? '' : 'S'}`);
+    set('spn-n', 'text', `${sp} MIRACLE${sp === 1 ? '' : 'S'}`);
     $('b-tal').classList.toggle('badge', pts > 0);
     const iv = G.invasion.on, alive = G.invasion.alive();
     const ev = G.darkness.status() || G.mech.status() || G.ritual.status() || G.gaze.status() || (!iv || iv.phase === 'leaving' ? '' : iv.phase === 'landing' ? 'ALIEN INVASION · SOMETHING IS LANDING' : `ALIEN INVASION · ${alive} INVADER${alive === 1 ? '' : 'S'} LEFT`);
@@ -308,6 +326,8 @@
       set('bossfill', 'width', pct(Math.max(0, b.hp / b.maxHp), 1));
       set('bosslag', 'width', pct(Math.max(0, b.hp / b.maxHp), 1));
       set('bosstext', 'text', `${Math.ceil(b.hp)} / ${Math.round(b.maxHp)}`);
+      // the bar turns greener while it is poisoned, redder while it bleeds
+      const bf = $('bossfill'); bf.classList.toggle('psn', b.poison.length > 0); bf.classList.toggle('bld', b.bleed.length > 0);
       renderBossFx(b);
     }
   };
@@ -316,8 +336,8 @@
   // Each: { icon, color, name, n (stack count), t (seconds left), forever, passive }.
   UI.monsterFx = function (e) {
     const out = [], f = G.stats.fx, D = G.DOTS, mx = (arr) => Math.max(...arr.map((p) => p.t));
-    if (e.poison.length) out.push({ key: 'poison', icon: 'poison', color: '#8aef4a', name: 'Poisoned', n: e.poison.length, t: mx(e.poison), max: D.poison.duration });
-    if (e.bleed.length) out.push({ key: 'bleed', icon: 'blood', color: '#ff5a4a', name: 'Bleeding', t: e.bleed[0].t, max: Math.max(D.bleed.duration, e.bleed[0].t) });
+    if (e.poison.length) out.push({ key: 'poison', icon: 'poison', color: '#8aef4a', name: 'Poisoned', n: e.poison.length, t: mx(e.poison), max: D.poison.duration * G.combat.poisonK() });
+    if (e.bleed.length) out.push({ key: 'bleed', icon: 'blood', color: '#ff5a4a', name: 'Bleeding', n: e.bleed.length > 1 ? e.bleed.length : undefined, t: mx(e.bleed), max: Math.max(D.bleed.duration * G.combat.bleedK(), mx(e.bleed)) });
     if (e.crippled > 0) out.push({ key: 'crippled', icon: 'cripple', color: '#ff5a4a', name: 'Crippled', t: e.crippled, max: Math.max(D.bleed.duration, e.crippled) });
     if (e.holy && e.holy.length) out.push({ key: 'holy', icon: 'holycross', color: '#ffe080', name: 'Holy Fire', n: e.holy.length, t: mx(e.holy), max: D.holy.duration });
     if (e.voodoo > 0) out.push({ key: 'voodoo', icon: 'voodoo', color: '#c08aff', name: 'Cursed', t: e.voodoo, max: (G.trinkets.curse && G.trinkets.curse.dur) || 3 });
@@ -334,12 +354,13 @@
     const sum = (arr) => arr.reduce((a, p) => a + p.dps, 0), D = G.DOTS;
     if (key === 'poison' && e.poison.length) {
       const t = e.poison.map((p) => p.t);
-      return [`${e.poison.length} poison stack${e.poison.length === 1 ? '' : 's'}`, `${n0(sum(e.poison))} damage per second`, `Next stack wears off in ${Math.min(...t).toFixed(1)}s · all gone in ${Math.max(...t).toFixed(1)}s`];
+      const pr = G.combat.poisonRate();
+      return [`${e.poison.length} poison stack${e.poison.length === 1 ? '' : 's'}`, `${n0(sum(e.poison) * pr)} damage per second${pr !== 1 ? ` (ticking ×${pr.toFixed(2)})` : ''}`, `Next stack wears off in ${Math.min(...t).toFixed(1)}s · all gone in ${Math.max(...t).toFixed(1)}s`];
     }
     if (key === 'bleed' && e.bleed.length) {
-      const RB = G.stats.fx.ragingBull, rb = RB && G.player.buffs[RB.buff] ? RB.bleedMult : 1, ap = G.chests.bleedMult(), m = rb * ap, b = e.bleed[0];
-      const fr = G.combat.bleedRamp(b);
-      return [`${n0(b.dps * m * fr)} damage per second${rb > 1 ? ' (Raging Bull ×' + rb + ')' : ''}${ap > 1 ? ' (Apostasy ×' + ap + ')' : ''}${b.ramp ? ` (festering ×${fr.toFixed(1)}, up to ×${b.ramp})` : ''}`, `${b.t.toFixed(1)}s left · about ${n0(b.dps * m * b.t)} damage to come`];
+      const RB = G.stats.fx.ragingBull, rb = RB && G.player.buffs[RB.buff] ? RB.bleedMult : 1, ap = G.chests.bleedMult(), m = rb * ap, C = G.combat, b = C.topBleed(e);
+      const fr = C.bleedRamp(b), dps = e.bleed.reduce((a, x) => a + x.dps * C.bleedRamp(x), 0), left = e.bleed.reduce((a, x) => a + x.dps * x.t, 0), n = e.bleed.length;
+      return [`${n0(dps * m)} damage per second${n > 1 ? ` from ${n} bleeds (up to ${C.bleedStacks()})` : ''}${rb > 1 ? ' (Raging Bull ×' + rb + ')' : ''}${ap > 1 ? ' (Apostasy ×' + ap + ')' : ''}${b.ramp ? ` (festering ×${fr.toFixed(1)}, up to ×${b.ramp})` : ''}`, `${Math.max(...e.bleed.map((x) => x.t)).toFixed(1)}s left · about ${n0(left * m)} damage to come`];
     }
     if (key === 'holy' && e.holy && e.holy.length) {
       const t = e.holy.map((p) => p.t), n = e.holy.length, need = D.holy.explodeAt;
@@ -491,16 +512,21 @@
     ['Doublecrit chance', (s) => (s.fx.experiencedPrecision ? pct(U.clamp(s.crit - 1, 0, 1), 1) : '—')], ['Damage bonus', (s) => '+' + pct(s.dmgMult)],
     ['Attack area', (s) => '+' + pct(s.area)], ['Poison chance', (s) => (s.noPoison ? 'Never' : s.weaponPoison ? 'Weapon: always' : pct(s.fx.multiPoison ? s.poisonChance : Math.min(1, s.poisonChance)))],
     ['Poison damage', (s) => '+' + pct(s.poisonDmg)], ['Bleed chance', (s) => pct(Math.min(1, s.bleedChance))], ['DoT damage', (s) => '+' + pct(s.dotDmg)],
+    ['Poison duration', (s) => `${(G.DOTS.poison.duration * G.combat.poisonK()).toFixed(1)}s${s.poisonDuration ? ` (${G.fmtVal('poisonDuration', s.poisonDuration)})` : ''}`],
+    ['Poison tick rate', (s) => (s.poisonTickRate ? `×${G.combat.poisonRate().toFixed(2)}` : '—')],
+    ['Bleed duration', (s) => `${(G.DOTS.bleed.duration * G.combat.bleedK()).toFixed(1)}s${s.bleedDuration ? ` (${G.fmtVal('bleedDuration', s.bleedDuration)})` : ''}`],
+    ['Bleed stacks', () => String(G.combat.bleedStacks())],
     ['Ricochet', (s) => (s.ricochetChance > 0 ? `${pct(Math.min(1, s.ricochetChance))} · ${s.chains} bounce${s.chains > 1 ? 's' : ''}` : '—')],
     ['Explode on kill', (s) => (s.explodeChance > 0 ? `${pct(Math.min(1, s.explodeChance))} · ${s.explodePower * 100}%` : '—')],
     ['Max health', (s) => Math.round(s.maxHp)], ['Regen / 5s', (s) => (s.regen ? '+' + Math.round(s.regen * 10) / 10 : '—')],
     ['Block chance', (s) => `${pct(s.blockChance, 1)} (${Math.round(s.blockRating)})`], ['Heal on block', (s) => (s.blockHeal ? pct(s.blockHeal, 1) : '—')],
-    ['Armor', (s) => { const a = G.progress.armor(); return a > 0 ? `${Math.round(a)} · ${pct(G.progress.reduction(a), 1)} less damage` : '—'; }],
+    // armor is worth less as danger rises: show the armor that would halve damage right now next to it
+    ['Armor', (s) => { const a = G.progress.armor(); return a > 0 ? `${Math.round(a)} · ${pct(G.progress.reduction(a), 1)} less damage · ${Math.round(G.progress.armorThreshold())} halves it now` : '—'; }],
     ['Increased armor', (s) => (s.armorInc ? '+' + pct(s.armorInc) : '—')], ['Increased health', (s) => (s.maxHpInc ? '+' + pct(s.maxHpInc) : '—')], ['Health per kill', (s) => (s.lifeOnKill ? '+' + s.lifeOnKill.toFixed(1) : '—')],
     ['Move speed', (s) => s.speed.toFixed(1)], ['Pickup radius', (s) => s.pickupR.toFixed(1)], ['Luck', (s) => Math.round(s.luck)],
     ['XP gain', (s) => '+' + pct(s.xpGain)], ['Dash cooldown', (s) => (2.4 * (1 - Math.min(0.6, s.dashCdr))).toFixed(1) + 's'],
     ['Weapon damage', (s) => (s.weaponDmgInc ? '+' + pct(s.weaponDmgInc) : '—')], ['Class damage', (s) => { const v = { melee: s.meleeDmg, firearm: s.firearmDmg, magic: s.magicDmg }[s.weapon.class] || 0; return v ? `+${pct(v)} ${s.weapon.class}` : '—'; }],
-    ['Essence gained', (s) => (s.essenceGain ? '+' + pct(s.essenceGain) : '—')], ['Reroll discount', (s) => (s.rerollDiscount ? pct(Math.min(0.9, s.rerollDiscount)) : '—')],
+    ['Embers gained', (s) => (s.essenceGain ? '+' + pct(s.essenceGain) : '—')], ['Reroll discount', (s) => (s.rerollDiscount ? pct(Math.min(0.9, s.rerollDiscount)) : '—')],
     ['Dash charges', (s) => 1 + Math.round(s.dashCharges)], ['Trinket recovery', (s) => (s.trinketCdr ? '+' + pct(s.trinketCdr) + ' faster' : '—')], ['Healing taken', (s) => (s.healTaken ? '+' + pct(s.healTaken) : '—')],
     ['Golem damage', (s) => (s.bossDmg ? '+' + pct(s.bossDmg) : '—')], ['Dash strike', (s) => (s.dashStrike ? pct(s.dashStrike) + ' of hit' : '—')],
     ['Spare lives', (s) => (s.extraLives ? `${Math.max(0, s.extraLives - G.run.livesUsed)} / ${s.extraLives}` : '—')], ['Blessing choices', (s) => Math.round(s.choices)],
@@ -520,10 +546,11 @@
       ['Explode on kill', 'bomb'], ['Golem damage', 'crown'], ['Damage to stunned', 'skull'], ['Dash strike', 'paw']]],
     ['Elemental and control', 'bolt', [['Flat elemental', 'bolt'], ['Elemental damage', 'bolt'], ['Elemental vs shocked', 'zigzag'], ['Elemental vs slowed', 'snail'], ['Elemental vs rooted', 'root'],
       ['Shock chance', 'zigzag'], ['Slow chance', 'snail'], ['Stun chance', 'moon'], ['Root chance', 'root'], ['Shock slow', 'snail'], ['Acid burst chance', 'flask']]],
-    ['Damage over time', 'poison', [['Poison chance', 'poison'], ['Poison damage', 'venomvial'], ['Bleed chance', 'blood'], ['Bleed damage', 'fang'], ['DoT damage', 'hourglass'], ['Armor per poisoned', 'armor']]],
+    ['Damage over time', 'poison', [['Poison chance', 'poison'], ['Poison damage', 'venomvial'], ['Poison duration', 'hourglass'], ['Poison tick rate', 'poison'], ['Bleed chance', 'blood'], ['Bleed damage', 'fang'],
+      ['Bleed duration', 'hourglass'], ['Bleed stacks', 'blood'], ['DoT damage', 'hourglass'], ['Armor per poisoned', 'armor']]],
     ['Defense', 'shield', [['Max health', 'heart'], ['Increased health', 'heart'], ['Regen / 5s', 'milk'], ['Healing taken', 'milk'], ['Health per kill', 'bloodlust'], ['Block chance', 'shield'],
       ['Heal on block', 'shieldheal'], ['Armor', 'armor'], ['Increased armor', 'armor'], ['Status resistance', 'anchor'], ['Spare lives', 'halo']]],
-    ['Utility', 'boot', [['Move speed', 'boot'], ['Dash cooldown', 'feather'], ['Dash charges', 'boot'], ['Pickup radius', 'magnet'], ['Luck', 'clover'], ['XP gain', 'star'], ['Essence gained', 'essence'],
+    ['Utility', 'boot', [['Move speed', 'boot'], ['Dash cooldown', 'feather'], ['Dash charges', 'boot'], ['Pickup radius', 'magnet'], ['Luck', 'clover'], ['XP gain', 'star'], ['Embers gained', 'essence'],
       ['Reroll discount', 'dice'], ['Blessing choices', 'cards'], ['Trinket recovery', 'pocketwatch']]],
   ];
   const listed = new Set(STAT_SECTIONS.flatMap((x) => x[2].map((r) => r[0])));
@@ -559,12 +586,12 @@
     const tags = it.slot === 'weapon' ? G.WEAPONS[it.wtype].tags : G.tagsFor(it.mods, null);
     return `<div class="ilvl">ITEM LEVEL <b>${lvl}</b>${ups}</div><h4 style="color:${R.color}">${esc(it.name)}</h4><div class="meta">${kind}${upg}</div>${UI.tagChips(tags)}${score}<ul>${lines}</ul>`;
   }
-  // Alien talents (inventory tab): three columns of talents bought with Alien Spoons, in any order.
-  // Learned ones glow green.
+  // Miracles (the 'alien' tab): three columns of big talents bought with Miracles, in any order.
+  // Learned ones glow gold.
   UI.invTab = 'ledger';
   function renderAlien() {
-    const TL = G.talents, A2 = G.CHAR.alien, pts = TL.points('spoon'), left = TL.dayLeft('spoon');
-    $('alien-pts').innerHTML = `<img src="${UI.icon('spoon')}" alt="">${pts} ALIEN SPOON${pts === 1 ? '' : 'S'}<span style="color:var(--dim);font-size:9px">${left ? ' · 1 MORE FROM INVASIONS ON THIS LEVEL' : ' · ALL FOUND ON THIS LEVEL'}</span>`;
+    const TL = G.talents, A2 = G.CHAR.alien, pts = TL.points('spoon'), left = TL.dayLeft('spoon'), CU = G.CURRENCIES.spoon;
+    $('alien-pts').innerHTML = `<img src="${UI.icon(CU.icon)}" alt="">${pts} ${(pts === 1 ? CU.name : CU.plural).toUpperCase()}<span style="color:var(--dim);font-size:9px">${left ? ' · ONE MORE AT TONIGHT\'S BONFIRE' : ' · TONIGHT\'S MIRACLE IS FOUND'}</span>`;
     const cols = $('acols');
     cols.innerHTML = '';
     for (const g of A2.groups) {
@@ -580,9 +607,9 @@
           + (reqs.length ? `<p class="req${reqs.every((q) => q.met) ? ' met' : ''}">Requires ${reqs.map((q) => esc(q.text)).join(', ')}</p>` : '');
         const b = document.createElement('button');
         b.className = 'btn' + (can ? ' primary' : '');
-        b.textContent = on ? 'LEARNED' : can ? `LEARN · ${t.cost} SPOON${t.cost > 1 ? 'S' : ''}` : reqs.some((q) => !q.met) ? 'LOCKED' : 'NEED A SPOON';
+        b.textContent = on ? 'LEARNED' : can ? `LEARN · ${t.cost} MIRACLE${t.cost > 1 ? 'S' : ''}` : reqs.some((q) => !q.met) ? 'LOCKED' : 'NEED A MIRACLE';
         b.disabled = !can;
-        b.addEventListener('click', () => { if (TL.learn(t.id)) { A.play('totem'); UI.toast(`${t.name} learned`, '#7dff6a'); UI.renderInv(); } });
+        b.addEventListener('click', () => { if (TL.learn(t.id)) { A.play('totem'); UI.toast(`${t.name} learned`, CU.color); UI.renderInv(); } });
         card.appendChild(b); col.appendChild(card);
       }
       cols.appendChild(col);
@@ -590,9 +617,9 @@
   }
   // ---------- the character panel ----------
   // Four tabs in one window: the ledger (the cat in its gear, the main numbers, the saddlebag), stats
-  // (every stat by section, and the blessings), the talent tree and the alien talents.
+  // (every stat by section, and the blessings), the talent tree and the Miracles (tab id 'alien').
   const PANEL_TABS = ['ledger', 'stats', 'talents', 'alien'];
-  const TAB_TITLES = { ledger: 'Farmhand Ledger', stats: 'Character Sheet', talents: 'Talent Tree', alien: 'Alien Talents' };
+  const TAB_TITLES = { ledger: 'Farmhand Ledger', stats: 'Character Sheet', talents: 'Talent Tree', alien: 'Miracles' };
   UI.invTab = 'ledger';
   // center: scroll the talent tree to the start (when the panel opens on it)
   UI.setTab = function (tab, center) {
@@ -614,7 +641,7 @@
   // Draws whichever tab is open (the name other code calls after changing gear or talents).
   UI.renderInv = function () {
     const sp = G.talents.points('spoon');
-    $('t-alien').innerHTML = `ALIEN TALENTS${sp > 0 ? ` (${sp})` : ''} <span class="kbd">Y</span>`;
+    $('t-alien').innerHTML = `<img src="${UI.icon(G.CURRENCIES.spoon.icon)}" alt="">MIRACLES${sp > 0 ? ` (${sp})` : ''} <span class="kbd">Y</span>`;
     const tab = UI.invTab;
     if (tab === 'alien') renderAlien();
     else if (tab === 'stats') renderStats();
@@ -706,7 +733,7 @@
     const TL = G.talents;
     $('lvl-pts-label').textContent = `TALENT POINTS ON THIS LEVEL · DAY ${G.day + 1}`;
     $('lvl-pts').innerHTML = Object.entries(G.CURRENCIES).map(([k, c]) => {
-      const cap = G.TALENT_CAP[k], got = cap - TL.dayLeft(k), left = TL.dayLeft(k), src = k === 'spoon' ? 'from invasions' : 'from altars';
+      const cap = G.TALENT_CAP[k], got = cap - TL.dayLeft(k), left = TL.dayLeft(k), src = k === 'spoon' ? 'at the bonfire' : 'from altars';
       return `<div style="color:${c.color}"><img src="${UI.icon(c.icon)}" alt="">${got}/${cap} ${esc(c.plural)}`
         + `<b>${left ? `${left} more ${src}` : 'all unlocked'} · ${TL.points(k)} unspent</b></div>`;
     }).join('');
@@ -750,15 +777,15 @@
     PV.r.render(PV.scene, PV.cam);
   };
   // ---------- workbench ----------
-  // Blessings for essence (reroll the stock for essence), and scrap everything on the ground.
+  // Blessings for embers (reroll the stock for embers), and scrap everything on the ground.
   UI.renderBench = function () {
     const PR = G.progress, es = Math.floor(G.run.essence), loot = G.pickups.loot, sh = G.run.shop;
-    $('bench-ess').innerHTML = `<img src="${UI.icon('essence')}" alt="">${es} ESSENCE`;
+    $('bench-ess').innerHTML = `<img src="${UI.icon('essence')}" alt="">${es} EMBERS`;
     const xp = loot.reduce((a, l) => a + PR.scrapValue(l.item), 0), sb = $('b-bench-scrap');
     sb.textContent = loot.length ? `SCRAP ${loot.length} ITEM${loot.length === 1 ? '' : 'S'} ON THE GROUND (+${xp} XP)` : 'NOTHING ON THE GROUND TO SCRAP';
     sb.disabled = !loot.length;
     const rc = PR.rerollCost(), rb = $('b-bench-reroll');
-    rb.textContent = `REROLL · ${rc} ESSENCE`; rb.disabled = es < rc;
+    rb.textContent = `REROLL · ${rc} EMBERS`; rb.disabled = es < rc;
     const box = $('bench-shop');
     box.innerHTML = '';
     sh.offers.forEach((o, i) => {
@@ -770,7 +797,7 @@
         + `<p>${esc(u.text(v))}</p><p class="delta">${o.sold ? '' : UI.delta(u, v)}</p>`;
       const b = document.createElement('button');
       b.className = 'btn' + (o.sold ? '' : ' primary');
-      b.textContent = o.sold ? 'SOLD' : `BUY · ${price} ESSENCE`;
+      b.textContent = o.sold ? 'SOLD' : `BUY · ${price} EMBERS`;
       b.disabled = o.sold || es < price;
       b.addEventListener('click', () => {
         if (!PR.buy(i)) return;
@@ -907,7 +934,7 @@
     for (const b of document.querySelectorAll('.tal-node')) b.classList.toggle('sel', b.dataset.id === id);
     const TL = G.talents, t = G.CHAR.tree.byId[id], det = $('tal-detail');
     if (!t) {
-      det.innerHTML = '<p class="empty-note">Hover a talent to read it and double-click to learn it. Totems of Power come from altars, Alien Spoons from repelled alien invasions. Talents last for this run only. Drag the tree to look around.</p>';
+      det.innerHTML = '<p class="empty-note">Hover a talent to read it and double-click to learn it. Totems of Power come from altars, Miracles from the bonfire at night. Talents last for this run only. Drag the tree to look around.</p>';
       return;
     }
     const r = TL.rank(t.id), cur = G.CURRENCIES[t.currency];
@@ -988,7 +1015,7 @@
     const keys = t.start ? 'Always learned'
       : r >= t.maxRank ? 'Mastered'
         : reqs.some((q) => !q.met) ? 'Locked until the requirements are met'
-          : pts < t.cost ? `Not enough ${cur.plural} (${pts} left). ${t.currency === 'spoon' ? 'Repel alien invasions to earn them.' : 'Claim them from altars.'}`
+          : pts < t.cost ? `Not enough ${cur.plural} (${pts} left). ${t.currency === 'spoon' ? 'Pray at the bonfire at night to earn them.' : 'Claim them from altars.'}`
             : `Double-click to learn · ${pts} ${cur.short}${pts === 1 ? '' : 's'} left`;
     return { color: tree.color(t), html: h + `<div class="keys">${keys}</div>` };
   }
@@ -1012,7 +1039,7 @@
   UI.tagChips = (tags) => (tags && tags.length ? `<div class="chips">${tags.filter((t) => G.TAGS[t]).map((t) => `<span class="chip" style="--tc:${G.TAGS[t].color}"><img src="${UI.icon(G.TAGS[t].icon)}" alt="">${esc(G.TAGS[t].name)}</span>`).join('')}</div>` : '');
   function procTip(c) {
     const [txt, ...state] = c.lines;
-    let h = `<h4>${esc(c.name)}</h4><div class="meta">${c.kind || (c.id && c.id.startsWith('tr_') ? 'Trinket' : c.color === '#7dff6a' ? 'Alien talent' : 'Talent')}</div>${UI.tagChips(c.tags)}`;
+    let h = `<h4>${esc(c.name)}</h4><div class="meta">${c.kind || (c.id && c.id.startsWith('tr_') ? 'Trinket' : c.color === G.CURRENCIES.spoon.color ? 'Miracle' : 'Talent')}</div>${UI.tagChips(c.tags)}`;
     h += `<ul>${txt ? `<li>${esc(txt)}</li>` : ''}${state.map((l) => `<li class="up">${esc(l)}</li>`).join('')}</ul>`;
     return { color: c.color, html: h };
   }
@@ -1131,8 +1158,10 @@
     return rows.map((r) => `<div class="ob-row" data-otip="${esc(r.tip)}"><span class="ob-l">${esc(r.label)}</span><span class="ob-track"><i style="width:${(r.v / max * 100).toFixed(1)}%;background:${r.col}"></i></span>`
       + `<span class="ob-v">${big(r.v)}${total ? ` <small>${Math.round(r.v / total * 100)}%</small>` : ''}</span></div>`).join('');
   }
-  function dpsChart(tl) {
+  // tl: timeline samples ({ t, dps, day, ... }); t0: seconds subtracted from every t (the bonfire's chart of one day)
+  function dpsChart(tl, t0 = 0) {
     if (tl.length < 2) return '<p class="empty-note">Not enough of a fight to chart.</p>';
+    if (t0) tl = tl.map((p) => Object.assign({}, p, { t: p.t - t0 }));
     const W = 600, H = 150, pad = 4, tmax = tl[tl.length - 1].t || 1, dmax = Math.max(1, ...tl.map((p) => p.dps));
     const X = (t) => pad + (t / tmax) * (W - pad * 2), Y = (v) => H - pad - (v / dmax) * (H - pad * 2 - 14);
     const pts = tl.map((p) => `${X(p.t).toFixed(1)},${Y(p.dps).toFixed(1)}`).join(' ');
@@ -1145,6 +1174,7 @@
       + `<line class="oc" x1="0" x2="0" y1="${pad}" y2="${H - pad}" visibility="hidden"/><circle class="odot" r="4" visibility="hidden"/>`
       + `<rect class="ohit" x="0" y="0" width="${W}" height="${H}"/></svg>`;
   }
+  UI.dpsChart = dpsChart; UI.barRows = barRows; UI.big = big; UI.wireChart = (tl, root) => wireOverChart(tl, root);
   UI.showGameOver = function (isBest) {
     const r = G.run, tl = r.tl || [], C = G.combat;
     const peak = Math.max(C.meterRow('player').peak || 0, ...tl.map((p) => p.dps), 0);
@@ -1157,7 +1187,7 @@
     const slain = Object.entries(r.killsBy || {}).sort((a, b) => b[1] - a[1]).slice(0, 6)
       .map(([id, n]) => ({ label: G.ENEMIES[id] ? G.ENEMIES[id].name : id, v: n, col: 'var(--s-one)', tip: `${G.ENEMIES[id] ? G.ENEMIES[id].name : id}: ${n.toLocaleString('en-US')} slain (${Math.round(n / Math.max(1, r.kills) * 100)}% of your kills)` }));
     const rest = [['Days survived', r.days], ['Critical hits', r.crits], ['Blocks', r.blocks], ['Bosses slain', r.bosses], ['Rare golems', r.rares], ['Invasions repelled', r.invasions],
-      ['Totems claimed', r.totems], ['Alien spoons', r.spoons], ['Chests opened', r.chests || 0], ['Barrels broken', r.barrels || 0], ['Essence gathered', big(r.essenceTotal)], ['Dungeons cleared', r.dungeons || 0], ['Shrines visited', r.shrines || 0], ['Mokosh favours', r.mokosh ? r.mokosh.cut + r.mokosh.weave : 0], ['Eldritch eyes closed', r.gazes || 0], ['Darks survived', r.darks || 0], ['Item levels upgraded', r.upgrades || 0]];
+      ['Totems claimed', r.totems], ['Miracles', r.spoons], ['Chests opened', r.chests || 0], ['Barrels broken', r.barrels || 0], ['Embers gathered', big(r.essenceTotal)], ['Dungeons cleared', r.dungeons || 0], ['Shrines visited', r.shrines || 0], ['Mokosh favours', r.mokosh ? r.mokosh.cut + r.mokosh.weave : 0], ['Eldritch eyes closed', r.gazes || 0], ['Darks survived', r.darks || 0], ['Item levels upgraded', r.upgrades || 0]];
     $('over-stats').innerHTML = `<div class="otiles">${tiles.map(([k, v]) => `<div><b>${v}</b><span>${k}</span></div>`).join('')}</div>`
       + `<div class="opanel"><h3>Damage per second</h3>${dpsChart(tl)}</div>`
       + `<div class="ogrid"><div class="opanel"><h3>Damage by type</h3>${total ? barRows(dmgRows, total) : '<p class="empty-note">No damage dealt.</p>'}</div>`
@@ -1170,8 +1200,9 @@
     $('b-again').focus();
   };
   // Hover: a crosshair and a readout on the DPS chart, and a tooltip on every bar.
-  function wireOverChart(tl) {
-    const root = $('over-stats'), tipEl = $('over-tip'), svg = root.querySelector('.ochart');
+  // root: the element holding the chart and the bars (the run summary, or the bonfire's day summary)
+  function wireOverChart(tl, root = $('over-stats')) {
+    const tipEl = $('over-tip'), svg = root.querySelector('.ochart');
     const show = (html, x, y) => { tipEl.innerHTML = html; tipEl.hidden = false; tipEl.style.transform = `translate(${Math.min(innerWidth - tipEl.offsetWidth - 8, x + 14)}px, ${y + 14}px)`; };
     const hide = () => { tipEl.hidden = true; };
     if (svg && tl.length > 1) {

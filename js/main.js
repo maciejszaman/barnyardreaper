@@ -1,20 +1,23 @@
 'use strict';
-// Main: boot, state machine (title → playing ⇄ levelup/inventory/talents/bench/paused → dying → gameover) and the frame loop.
+// Main: boot, state machine (title → playing ⇄ levelup/inventory/talents/bench/bonfire/paused → dying → gameover;
+// bonfire → praying → playing on the next day) and the frame loop.
+// Names (CLAUDE.md): G.run.spoons = Miracles, G.run.essence = Embers, the panel tab 'alien' = Miracles.
 (function () {
   const U = G.U, A = G.audio, F = G.fx, W = G.world, P = G.player;
   G.state = 'title'; G.time = 0; G.tier = 0; G.day = 0; G.dayT = 0; G.danger = 0; G.phase = 'fight'; G.offers = [];
-  // totems / spoons: talent currency collected this run. talents: { talentId: rank } learned this run.
-  // byType: damage dealt per damage type (G.DMG_TYPES). essence: workbench currency in hand.
-  const newRun = () => ({ kills: 0, dealt: 0, taken: 0, blocks: 0, crits: 0, doublecrits: 0, bosses: 0, rares: 0, totems: 0, spoons: 0, chests: 0, invasions: 0, livesUsed: 0, ricochets: 0, explosions: 0,
+  // totems / spoons: talent currency collected this run (spoons = Miracles). talents: { talentId: rank } learned this run.
+  // byType: damage dealt per damage type (G.DMG_TYPES). essence: Embers in hand (the workbench currency).
+  // items: gear picked up. dayStart: where the current day started (day.js), for the bonfire's summary.
+  const newRun = () => ({ kills: 0, dealt: 0, taken: 0, blocks: 0, crits: 0, doublecrits: 0, bosses: 0, rares: 0, totems: 0, spoons: 0, chests: 0, items: 0, invasions: 0, livesUsed: 0, ricochets: 0, explosions: 0,
     days: 0, essence: 0, essenceTotal: 0, talents: {}, banned: [], mokosh: { cut: 0, weave: 0 }, dayPts: { totem: 0, spoon: 0 }, byType: { physical: 0, poison: 0, elemental: 0 }, bySrc: {}, killsBy: {}, tl: [] });
   G.newRun = newRun;
   // The title scene keeps animating behind the talent screen when it was opened from the title.
   G.onTitle = () => G.state === 'title' || G.state === 'select' || (G.state === 'inventory' && G.panelFrom === 'title') || (G.state === 'book' && G.bookFrom === 'title');
 
   function resetWorld() {
-    G.dungeon.reset(); G.gaze.clear(); G.darkness.clear(); G.enemySys.clear(); G.combat.reset(); G.pickups.clear(); G.altars.reset(); G.invasion.reset(); G.chests.reset(); G.mokosh.clear(); G.mech.clear(); G.ritual.clear(); G.days.clear(); G.tfx.reset(); G.rules.reset(); F.clear();
+    G.bonfire.reset(); G.dungeon.reset(); G.gaze.clear(); G.darkness.clear(); G.enemySys.clear(); G.combat.reset(); G.pickups.clear(); G.altars.reset(); G.invasion.reset(); G.chests.reset(); G.mokosh.clear(); G.mech.clear(); G.ritual.clear(); G.days.clear(); G.tfx.reset(); G.rules.reset(); F.clear();
     G.time = 0; G.run = newRun();
-    G.days.reset(); W.setMap(G.map());
+    G.days.reset(); W.setMap(G.map()); W.setNight(false, true);
     G.progress.reset(); G.progress.restock(); G.trinkets.reset(); G.playerSys.reset(); G.playerSys.setWeapon(G.equip.weapon.wtype); G.playerSys.setHat(G.CHAR.hat);
     G.spawner.reset();
     for (const c of W.caves) c.warn = 0;
@@ -37,7 +40,7 @@
     G.state = 'playing';
     G.ui.show(null);
     const m = G.map();
-    G.ui.banner(`Day 1: ${m.name}`, m.message || 'Hold the farm until dawn.', '#f2c04e');
+    G.ui.banner(`Day 1: ${m.name}`, m.message || 'Hold the farm until nightfall.', '#f2c04e');
     for (let i = 1; i <= 3; i++) G.offers.push({ title: 'Before the Night', sub: `Choose a starting blessing · ${i} of 3`, luck: 0, min: 0 });
     G.debug.fromUrl();   // ?learn=... from the talent creator's play-test
   }
@@ -54,6 +57,7 @@
   };
   G.resume = function () {
     if (G.state === 'inventory') G.closePanel();
+    else if (G.state === 'bonfire') G.bonfire.close();
     else if (G.state === 'paused' || G.state === 'levelup' || G.state === 'bench' || G.state === 'debug' || G.state === 'held') { G.state = 'playing'; G.ui.show(null); }
   };
   // Left Alt: the game stands still where it is, without the pause menu, so you can hover buffs,
@@ -62,13 +66,13 @@
     if (G.state === 'playing') G.state = 'held';
     else if (G.state === 'held') G.state = 'playing';
   };
-  // The workbench (day.js opens it when you walk up to it at dawn, or press E next to it).
+  // The workbench (day.js opens it when you walk up to it at night, or press E next to it).
   G.openBench = function () {
     if (G.state !== 'playing') return;
     G.state = 'bench'; G.ui.renderBench(); G.ui.show('scr-bench');
   };
   // The character panel, one screen with four tabs: ledger (gear, the cat, the main numbers), stats (every
-  // stat and blessing), talents (the tree) and alien (alien talents). Its key on the open tab closes it,
+  // stat and blessing), talents (the tree) and alien (the Miracles). Its key on the open tab closes it,
   // another tab's key switches to that tab. From the title screen only the talent tree.
   G.openPanel = function (tab) {
     if (G.state === 'inventory') { if (G.ui.invTab === tab || (G.panelFrom === 'title' && tab !== 'talents')) G.closePanel(); else G.ui.setTab(tab); return; }
@@ -119,7 +123,7 @@
         else if (c === 'KeyF') G.trinkets.use();
         else if (PANEL_KEYS[c]) G.openPanel(PANEL_KEYS[c]);
         else if (c === 'KeyK') G.openBook();
-        else if (c === 'KeyE') { if (!G.dungeon.use() && !G.chests.use() && !G.mokosh.use()) G.days.useBench(); }
+        else if (c === 'KeyE') { if (!G.dungeon.use() && !G.chests.use() && !G.mokosh.use() && !G.bonfire.use()) G.days.useBench(); }
         break;
       case 'held':
         if (c === 'AltLeft') G.hold();
@@ -133,6 +137,8 @@
       case 'inventory': if (c === 'Escape') G.closePanel(); else if (PANEL_KEYS[c]) G.openPanel(PANEL_KEYS[c]); break;
       case 'bench': if (c === 'Escape' || c === 'KeyE') G.resume(); break;
       case 'mokosh': if (c === 'Escape' || c === 'KeyE') G.mokosh.close(); break;
+      case 'bonfire': if (c === 'Escape' || c === 'KeyE') G.bonfire.close(); else if (c === 'KeyY') G.bonfire.spend(); break;
+      case 'praying': break;   // the screen is turning white: nothing until the next day
       case 'levelup': {
         const m = /^(Digit|Numpad)([1-9])$/.exec(c);
         if (m) G.ui.pick(+m[2] - 1); else if (c === 'KeyR') G.ui.reroll();
@@ -204,7 +210,7 @@
     else if (G.state === 'select') { G.select.update(dt); sim = dt; }
     else if (onTitle) { updateTitle(dt); sim = dt; }
     A.setScene(onTitle ? 'title' : G.state === 'intro' ? 'intro' : G.phase === 'camp' ? 'camp' : G.dungeon.active ? 'spirit' : G.map().music,
-      onTitle ? G.select.dread() : G.dungeon.active ? 1 : G.phase === 'fight' ? G.dayT / G.DAY_SECONDS : 0);   // the title music darkens with Gregory in the light
+      onTitle ? G.select.dread() : G.dungeon.active ? 1 : G.phase === 'fight' ? G.dayT / G.DAY_SECONDS : 0);   // the title music darkens with Gregory in the light (camp = the night's song)
     W.update(sim, now / 1000);
     G.enemySys.render(sim); G.combat.render(); G.pickups.render();
     W.render();

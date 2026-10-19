@@ -1,9 +1,10 @@
 'use strict';
 // Alien invasion (data/stages.json > invasion): a green light pillar lands, rare monsters with random
 // modifiers climb out of it, and the pillar wanders the farm burning everything that is not green and
-// dropping more green monsters until every rare is dead. Repelling it earns an Alien Spoon for this run.
+// dropping more green monsters until every rare is dead. Repelling it gives experience, items and a buff
+// (stages.json invasion.reward; its "spoons" are Miracles, 0 now: Miracles come from the bonfire at night).
 // Day events start invasions (day.js); every invasion brings more rares than the one before
-// (stages.json > invasion.raresGrowth). Dawn ends an invasion still in progress.
+// (stages.json > invasion.raresGrowth). Nightfall ends an invasion still in progress.
 (function () {
   const T = THREE, U = G.U, F = G.fx, A = G.audio, W = G.world, P = G.player, ES = G.enemySys;
   const IV = G.invasion = { on: null, count: 0 };
@@ -79,7 +80,7 @@
     R.items.forEach((it, i) => Math.random() < G.DROPS.itemMult && PK.dropItem(v.lx + Math.cos(i * 2.4) * 1.5, v.lz + Math.sin(i * 2.4) * 1.5, G.combat.rollItem(U.clamp(it.minRarity || 0, 0, G.RARITY.length - 1), it.luck || 0)));
     if (R.buff) G.playerSys.addBuff(R.buff);
     A.play('totem'); F.flash('#7dff6a', 0.35);
-    G.ui.banner('Invasion Repelled!', n ? `+${n} Alien Spoon${n > 1 ? 's' : ''} for the talent tree (T)` : R.spoons ? 'No more Alien Spoons on this level.' : 'The green light fades.', '#7dff6a');
+    G.ui.banner('Invasion Repelled!', n ? `+${n} ${n > 1 ? G.CURRENCIES.spoon.plural : G.CURRENCIES.spoon.name} (Y)` : 'The green light fades.', '#7dff6a');
   }
 
   IV.update = function (dt) {

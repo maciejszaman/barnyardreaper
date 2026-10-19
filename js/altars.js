@@ -1,7 +1,7 @@
 'use strict';
 // Altars of Power: one rises every minute of a day (data/stages.json > altar). Walking onto it claims
 // its Totem of Power, a talent point for this run, but wakes a Rare Golem that climbs out of the
-// ground with random modifiers from data/monster_modifiers.json. Altars still standing at dawn can be
+// ground with random modifiers from data/monster_modifiers.json. Altars still standing at night can be
 // claimed safely in camp, and any left when you travel on are claimed for you.
 (function () {
   const T = THREE, U = G.U, M = G.M, F = G.fx, A = G.audio, W = G.world, P = G.player;

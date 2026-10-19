@@ -74,7 +74,7 @@
     "dinnerbell": {
       "name": "Dinner Bell",
       "icon": "dinnerbell",
-      "desc": "Rings for supper: every crystal and essence on the map flies to you, and monsters within 9 meters are blasted back and stunned for 2 seconds.",
+      "desc": "Rings for supper: every crystal and ember on the map flies to you, and monsters within 9 meters are blasted back and stunned for 2 seconds.",
       "cooldown": 45,
       "effect": { "id": "dinnerBell", "radius": 9, "stun": 2, "push": 18 },
       "tags": ["control", "area", "utility"]

@@ -3,7 +3,7 @@
 //   Monsters: health and damage per hit of the map's most common monster, an elite of it and the map's
 //     boss at any minute of the run, from the game's own scaling (stages.json, enemies.json).
 //   Characters: for every row (a level reached at a minute of the run) a character with random talents
-//     (the totems and spoons a run has by then), random blessings (one per level up, plus the three you
+//     (the totems and Miracles, "spoons" in the code, a run has by then), random blessings (one per level up, plus the three you
 //     start with) and random gear at that minute's item level, carrying a copy of every weapon base.
 //   Fights: each character fights the minute's boss alone, and packs of 5 and 50 of the minute's common
 //     monster around it, on the game's own combat code (talents, blessings, implicits, damage over time,
@@ -50,14 +50,14 @@
   }
   const mainBoss = (m) => { const ids = Object.keys(m.bosses).sort((a, b) => m.bosses[b] - m.bosses[a]); return ids.length ? G.ENEMIES[ids[0]] : null; };
   // Talent points a run has by then: altars rise `first` seconds into each day and every `every` after,
-  // at most the daily cap; one Alien Spoon a day from a repelled invasion (maps with invasions, 2 minutes in).
+  // at most the daily cap; a Miracle (spoon) from the bonfire every night already passed.
   function points(day, dayT) {
     const A = G.ALTAR, cap = G.TALENT_CAP;
     let totems = 0, spoons = 0;
     for (let d = 0; d <= day; d++) {
-      const t = d < day ? G.DAY_SECONDS : dayT, m = G.mapAt(d), ev = m.events || G.EVENTS.weights;
+      const t = d < day ? G.DAY_SECONDS : dayT;
       if (A.enemy) totems += Math.min(cap.totem, t < A.first ? 0 : Math.floor((t - A.first) / A.every) + 1);
-      if (G.INVASION && ev.invasion > 0 && t >= 120) spoons += cap.spoon;
+      if (d < day) spoons += Math.min(cap.spoon, G.BONFIRE.miracles);
     }
     return { totems, spoons };
   }

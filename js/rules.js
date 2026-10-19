@@ -8,6 +8,8 @@
 // Any number in a rule may be a list instead, one value per rank ([0.1, 0.2, 0.3]).
 // RU.TRIGGERS / CONDITIONS / ACTIONS below are the vocabulary, with every number's default; the talent
 // creator builds its forms from them, so anything added here shows up there.
+// Names (CLAUDE.md): the enum values 'essence' (= Embers) and 'spoons' (= Miracles) are saved ids; only the
+// words shown change.
 (function () {
   const U = G.U;
   const RU = G.rules = { state: {}, by: {}, cond: [], bonus: [], emp: [], zones: [], kills: [], t: 0, active: {}, busy: {} };
@@ -50,7 +52,7 @@
     still: { name: 'You stand still for a while', params: [p('seconds', 'sec', 1.5, 'Seconds')], desc: 'Goes off once, then again after you have moved.' },
     distance: { name: 'You walk a distance', params: [p('meters', 'num', 25, 'Meters', { u: 'm' })] },
     dayStart: { name: 'A fight begins', desc: 'The start of every day\'s fight.' },
-    dawn: { name: 'Dawn breaks', desc: 'The end of every day\'s fight.' },
+    dawn: { name: 'Night falls', desc: 'The end of every day\'s fight, when night falls and the bonfire is lit (the id is still dawn).' },
     bossAppears: { name: 'A boss appears', target: true },
   };
   RU.CONDITIONS = {
@@ -120,7 +122,7 @@
     extraAttack: { name: 'Attack again', params: [p('count', 'int', 1, 'Attacks'), p('gap', 'sec', 0.1, 'Gap')], tags: () => ['weapon', 'hit'] },
     empower: { name: 'Empower your next hits', params: [p('more', 'pct', 1, 'More damage'), p('hits', 'int', 1, 'Hits')], tags: () => ['hit'] },
     resetCooldowns: { name: 'Reset cooldowns', params: [p('which', 'enum', 'rules', 'Which', { opts: ['rules', 'talents', 'trinket', 'dash', 'all'] })], tags: (a) => (a.which === 'trinket' ? ['trinket'] : a.which === 'dash' ? ['movement'] : []) },
-    drop: { name: 'Drop a pickup', params: [p('item', 'enum', 'essence', 'Pickup', { opts: ['essence', 'xp', 'fish', 'catnip', 'loot'] }), p('amount', 'num', 5, 'Amount', { help: 'Essence or experience; for loot the rarity (0-2).' }), AT, RANGE], tags: () => ['utility'] },
+    drop: { name: 'Drop a pickup', params: [p('item', 'enum', 'essence', 'Pickup', { opts: ['essence', 'xp', 'fish', 'catnip', 'loot'] }), p('amount', 'num', 5, 'Amount', { help: 'Embers or experience; for loot the rarity (0-2).' }), AT, RANGE], tags: () => ['utility'] },
     gain: { name: 'Gain', params: [p('what', 'enum', 'essence', 'What', { opts: ['essence', 'xp', 'levels', 'rerolls', 'totems', 'spoons'] }), p('amount', 'num', 5, 'Amount')], tags: () => ['utility'] },
     magnet: { name: 'Pull every pickup to you', tags: () => ['utility'] },
     text: { name: 'Floating text', params: [p('text', 'str', 'BOOM!', 'Text'), p('color', 'color', '#ffd27a', 'Color'), p('size', 'int', 16, 'Size'), AT, RANGE] },
@@ -585,7 +587,7 @@
     for (const k in RU.state) { const s = RU.state[k]; if (s.cd > 0) s.cd = Math.max(0, s.cd - dt); }
     while (RU.kills.length && RU.kills[0] < RU.t - 30) RU.kills.shift();
     while (RU.emp.length > 8) RU.emp.shift();
-    // a new day's fight, dawn
+    // a new day's fight, and nightfall (the 'dawn' trigger)
     if (G.phase !== RU.phase) { const was = RU.phase; RU.phase = G.phase; if (was === 'camp' && G.phase === 'fight') RU.fire('dayStart'); if (was === 'fight' && G.phase === 'camp') RU.fire('dawn'); }
     // zones of our own (holy, tar, void)
     for (const z of RU.zones) {
@@ -639,7 +641,7 @@
   // hold light it up.
   RU.chips = function () {
     const per = new Map();
-    const get = (t) => per.get(t.id) || (per.set(t.id, { id: t.id, name: t.name, icon: t.icon, color: t.currency === 'spoon' ? '#7dff6a' : '#f2c04e', text: '', fill: 0, active: false, lines: [t.text], show: false, cd: 0, rank: 0 }), per.get(t.id));
+    const get = (t) => per.get(t.id) || (per.set(t.id, { id: t.id, name: t.name, icon: t.icon, color: t.currency === 'spoon' ? G.CURRENCIES.spoon.color : '#f2c04e', text: '', fill: 0, active: false, lines: [t.text], show: false, cd: 0, rank: 0 }), per.get(t.id));
     for (const when in RU.by) for (const inst of RU.by[when]) {
       const R = inst.rule, s = st(inst.key), every = Math.max(1, Math.round(val(R.every, inst.rank))), total = val(R.cooldown, inst.rank), c = get(inst.t);
       if (s.cd > 0 && (s.max || total) >= 1 && s.cd > c.cd) Object.assign(c, { show: true, cd: s.cd, rank: 3, fill: s.cd / (s.max || total), text: s.cd < 9.95 ? s.cd.toFixed(1) : String(Math.ceil(s.cd)), active: false, lines: [inst.t.text, `Recharging · ${s.cd.toFixed(1)}s`] });
@@ -674,7 +676,7 @@
     lowHealth: (R) => `When your health falls below ${P_(R.threshold)}`, heal: 'When you are healed', dash: 'When you dash', trinket: 'When you use your trinket', levelUp: 'When you gain a level',
     bleed: 'When you make a monster bleed', poison: 'When you poison a monster', status: (R) => (R.status === 'any' ? 'When you inflict a status' : `When you ${({ slow: 'slow', shock: 'shock', stun: 'stun', root: 'root' })[R.status]} a monster`),
     interval: (R) => `Every ${S_(R.seconds)}`, still: (R) => `After standing still for ${S_(R.seconds)}`, distance: (R) => `Every ${M_(R.meters)} you walk`,
-    dayStart: 'When a fight begins', dawn: 'At dawn', bossAppears: 'When a boss appears',
+    dayStart: 'When a fight begins', dawn: 'At nightfall', bossAppears: 'When a boss appears',
   };
   // "below 50%", "above 90%" (below 100% or more means no top), "between 20% and 50%"
   const band = (q) => { const lo = val(q.above, 1) > 0, hi = val(q.below, 1) < 1; return lo && hi ? `between ${P_(q.above)} and ${P_(q.below)}` : lo ? `above ${P_(q.above)}` : hi ? `below ${P_(q.below)}` : 'at any'; };
@@ -719,8 +721,8 @@
     trinketEffect: (a) => `${nameOf(G.TRINKETS, a.trinket)} goes off`, extraAttack: (a) => `attack ${val(a.count, 1) > 1 ? `${N_(a.count)} more times` : 'again'}`,
     empower: (a) => `your next ${val(a.hits, 1) > 1 ? `${N_(a.hits)} hits deal` : 'hit deals'} ${P_(a.more)} more damage`,
     resetCooldowns: (a) => ({ rules: 'reset your talents\' cooldowns', talents: 'reset your talent effects\' cooldowns', trinket: 'your trinket recharges fully', dash: 'your dash charges refill', all: 'every cooldown resets' })[a.which],
-    drop: (a) => `${AT_TXT[a.at] === 'you' ? 'you drop' : `${AT_TXT[a.at]} drops`} ${a.item === 'essence' ? `${N_(a.amount)} essence` : a.item === 'xp' ? `${N_(a.amount)} experience` : a.item === 'loot' ? 'loot' : `a ${a.item}`}`,
-    gain: (a) => `gain ${N_(a.amount)} ${a.what === 'xp' ? 'experience' : a.what === 'essence' || val(a.amount, 1) !== 1 ? a.what : a.what.slice(0, -1)}`, magnet: () => 'every pickup flies to you',
+    drop: (a) => `${AT_TXT[a.at] === 'you' ? 'you drop' : `${AT_TXT[a.at]} drops`} ${a.item === 'essence' ? `${N_(a.amount)} embers` : a.item === 'xp' ? `${N_(a.amount)} experience` : a.item === 'loot' ? 'loot' : `a ${a.item}`}`,
+    gain: (a) => `gain ${N_(a.amount)} ${a.what === 'xp' ? 'experience' : a.what === 'essence' ? 'embers' : a.what === 'spoons' ? (val(a.amount, 1) === 1 ? 'Miracle' : 'Miracles') : val(a.amount, 1) !== 1 ? a.what : a.what.slice(0, -1)}`, magnet: () => 'every pickup flies to you',
     text: (a) => `"${a.text}"`, sound: () => '', flash: () => '', shake: () => '', ring: () => '',
   };
   RU.actionText = (a) => ACT_TXT[a.do](a);

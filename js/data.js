@@ -3,6 +3,9 @@
 // tables the game reads (G.RARITY, G.UPGRADES, G.WEAPONS, G.ENEMIES, G.MODIFIERS, G.MAPS, ...).
 // Stat keys, enemy AIs, models and icons are engine features, so they are listed here and in each
 // file's "_help" block. Every number and name is tuned from the JSON.
+// Nomenclature (CLAUDE.md): ids in code and JSON keep their old names, players see the new ones.
+//   currency id 'spoon' / G.run.spoons = Miracles (from the bonfire), the 'alien' talent set = the Miracles tab;
+//   'essence' (G.run.essence, essenceGain, enemies' "essence") = Embers; 'upgrades' (upgrades.json) = blessings.
 (function () {
   const U = G.U;
 
@@ -24,6 +27,10 @@
     area: { label: 'Area bonus', name: 'attack area', pct: true },
     poisonChance: { label: 'Poison chance', name: 'poison chance', pct: true },
     poisonDmg: { label: 'Poison damage', name: 'poison damage', pct: true },
+    // Ailment timing (talent builder stats). Duration changes keep a poison's or bleed's total damage: shorter
+    // ones deal it faster (more damage per second), longer ones slower. Tick rate adds ticks of the same size.
+    poisonTickRate: { label: 'Poison tick rate', name: 'faster poison ticks', pct: true, tpl: 'Poisons tick {u} faster (more ticks of the same damage)' },
+    poisonDuration: { label: 'Poison duration', name: 'poison duration', pct: true, tpl: '{v} poison duration (same total damage)' },
     bleedChance: { label: 'Bleed chance', name: 'bleed chance', pct: true },
     dotDmg: { label: 'DoT damage', name: 'damage over time', pct: true },
     blockRating: { label: 'Block rating', name: 'block rating' },
@@ -56,6 +63,8 @@
     acidChance: { label: 'Acid burst chance', name: 'chance for kills to burst into acid', pct: true },
     flatElem: { label: 'Flat elemental', name: 'elemental damage on every hit' },
     bleedDmg: { label: 'Bleed damage', name: 'bleed damage', pct: true },
+    bleedDuration: { label: 'Bleed duration', name: 'bleed duration', pct: true, tpl: '{v} bleed duration (same total damage)' },
+    bleedStacks: { label: 'Bleed stacks', name: 'maximum bleed stack', plural: 'maximum bleed stacks' },
     elemDmg: { label: 'Elemental damage', name: 'elemental damage', pct: true },
     healTaken: { label: 'Healing taken', name: 'healing taken', pct: true },
     trinketCdr: { label: 'Trinket recovery', name: 'faster trinket recovery', pct: true },
@@ -73,7 +82,7 @@
     firearmDmg: { label: 'Firearm damage', name: 'damage with firearms', pct: true },
     magicDmg: { label: 'Magic damage', name: 'damage with magical weapons', pct: true },
     meleeDmg: { label: 'Melee damage', name: 'damage with melee weapons', pct: true },
-    essenceGain: { label: 'Essence gained', name: 'essence gained', pct: true },
+    essenceGain: { label: 'Embers gained', name: 'embers gained', pct: true },   // id kept from when Embers were Essence
     rerollDiscount: { label: 'Reroll discount', name: 'cheaper workbench rerolls', pct: true },
     lifeOnKillPct: { label: 'Max health per kill', name: 'of your max health back per kill', pct: true, dec: 1 },
     dashCharges: { label: 'Dash charges', name: 'dash charge', plural: 'dash charges' },
@@ -122,7 +131,7 @@
     holyLeech: { share: 0.1, cap: 0.25, duration: 4 },
     ccShield: { share: 0.3, duration: 6, cooldown: 60 },
     trinketInvuln: { duration: 2 },
-    freeUpgrade: { every: 120 },
+    freeUpgrade: { every: 60 },
     trinketBlast: { mult: 5, radius: 3, cooldown: 30 },
     dungeonShield: { share: 0.2, duration: 30 },
     fifthCrit: { every: 5 },
@@ -130,8 +139,11 @@
     poisonMaxHp: { share: 0.01 },
     poisonKillHeal: { perStack: 1 },
     poisonReversal: {},
+    // talent builder options (tools/talents): elemental hits can poison; your poisons poison you too
+    elementalPoison: {},
+    poisonReflect: { maxHp: 0.02, duration: 2 },
     riposte: { mult: 3, area: 1.5, slow: 0.5, cooldown: 15 },
-    // alien talents (inventory > Alien Talents)
+    // Miracles (the old alien talents: character panel > Miracles, Y)
     baneOfLegends: { more: 0.2, execute: 0.1 },
     thirst: { heal: 0.1, cooldown: 30 },
     zealotry: { perKill: 0.1, cap: 1, recently: 4, cooldown: 10 },
@@ -159,7 +171,7 @@
     hit: { name: 'Hit', color: '#ffd27a', icon: 'crosshair', desc: 'Damage dealt all at once. Hits can be critical (weapon hits only) and can inflict statuses.' },
     dot: { name: 'Damage over time', color: '#c8a0ff', icon: 'hourglass', desc: 'Ticks every half second. Never critical; cannot inflict poison, bleeding or shock.' },
     weapon: { name: 'Weapon', color: '#ffd27a', icon: 'sword', desc: 'Your weapon\'s own hits.' },
-    melee: { name: 'Melee', color: '#ffb070', icon: 'sword', desc: 'Scythes, swords, daggers and knives.' },
+    melee: { name: 'Melee', color: '#ffb070', icon: 'sword', desc: 'Scythes, swords, daggers, knives and axes.' },
     firearm: { name: 'Firearm', color: '#ffb070', icon: 'gun', desc: 'Shotguns, revolvers, the MP5 and the flamethrower.' },
     magic: { name: 'Magic', color: '#ffb070', icon: 'flask', desc: 'The poison flask, the poison dart blower, the Tome of Fireball and the Shrieking Scream.' },
     bleed: { name: 'Bleeding', color: '#ff5a4a', icon: 'blood', desc: 'Physical damage over time from physical hits.' },
@@ -190,7 +202,7 @@
   // Knowledge and tooltips: each stat and each talent effect names the tags it is about.
   const ST = (tags, ...stats) => Object.fromEntries(stats.map((k) => [k, tags]));
   G.STAT_TAGS = Object.assign({},
-    ST(['poison'], 'poisonChance', 'poisonDmg'), ST(['physical', 'bleed'], 'bleedChance', 'bleedDmg', 'bleedPerHp'), ST(['poison'], 'poisonPerArmor'),
+    ST(['poison'], 'poisonChance', 'poisonDmg', 'poisonTickRate', 'poisonDuration'), ST(['physical', 'bleed'], 'bleedChance', 'bleedDmg', 'bleedPerHp', 'bleedDuration', 'bleedStacks'), ST(['poison'], 'poisonPerArmor'),
     ST(['elemental'], 'elemDmg', 'flatElem', 'shockedElem', 'slowedElem', 'rootedElem'), ST(['elemental', 'acid'], 'acidChance'), ST(['elemental', 'shock'], 'shockChance', 'shockSlow'),
     ST(['dot'], 'dotDmg'), ST(['elemental', 'explosion'], 'explodeChance', 'explodePower'), ST(['melee'], 'meleeDmg', 'meleeDmgPerAttack'), ST(['firearm'], 'firearmDmg', 'gunDmgPerAttack'), ST(['magic'], 'magicDmg'),
     ST(['weapon', 'hit'], 'dmgMult', 'critChance', 'critMult', 'weaponCrit', 'atkSpeed', 'projectiles', 'ricochetChance', 'chains', 'area', 'weaponDmgInc', 'bossDmg', 'stunnedDmg', 'wDmg', 'wSpeed', 'wCrit'),
@@ -211,6 +223,7 @@
     holyLeech: ['holy', 'defense'], ccShield: ['defense', 'control'], trinketInvuln: ['trinket', 'defense'], freeUpgrade: ['utility'],
     trinketBlast: ['trinket', 'explosion', 'elemental'], dungeonShield: ['defense'], fifthCrit: ['hit'], bossBleedSpread: ['bleed'],
     poisonMaxHp: ['poison', 'dot'], poisonKillHeal: ['poison', 'heal'], poisonReversal: ['poison'], riposte: ['melee', 'hit', 'area', 'defense'],
+    elementalPoison: ['elemental', 'poison'], poisonReflect: ['poison', 'defense'],
   };
   // The tags of a set of stats plus an effect id (plus extra tags: a talent's rules), in G.TAGS order.
   G.tagsFor = function (stats, effectId, extra) {
@@ -222,11 +235,11 @@
   // kind: the damage number style. inherit: taken from a hit, so the hit's own scaling is already in it.
   G.DMG_SOURCES = {
     weapon: { name: 'Weapon hits', type: 'physical', tags: ['hit', 'weapon'], kind: 'hit', desc: 'Your weapon\'s hits, swings, bullets, pellets, darts, knives and ricochets. Also tagged with the weapon\'s class (melee, firearm or magic). Only these can be critical, poison and cause bleeding.' },
-    bleed: { name: 'Bleeding', type: 'physical', tags: ['dot', 'bleed'], kind: 'bleed', inherit: true, desc: 'One bleed per monster: 150% of the hit that caused it, every second, for 5 seconds. A weaker bleed never replaces a stronger one.' },
+    bleed: { name: 'Bleeding', type: 'physical', tags: ['dot', 'bleed'], kind: 'bleed', inherit: true, desc: 'One bleed per monster (more with Bleed stacks): 210% of the hit that caused it, every second, for 5 seconds. A weaker bleed never replaces a stronger one.' },
     bloodTrail: { name: 'Blood trails', type: 'physical', tags: ['dot', 'bleed', 'talent'], kind: 'bleed', inherit: true, desc: 'Crippled monsters (Bleeding from the Ears) leave pools of blood that make the others bleed.' },
     bloodBurst: { name: 'Blood bursts', type: 'physical', tags: ['hit', 'explosion'], kind: 'explode', desc: 'Bleeding monsters exploding on death (the Serrated Dagger\'s implicit) and the spray of the ones the Tell-Tale Heart bursts.' },
     bloodPop: { name: 'Burst hearts', type: 'physical', tags: ['bleed', 'trinket'], kind: 'explode', noScale: true, fixed: true, desc: 'The Tell-Tale Heart: every bleeding monster bursts and dies at once, whatever its health. Takes no bonuses: not even shock or armor change it.' },
-    poison: { name: 'Poison', type: 'poison', tags: ['dot', 'poison'], kind: 'poison', desc: 'Every poison is its own stack, without limit, dealing 1% of the monster\'s max health per second for 4 seconds. Inflicted by physical hits.' },
+    poison: { name: 'Poison', type: 'poison', tags: ['dot', 'poison'], kind: 'poison', desc: 'Every poison is its own stack, without limit, dealing 30% of the hit that caused it per second for 2 seconds. Inflicted by physical hits (and elemental hits with the talent option).' },
     flatElem: { name: 'Added elemental damage', type: 'elemental', tags: ['hit'], kind: 'elemental', desc: 'Flat elemental damage added to every weapon hit (weapon modifier), as a separate elemental hit.' },
     elemBonus: { name: 'Bonus elemental damage', type: 'elemental', tags: ['hit'], kind: 'elemental', inherit: true, desc: 'A share of a weapon hit dealt again as elemental damage: against shocked, slowed or rooted monsters (alien modifiers), Chain Lightning, the Scarecrow Effigy\'s embers.' },
     lightning: { name: 'Lightning bolts', type: 'elemental', tags: ['hit', 'lightning', 'talent'], kind: 'elemental', inherit: true, desc: 'Storm Caller\'s bolts: they always shock.' },
@@ -254,20 +267,22 @@
   // The four crowd-control statuses and the stat that gives the player a chance to inflict each.
   G.STATUS_IDS = ['slow', 'shock', 'stun', 'root'];
   G.STATUS_STAT = { slow: 'slowChance', shock: 'shockChance', stun: 'stunChance', root: 'rootChance' };
-  // Talent currencies: Totems of Power from altars, Alien Spoons from invasions.
+  // Talent currencies: Totems of Power from altars, Miracles from the bonfire at night (the id 'spoon' is
+  // left from when they were Alien Spoons that invasions gave).
   G.CURRENCIES = {
     totem: { name: 'Totem of Power', plural: 'Totems of Power', short: 'totem', icon: 'totem', color: '#8ff8ff' },
-    spoon: { name: 'Alien Spoon', plural: 'Alien Spoons', short: 'spoon', icon: 'spoon', color: '#7dff6a' },
+    spoon: { name: 'Miracle', plural: 'Miracles', short: 'miracle', icon: 'sun', color: '#ffd84a' },
   };
   G.SLOTS = ['weapon', 'hat', 'body', 'boots', 'charm'];
   const AIS = ['dog', 'crow', 'pumpkin', 'shooter', 'blob', 'mosquito', 'golem', 'ghost', 'snail', 'summoner', 'frog', 'cauldron', 'ritual', 'eye', 'voidling', 'crawler', 'tentacle', 'cthulhu'];
-  const ENEMY_MODELS = ['dog', 'crow', 'pumpkin', 'alien', 'blob', 'mosquito', 'alienbird', 'witchdoctor', 'shaman', 'ghost', 'cultist', 'snail', 'frog', 'cauldron', 'eye', 'voidling', 'crawler', 'tentacle', 'cthulhu',
+  const ENEMY_MODELS = G.ENEMY_MODELS = ['dog', 'crow', 'pumpkin', 'alien', 'blob', 'mosquito', 'alienbird', 'witchdoctor', 'shaman', 'ghost', 'cultist', 'snail', 'frog', 'cauldron', 'eye', 'voidling', 'crawler', 'tentacle', 'cthulhu',
     'golem', 'bigblob', 'deer', 'orc', 'demon'];
   G.BOSS_MODELS = ['golem', 'bigblob', 'deer', 'orc', 'demon'];   // full animated hierarchies instead of instanced parts
-  const WEAPON_MODELS = ['scythe', 'sword', 'shotgun', 'revolver', 'flask', 'flamethrower', 'mp5', 'blowgun', 'obsidian', 'dagger', 'fan', 'tome', 'screamskull'];
+  const WEAPON_MODELS = ['scythe', 'sword', 'shotgun', 'revolver', 'flask', 'flamethrower', 'mp5', 'blowgun', 'obsidian', 'dagger', 'fan', 'tome', 'screamskull', 'axe'];
+  G.WEAPON_MODELS = WEAPON_MODELS;   // the showcase tool lists them
   const POSES = ['scythe', 'sword', 'shotgun', 'revolver', 'flask', 'tome'];
   G.PROJ_KINDS = ['scythe', 'wave', 'pellet', 'bullet', 'flask', 'flame', 'dart', 'knife', 'fireball', 'nova'];
-  const GEAR_MODELS = { hat: ['straw', 'cap', 'cowboy', 'antenna', 'dome', 'shamanmask', 'bearhood', 'flayedhood', 'tentaclecrown'], body: ['body', 'tiki', 'bearpelt', 'butcherapron', 'voidmantle'],
+  const GEAR_MODELS = G.GEAR_MODELS = { hat: ['straw', 'cap', 'cowboy', 'antenna', 'dome', 'shamanmask', 'bearhood', 'flayedhood', 'tentaclecrown'], body: ['body', 'tiki', 'bearpelt', 'butcherapron', 'voidmantle'],
     boots: ['boots', 'moonboots', 'bearpaws', 'bloodboots', 'voidtreads'], charm: ['horseshoe', 'bell', 'watch', 'heartjar', 'voideye'] };
   const MOD_EFFECTS = ['hp', 'damage', 'speed', 'size', 'armor', 'regen', 'healOnHit', 'attackSpeed', 'boulders', 'summons', 'slamRadius', 'lavaTrail', 'deathBlast', 'dotImmune', 'inflicts', 'pulse', 'anchor', 'shamanic', 'shroud'];
   // Item tags: themed gear that only drops on maps listing the tag (stages.json maps[].gear).
@@ -411,7 +426,8 @@
     });
     G.ITEM_SCALING = Object.assign({ weaponRoll: 0.07, affixRoll: 0.15, scrapPerStage: 0.5 }, d.scaling);
     const ar = d.armor || {};
-    G.ARMOR = { maxReduction: U.clamp(num(ar.maxReduction, 0.9), 0, 0.99) };
+    // armor's threshold (the armor that halves damage) grows with danger: threshold x thresholdGrowth ^ danger (combat.js PR.reduction)
+    G.ARMOR = { maxReduction: U.clamp(num(ar.maxReduction, 0.9), 0, 0.99), threshold: Math.max(1, num(ar.threshold, 40)), thresholdGrowth: Math.max(1, num(ar.thresholdGrowth, 1.3225)) };
     for (const sl of G.SLOTS) { const v = Array.isArray(ar[sl]) ? ar[sl] : [0, 0]; G.ARMOR[sl] = [Math.max(0, num(v[0], 0)), Math.max(0, num(v[1], num(v[0], 0)))]; }
     G.SLOT_NAMES = {}; G.SLOT_WEIGHTS = {};
     for (const s of G.SLOTS) { const o = (d.slots || {})[s] || {}; G.SLOT_NAMES[s] = o.name || s; G.SLOT_WEIGHTS[s] = num(o.dropWeight, 1); }
@@ -465,8 +481,8 @@
     for (const k in st) if (!G.STATUS_IDS.includes(k)) warn(`status_effects.json: unknown status "${k}" (the statuses are ${G.STATUS_IDS.join(', ')})`);
     const dots = d.dots || {}, p = dots.poison || {}, b = dots.bleed || {};
     G.DOTS = {
-      poison: { damage: Math.max(0, num(p.damage, 0)), maxHp: Math.max(0, num(p.maxHpPerSecond, 0.01)), duration: Math.max(0.1, num(p.duration, 4)), maxStacks: Math.max(0, Math.floor(num(p.maxStacks, 0))), dummyHp: Math.max(1, num(p.dummyHp, 1000)) },
-      bleed: { damage: num(b.damage, 1.5), duration: Math.max(0.1, num(b.duration, 5)) },
+      poison: { damage: Math.max(0, num(p.damage, 0.3)), maxHp: Math.max(0, num(p.maxHpPerSecond, 0)), duration: Math.max(0.1, num(p.duration, 2)), maxStacks: Math.max(0, Math.floor(num(p.maxStacks, 0))), dummyHp: Math.max(1, num(p.dummyHp, 1000)) },
+      bleed: { damage: num(b.damage, 2.1), duration: Math.max(0.1, num(b.duration, 5)), maxStacks: Math.max(1, Math.floor(num(b.maxStacks, 1))) },
       holy: Object.assign({ damage: 0.4, duration: 3, auraRadius: 1, spread: 0.1, explodeAt: 5, explode: 0.5, explodeRadius: 4.5 }, dots.holy),
     };
     const pd = d.playerDots || {};
@@ -494,8 +510,11 @@
     projChains: { chains: 5 },
     pyroblast: { every: 5, mult: 2, size: 1.8, stun: 0.5, bounces: 3 },
     holyReaper: { holy: 2, faith: 2, push: 7 },
+    // the axe: while the buff is on you, attacks reach (1 + area) x as far all around you, you spin, and the
+    // bleeds they cause deal (1 + bleedMore) x damage
+    bloodlustWhirl: { buff: 'bloodlust', area: 1, bleedMore: 1 },
   };
-  const WEAPON_FX_TAGS = { bleedExplode: ['bleed', 'explosion'], holyEvery: ['elemental', 'holy'], poisonDeathSpread: ['poison'], dashBuff: ['movement', 'buff'], bleedKillBuff: ['bleed', 'buff'], pyroblast: ['explosion', 'area', 'control'], holyReaper: ['elemental', 'holy', 'control'] };
+  const WEAPON_FX_TAGS = { bleedExplode: ['bleed', 'explosion'], holyEvery: ['elemental', 'holy'], poisonDeathSpread: ['poison'], dashBuff: ['movement', 'buff'], bleedKillBuff: ['bleed', 'buff'], pyroblast: ['explosion', 'area', 'control'], holyReaper: ['elemental', 'holy', 'control'], bloodlustWhirl: ['bleed', 'buff', 'area'] };
   function implicit(o, where) {
     if (!o) return null;
     let effect = null;
@@ -527,7 +546,8 @@
         model: w.model || id, pose: w.pose || w.model || id, aimRange: num(w.aimRange, 16), sound: w.sound || null, muzzle: num(w.muzzle, 0.7), shake: num(w.shake, 0),
         melee: m ? { arc: num(m.arc, 120), range: num(m.range, 3), color: hex(m.color, 0xe8f4ff), pitch: num(m.pitch, 1) } : null,
         proj: {
-          kind: pr.kind || 'scythe', count: Math.max(1, num(pr.count, 1)), speed: num(pr.speed, 15), range: num(pr.range, 10), pierce: num(pr.pierce, 1),
+          // count: melee weapons may throw nothing (the axe: 0); everything else throws at least one
+          kind: pr.kind || 'scythe', count: Math.max(m ? 0 : 1, num(pr.count, 1)), speed: num(pr.speed, 15), range: num(pr.range, 10), pierce: num(pr.pierce, 1),
           dmgMul: num(pr.damageMult, 1), knock: num(pr.knockback, 1), spread: num(pr.spread, 0.6), splash: num(pr.splash, 2.4), puddle: num(pr.puddle, 3), jitter: num(pr.jitter, 0),
           ring: !!pr.ring,
         },
@@ -576,7 +596,7 @@
     return true;
   };
   // One big tree per character: nodes on a grid, linked by requires / requiresAny.
-  // free: alien talents, picked in any order with no tree layout (no positions or links needed).
+  // free: the Miracles (JSON section "alien"), picked in any order with no tree layout (no positions or links needed).
   function buildTree(t, c, free) {
     const where = (c.talents || `${c.id} talents`) + (free ? ' alien' : ''), tree = { groups: [], segments: [], talents: [], byId: {} };
     const effect = (e, id) => {
@@ -748,7 +768,7 @@
     const ch = d.chests || {}, chEv = Array.isArray(ch.every) ? ch.every : [];
     G.CHESTS = {
       first: Math.max(0, num(ch.first, 25)), every: [Math.max(5, num(chEv[0], 55)), Math.max(5, num(chEv[1], num(chEv[0], 85)))], maxStanding: Math.max(1, Math.floor(num(ch.maxStanding, 3))),
-      freeAtStart: Math.max(0, Math.floor(num(ch.freeAtStart, 2))), weaponChest: Math.min(3, Math.floor(num(ch.weaponChest, 1))), cost: Math.max(0, num(ch.cost, 20)), costPerMinute: Math.max(0, num(ch.costPerMinute, 20)),
+      freeAtStart: Math.max(0, Math.floor(num(ch.freeAtStart, 2))), cost: Math.max(0, num(ch.cost, 20)), costPerMinute: Math.max(0, num(ch.costPerMinute, 20)),
       minRarity: U.clamp(Math.floor(num(ch.minRarity, 0)), 0, 3), luck: num(ch.luck, 25), pickupRadius: num(ch.pickupRadius, 1.8),
       minPlayerDistance: num(ch.minPlayerDistance, 8), area: U.clamp(num(ch.area, 31), 5, 36),
     };
@@ -885,13 +905,22 @@
         modifiers: Array.isArray(v.modifiers) && v.modifiers.length ? v.modifiers.map((n) => Math.max(0, Math.floor(num(n, 0)))) : [2],
         rareHp: num(v.rareHp, 14), rareDamage: num(v.rareDamage, 1.5), rareSize: num(v.rareSize, 1.6), rareXp: num(v.rareXp, 25),
         pillar: { radius: num(pl.radius, 2.6), speed: num(pl.speed, 3.2), playerDamage: num(pl.playerDamage, 14), monsterDamage: num(pl.monsterDamage, 0.6), bossDamage: num(pl.bossDamage, 0.02), spawnEvery: Math.max(0.3, num(pl.spawnEvery, 2.2)) },
-        reward: { spoons: Math.max(0, Math.floor(num(rw.spoons, 1))), xp: num(rw.xp, 0), items: Array.isArray(rw.items) ? rw.items : [], buff: buffRef(rw.buff, 'stages.json invasion.reward.buff') },
+        reward: { spoons: Math.max(0, Math.floor(num(rw.spoons, 0))), xp: num(rw.xp, 0), items: Array.isArray(rw.items) ? rw.items : [], buff: buffRef(rw.buff, 'stages.json invasion.reward.buff') },
       };
     } else G.INVASION = null;
     const cp = d.camp || {}, pt = (v, def) => (Array.isArray(v) && v.length === 2 ? [num(v[0], def[0]), num(v[1], def[1])] : def);
     G.CAMP = {
-      workbench: pt(cp.workbench, [22, -18.5]), trapdoor: pt(cp.trapdoor, [28.5, -17]), dummy: pt(cp.dummy, [-25, -37.4]), travelTime: Math.max(0, num(cp.travelTime, 1.5)),
+      workbench: pt(cp.workbench, [22, -18.5]), dummy: pt(cp.dummy, [-25, -37.4]),
     };
+    // Night (the pause between days): its sky, and the lamps that light up by the house, barn, dummy and workbench.
+    const nt = cp.night || {};
+    G.CAMP.night = { sky: toPhase(Object.assign({}, SKY0, nt.sky)), fade: Math.max(0.1, num(nt.fade, 3)), lamp: Math.max(0, num(nt.lampIntensity, 2.2)),
+      lamps: (Array.isArray(nt.lamps) ? nt.lamps : [[-18.2, -19.4], [19.4, -21.6], [-21.6, -35], [19.6, -17.4]]).map((v) => pt(v, [0, 0])) };
+    // The bonfire in the middle of the farm at night: praying at it is the only way to the next day.
+    const bf = cp.bonfire || {};
+    G.BONFIRE = { at: pt(bf.position, [0, 0]), radius: Math.max(1, num(bf.useRadius, 3.4)), miracles: Math.max(0, Math.floor(num(bf.miracles, 1))),
+      embersPerKill: Math.max(0, num(bf.embersPerKill, 0.2)), crosses: Math.max(0, Math.floor(num(bf.crosses, 9))), crossRadius: [Math.max(3, num((bf.crossRadius || [])[0], 7)), Math.max(3, num((bf.crossRadius || [])[1], 10))],
+      light: Math.max(0, num(bf.light, 3.2)), rays: Math.max(0, num(bf.rayLength, 22)), prayFade: Math.max(0.3, num(bf.prayFade, 3)), wakeFade: Math.max(0.2, num(bf.wakeFade, 1.6)) };
     const ug = cp.upgrade || {}, ugr = Array.isArray(ug.rarity) ? ug.rarity : [];
     G.CAMP.upgrade = { levels: Math.max(0, Math.floor(num(ug.levels, 3))), cost: Math.max(0, num(ug.cost, 12)), rarity: [1, 2, 3.5].map((v, i) => Math.max(0, num(ugr[i], v))), growth: Math.max(0, num(ug.growth, 0.5)) };
     const sh = cp.shop || {}, pr = Array.isArray(sh.prices) ? sh.prices : [];
@@ -1033,9 +1062,9 @@
     out.score = out.dps != null ? out.dps * (1 + power / 100) : power;
     return out;
   };
-  // ---------- the workbench's Upgrade: up to CAMP.upgrade.levels item levels per item, for essence ----------
+  // ---------- the workbench's Upgrade: up to CAMP.upgrade.levels item levels per item, for embers ----------
   G.upgradesLeft = (it) => Math.max(0, G.CAMP.upgrade.levels - (it.upgrades || 0));
-  // Essence for n more item levels.
+  // Embers for n more item levels.
   G.upgradeCost = function (it, n) {
     const U2 = G.CAMP.upgrade, r = U2.rarity[Math.min(it.rarity, U2.rarity.length - 1)];
     let c = 0;

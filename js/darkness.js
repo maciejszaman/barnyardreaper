@@ -64,7 +64,7 @@
     F.burst(x, 0.5, z, { n: 30, color: [PALE, 0xffffff], glow: true, speed: 4, life: 1, size: 0.16, up: 1.5, grav: -1 });
     return d;
   };
-  // A new run, dawn: the dark is simply gone.
+  // A new run, nightfall: the dark is simply gone.
   DK.clear = function () { dispose(); DK.post.dark = 0; DK.post.r = 0; A.duck(0); };
   // The dark has you: you die (or an extra life drags you back out, and the dark lifts).
   function take(d) {
@@ -78,7 +78,7 @@
   DK.update = function (dt) {
     const d = DK.on, post = DK.post, D = G.DARKNESS;
     if (!d) { post.dark = Math.max(0, post.dark - dt * 2); A.duck(post.dark * 0.85); return; }
-    if (G.phase !== 'fight' || G.dungeon.active) { dispose(); return; }   // dawn, or you went down a stairway
+    if (G.phase !== 'fight' || G.dungeon.active) { dispose(); return; }   // nightfall, or you went down a stairway
     d.t -= dt; d.age += dt;
     const inside = !P.dead && Math.hypot(P.x - d.x, P.z - d.z) < d.r;
     // the light breathes, and shines white while you stand in it

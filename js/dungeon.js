@@ -442,7 +442,7 @@
     const m = G.map(); G.scene.fog.near = m.fog[0]; G.scene.fog.far = m.fog[1];
     ES.gridCenter(0, 0);
   }
-  // Everything that dropped inside comes out with you: items around you, crystals and essence fly to you.
+  // Everything that dropped inside comes out with you: items around you, crystals and embers fly to you.
   function carryLoot() {
     const PK = G.pickups, ring = (i, n, r) => [P.x + Math.cos(i / Math.max(1, n) * Math.PI * 2) * r, P.z + Math.sin(i / Math.max(1, n) * Math.PI * 2) * r];
     const loot = PK.loot.filter((l) => inDungeon(l.z));
@@ -450,7 +450,7 @@
     for (const g of PK.gems.concat(PK.ess)) if (inDungeon(g.z)) { g.x = P.x + U.rnd(-3, 3); g.z = P.z + U.rnd(-3, 3); g.mag = true; }
     for (const m of PK.misc) if (inDungeon(m.z)) { m.x = P.x + U.rnd(-2, 2); m.z = P.z + U.rnd(-2, 2); m.mesh.position.set(m.x, 0.6, m.z); }
   }
-  // The boss is dead: a trinket you don't own, items, essence and a free level; then out you go.
+  // The boss is dead: a trinket you don't own, items, embers (dungeon.essence) and a free level; then out you go.
   function reward() {
     const D = G.DUNGEON, b = DG.boss, C = G.combat;
     G.run.dungeons = (G.run.dungeons || 0) + 1;

@@ -2,7 +2,7 @@
 // World: renderer + PS2-style post pass, sky and time of day, the farm arena, caves and colliders.
 (function () {
   const T = THREE, U = G.U, M = G.M;
-  const W = G.world = { colliders: [], fadeables: [], caves: [], lamps: [], phase: 0.5, phaseTarget: 0.5, cam: { x: 0, z: 0 } };
+  const W = G.world = { colliders: [], fadeables: [], caves: [], lamps: [], nightLamps: [], phase: 0.5, phaseTarget: 0.5, night: 0, nightTarget: 0, cam: { x: 0, z: 0 } };
   W.ARENA = 39;
   W.GROUND = 132;
   // Where the player may walk: the farm by default, a dungeon's extent while inside one (dungeon.js).
@@ -78,7 +78,7 @@
     });
     W.postScene.add(new T.Mesh(new T.PlaneGeometry(2, 2), W.postMat));
 
-    buildSky(); buildGround(); buildFarm(); buildCaves(); buildBackdrop();
+    buildSky(); buildGround(); buildFarm(); buildCaves(); buildBackdrop(); buildNightLights();
     W.setMap(G.MAPS[0]);
     W.applyPhase(W.phase);
     W.resize();
@@ -134,6 +134,30 @@
   }
 
   W.setPhaseTarget = (p) => { W.phaseTarget = Math.min(p, PH.length - 1); };
+  // ---------- night (the pause between days: day.js, bonfire.js) ----------
+  // W.night (0 day .. 1 night) eases toward W.nightTarget over stages.json camp.night.fade seconds and lays the
+  // night sky (camp.night.sky) over the day's stage sky. instant: no fade (waking on the next day).
+  W.setNight = function (on, instant) { W.nightTarget = on ? 1 : 0; if (instant) W.night = W.nightTarget; };
+  // The lights the night needs, made once here (adding lights later recompiles every material): a warm lamp
+  // by the house, the barn, the training dummy and the workbench, and the bonfire's light (bonfire.js drives it).
+  function buildNightLights() {
+    for (const [x, z] of G.CAMP.night.lamps) {
+      const L = new T.PointLight(0xffb060, 0, 16, 1.4); L.position.set(x + 0.72, 2.6, z); G.scene.add(L); W.nightLamps.push(L);
+    }
+    W.fireLight = new T.PointLight(0xff8a30, 0, 36, 1.2); W.fireLight.position.set(G.BONFIRE.at[0], 2.4, G.BONFIRE.at[1]); G.scene.add(W.fireLight);
+  }
+  function applyNight(k, time) {
+    const N = G.CAMP.night.sky, u = W.skyMat.uniforms;
+    u.top.value.lerp(_c1.set(N.top), k); u.hor.value.lerp(_c1.set(N.hor), k); u.bot.value.lerp(_c1.set(N.fog), k); G.scene.fog.color.lerp(_c1.set(N.fog), k);
+    W.hemi.color.lerp(_c1.set(N.hs), k); W.hemi.groundColor.lerp(_c1.set(N.hg), k); W.hemi.intensity = U.lerp(W.hemi.intensity, N.hi, k);
+    W.sun.color.lerp(_c1.set(N.sc), k); W.sun.intensity = U.lerp(W.sun.intensity, N.si, k);
+    W.sun.position.set(U.lerp(W.sun.position.x, N.sp[0], k), U.lerp(W.sun.position.y, N.sp[1], k), U.lerp(W.sun.position.z, N.sp[2], k));
+    W.cloudMat.color.lerp(_c1.set(N.cl), k); W.celMat.color.lerp(_c1.set(N.cel), k);
+    W.playerLight.intensity = U.lerp(W.playerLight.intensity, N.pl, k);
+    for (const l of W.lamps) l.intensity = U.lerp(l.intensity, N.lamp, k);
+    const tn = W.postMat.uniforms.tint.value; tn.set(U.lerp(tn.x, N.tint[0], k), U.lerp(tn.y, N.tint[1], k), U.lerp(tn.z, N.tint[2], k));
+    if (W.windows && k > 0.5) W.windows.visible = true;
+  }
   W.applyPhase = function (p) {
     const i = Math.min(Math.floor(p), PH.length - 1), j = Math.min(i + 1, PH.length - 1), t = p - i, a = PH[i], b = PH[j];
     mixHex(a.top, b.top, t, W.skyMat.uniforms.top.value);
@@ -582,6 +606,10 @@
   W.update = function (dt, time) {
     W.phase = U.damp(W.phase, W.phaseTarget, 0.45, dt);
     W.applyPhase(W.phase);
+    W.night = W.nightTarget > W.night ? Math.min(W.nightTarget, W.night + dt / G.CAMP.night.fade) : Math.max(W.nightTarget, W.night - dt / G.CAMP.night.fade);
+    const nk = W.night * W.night * (3 - 2 * W.night);   // eased
+    if (nk > 0.001 && !W.dark) applyNight(nk, time);
+    for (let i = 0; i < W.nightLamps.length; i++) W.nightLamps[i].intensity = W.dark ? 0 : G.CAMP.night.lamp * nk * (0.92 + Math.sin(time * 7 + i * 2.1) * 0.05 + Math.sin(time * 17 + i) * 0.03);
     const D = W.dark;
     W.sky.visible = W.cel.visible = !D;
     for (const c of W.clouds) c.visible = !D;
@@ -590,6 +618,7 @@
       G.scene.fog.color.set(D.fog); W.playerLight.intensity = D.playerLight * (0.92 + Math.sin(time * 11) * 0.05 + Math.sin(time * 23) * 0.03);
       W.postMat.uniforms.tint.value.set(D.tint[0], D.tint[1], D.tint[2]);
       for (const l of W.lamps) l.intensity = 0;
+      if (W.fireLight) W.fireLight.intensity = 0;
       if (W.windows) W.windows.visible = false;
     }
     W.playerLight.distance = D ? D.lightDistance : 15;
@@ -597,7 +626,7 @@
     W.decorT = (W.decorT || 0) + dt;   // the living decor's clock: it stands still while the game does
     if (W.motes && W.motes.visible) updateMotes(dt, W.decorT);
     if (W.decorUpdate && !D) W.decorUpdate(dt, W.decorT);
-    // the map's madness rises through the day (none in a dungeon, half at the camp)
+    // the map's madness rises through the day (none in a dungeon, half at night)
     const mw = W.mapWarp, dayK = G.phase === 'fight' ? U.clamp((G.dayT || 0) / G.DAY_SECONDS, 0, 1) : 0;
     W.warpNow = !mw || D || G.onTitle() ? 0 : U.lerp(mw[0], mw[1], dayK) * (G.phase === 'camp' ? 0.5 : 1);
     if (W.fan) W.fan.rotation.z -= dt * 1.6;

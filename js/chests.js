@@ -1,9 +1,9 @@
 'use strict';
 // Chests (data/stages.json > chests): each holds one random item. Every day starts with a couple of
 // free chests right next to you, which open when you walk up to them. More turn up at random spots
-// while the day is fought; those cost essence (press E next to one), and the later in the day a chest
-// turns up, the more it costs. Unopened chests stay until you take the cellar trapdoor.
-// The first free chest of each day is a Weapon Chest that always holds a weapon (chests.weaponChest).
+// while the day is fought; those cost embers (G.run.essence; press E next to one), and the later in the day
+// a chest turns up, the more it costs. Unopened chests stay until you pray at the bonfire.
+// (There used to be a Weapon Chest; now every chest is just a Chest.)
 // Also here: experience barrels (stages.json barrels) that break open when you walk into them and
 // give you a level, and shrines (stages.json shrines): a Shrine of Mary you walk into for Empowered
 // Faith, or at night sometimes an Unholy Shrine with a goat on its roof, where E makes a pact (Apostasy).
@@ -59,19 +59,19 @@
     }
     return null;
   }
-  // free: one of the day's free chests, placed beside you (i of n). weapon: a Weapon Chest.
-  CH.spawn = function (free, i = 0, n = 1, weapon = false) {
+  // free: one of the day's free chests, placed beside you (i of n).
+  CH.spawn = function (free, i = 0, n = 1) {
     const p = free ? besideYou(i, n) || spot() : spot();
     if (!p) return null;
     const [x, z] = p, m = M.chest(), cost = free ? 0 : CH.priceNow();
     m.root.position.set(x, -1, z); m.root.rotation.y = Math.atan2(P.x - x, P.z - z);
     m.glowMat.color.setRGB(0.15, 0.12, 0.05);
     G.scene.add(m.root);
-    const c = { x, z, m, cost, weapon, state: 'rising', t: 0 };
+    const c = { x, z, m, cost, state: 'rising', t: 0 };
     CH.list.push(c);
     F.dust(x, z, 10); F.ring(x, z, { r0: 0.4, r1: 2.6, life: 0.6, color: GOLD });
     A.play('chest');
-    if (cost) G.ui.toast(`A chest appeared · ${cost} essence to open`, '#ffd04a');
+    if (cost) G.ui.toast(`A chest appeared · ${cost} embers to open`, '#ffd04a');
     return c;
   };
   function open(c) {
@@ -81,7 +81,7 @@
     A.play('chestopen'); F.flash('#fff0b0', 0.15);
     F.burst(c.x, 1, c.z, { n: 22, color: [GOLD, 0xfff4c0], glow: true, speed: 5, life: 0.7, size: 0.16, up: 1 });
   }
-  // The chest within reach that costs essence, if any.
+  // The chest within reach that costs embers, if any.
   const near = () => CH.list.find((c) => c.state === 'idle' && c.cost > 0 && Math.hypot(P.x - c.x, P.z - c.z) < G.CHESTS.pickupRadius + 0.6);
   // E next to a paid chest: open it if you can afford it; next to an Unholy Shrine: make the pact.
   // Returns true when something was in reach.
@@ -90,7 +90,7 @@
     if (sh) { pact(sh); return true; }
     const c = near();
     if (!c) return false;
-    if (G.run.essence < c.cost) { G.ui.toast(`Not enough essence · this chest costs ${c.cost}`, '#ff6a4a'); A.play('click'); return true; }
+    if (G.run.essence < c.cost) { G.ui.toast(`Not enough embers · this chest costs ${c.cost}`, '#ff6a4a'); A.play('click'); return true; }
     open(c);
     return true;
   };
@@ -101,8 +101,8 @@
     if (G.phase === 'fight' && CH.startFree > 0) {
       const n = CH.startFree;
       CH.startFree = 0;
-      for (let i = 0; i < n; i++) CH.spawn(true, i, n, i === 0 && C.weaponChest >= 0);
-      G.ui.toast(`${n} free chest${n === 1 ? '' : 's'} beside you${C.weaponChest >= 0 ? ', one of them a Weapon Chest' : ''}!`, '#ffd04a');
+      for (let i = 0; i < n; i++) CH.spawn(true, i, n);
+      G.ui.toast(`${n} free chest${n === 1 ? '' : 's'} beside you!`, '#ffd04a');
     }
     // a new chest every few dozen seconds of the fight (at most maxStanding unopened at once)
     if (G.phase === 'fight' && G.dayT >= CH.next && CH.next < G.DAY_SECONDS) {
@@ -129,7 +129,7 @@
         if (!c.dropped && c.t >= 0.3) {
           c.dropped = true;
           const a = Math.atan2(P.x - c.x, P.z - c.z);
-          const it = c.weapon ? G.makeItem('weapon', C.weaponChest, G.danger, null, { ilvl: G.rollItemLevel(), tags: G.map().tags }) : G.combat.rollItem(C.minRarity, C.luck);
+          const it = G.combat.rollItem(C.minRarity, C.luck);
           G.pickups.dropItem(c.x + Math.sin(a) * 1.3, c.z + Math.cos(a) * 1.3, it);
           F.burst(c.x, 1.1, c.z, { n: 12, color: [GOLD, 0xffffff], glow: true, speed: 3, life: 0.5, size: 0.14, up: 1 });
         }
@@ -294,7 +294,7 @@
       if (!F.pointer(c, dpr, ch.x, ch.z, col, 'CHEST')) continue;
       const s = F.project(ch.x, 1.9, ch.z);
       if (!s) continue;
-      const txt = ch.weapon ? 'Weapon Chest' : !ch.cost ? 'Free Chest' : `${ch === n ? 'E · ' : ''}Chest · ${ch.cost} essence`;
+      const txt = !ch.cost ? 'Chest' : `${ch === n ? 'E · ' : ''}Chest · ${ch.cost} embers`;
       c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = `${Math.round(19 * dpr)}px VT323, monospace`;
       const tw = c.measureText(txt).width + 10 * dpr;
       c.fillStyle = 'rgba(10,7,6,.75)'; c.fillRect(s.x - tw / 2, s.y - 10 * dpr, tw, 20 * dpr);

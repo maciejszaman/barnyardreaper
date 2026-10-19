@@ -1,13 +1,14 @@
 'use strict';
 // Talents: one big tree per character (data/<character>_talents.json) bought with Totems of Power
-// (from altars), and a set of alien talents with no tree (inventory > Alien Talents) bought with
-// Alien Spoons (from invasions). Both currencies and the learned ranks belong to the current run
-// (G.run): everything resets when a run ends.
+// (from altars), and the Miracles: big talents with no tree (character panel > Miracles, Y; the JSON's
+// "alien" section, G.CHAR.alien) bought with Miracles (currency id 'spoon', G.run.spoons) from the bonfire
+// at night. Both currencies and the learned ranks belong to the current run (G.run): everything resets
+// when a run ends.
 (function () {
   const TL = G.talents = {};
   const tree = () => G.CHAR.tree;
   const ranks = () => G.run.talents;
-  // Every talent: the tree's and the alien ones.
+  // Every talent: the tree's and the Miracles.
   TL.all = () => tree().talents.concat(G.CHAR.alien.talents);
   TL.byId = (id) => tree().byId[id] || G.CHAR.alien.byId[id];
 

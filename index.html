@@ -71,7 +71,7 @@ button { font: inherit; color: inherit; }
 #totems { display: flex; align-items: center; gap: 6px; font-family: var(--font-num); font-size: 10px; color: #8ff8ff; text-shadow: 2px 2px 0 #000; }
 #totems img { width: 22px; height: 22px; image-rendering: pixelated; }
 #spn { display: flex; align-items: center; gap: 6px; color: #9dff7a; margin-left: 6px; }
-#ess { display: flex; align-items: center; gap: 6px; font-family: var(--font-num); font-size: 10px; color: #d8a8ff; text-shadow: 2px 2px 0 #000; }
+#ess { display: flex; align-items: center; gap: 6px; font-family: var(--font-num); font-size: 10px; color: #ffb060; text-shadow: 2px 2px 0 #000; }   /* Embers (id "ess": they were Essence) */
 #ess img { width: 22px; height: 22px; image-rendering: pixelated; }
 #statuses { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 5px; max-width: 260px; }
 .st { --sc: var(--straw); position: relative; width: 38px; height: 38px; pointer-events: auto; display: grid; place-items: center; overflow: hidden;
@@ -104,6 +104,9 @@ button { font: inherit; color: inherit; }
 #bossbar .bar { width: 100%; height: 14px; }
 #bossfill { background: linear-gradient(#ffb36b, #d2561e 50%, #7a2a0c); transition: width .25s ease-out; }
 #bosslag { background: #ffe8c0; opacity: .85; transition: width .9s .25s ease-in; }
+#bossfill.psn { background: linear-gradient(#c8ff8a, #7ab83a 50%, #3a6a14); }   /* poisoned: greener */
+#bossfill.bld { background: linear-gradient(#ff9a8a, #d8301e 50%, #7a1008); }   /* bleeding: redder */
+#bossfill.psn.bld { background: linear-gradient(#ffd08a, #b8762a 50%, #5a3a10); }
 #hud.has-event #bossbar { top: calc(env(safe-area-inset-top, 0px) + 132px); }
 #bossmods { font-size: 20px; text-shadow: 1px 1px 0 #000, -1px 1px 0 #000; margin-top: 3px; }
 #weapon { display: flex; align-items: center; gap: 8px; position: absolute; left: 16px; bottom: calc(env(safe-area-inset-bottom, 0px) + 14px); pointer-events: auto; }
@@ -279,7 +282,7 @@ button { font: inherit; color: inherit; }
 .lvl-actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
 
 /* Inventory / character */
-/* Character panel: one fixed-size window, four tabs (ledger, stats, talents, alien talents) */
+/* Character panel: one fixed-size window, four tabs (ledger, stats, talents, Miracles: id "alien") */
 .inv { width: min(1180px, 100%); height: min(860px, calc(100vh - 32px)); display: flex; flex-direction: column; gap: 12px; padding: 18px; }
 .pv { flex: 1; min-height: 0; min-width: 0; }
 .inv-head h2 { white-space: nowrap; }
@@ -306,7 +309,7 @@ button { font: inherit; color: inherit; }
 #v-stats { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 18px; }
 .st-col { display: grid; grid-template-rows: auto minmax(0, 1fr); min-height: 0; min-width: 0; }
 .st-col > :last-child { overflow-y: auto; padding-right: 6px; align-content: start; }
-/* talents and alien talents fill the window */
+/* the talent tree and the Miracles fill the window */
 #v-talents { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 12px; }
 #v-talents .tal-view { height: auto; min-height: 200px; }
 .tal-side { display: grid; gap: 6px; align-content: start; width: min(420px, 100%); }
@@ -328,10 +331,12 @@ button { font: inherit; color: inherit; }
 .inv-tabs { display: flex; gap: 6px; margin-right: auto; margin-left: 10px; flex-wrap: wrap; }
 .inv-tabs .btn { font-size: 10px; padding: 8px 10px 6px; opacity: .7; }
 .inv-tabs .btn.on { opacity: 1; box-shadow: inset 0 0 0 2px var(--straw), inset 0 -5px 0 rgba(0,0,0,.35); }
-.inv-tabs .btn.alien.on { box-shadow: inset 0 0 0 2px #7dff6a, inset 0 -5px 0 rgba(0,0,0,.35); color: #b8ffa8; }
+/* the Miracles tab (id "alien": they were the alien talents): gold, with a sun */
+.inv-tabs .btn.alien img { width: 16px; height: 16px; image-rendering: pixelated; vertical-align: -3px; margin-right: 5px; }
+.inv-tabs .btn.alien.on { box-shadow: inset 0 0 0 2px #ffd84a, inset 0 -5px 0 rgba(0,0,0,.35); color: #fff0a8; }
 .alien-view { display: grid; gap: 12px; min-width: 0; }
 .alien-top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; }
-#alien-pts { display: flex; align-items: center; gap: 8px; font-family: var(--font-num); font-size: 12px; color: #7dff6a; text-shadow: 2px 2px 0 #000; }
+#alien-pts { display: flex; align-items: center; gap: 8px; font-family: var(--font-num); font-size: 12px; color: #ffd84a; text-shadow: 2px 2px 0 #000; }
 #alien-pts img { width: 28px; height: 28px; image-rendering: pixelated; }
 .acols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; max-height: min(64vh, 640px); overflow-y: auto; padding: 4px; }
 @media (max-width: 760px) { .acols { grid-template-columns: minmax(0, 1fr); } }
@@ -346,10 +351,10 @@ button { font: inherit; color: inherit; }
 .atal .req { color: var(--dim); }
 .atal .req.met { color: #9de08a; }
 .atal .btn { font-size: 10px; padding: 8px 6px 6px; }
-.atal.on { background: linear-gradient(180deg, rgba(60,140,40,.35), rgba(0,0,0,.35) 75%); box-shadow: inset 0 0 0 2px #7dff6a, 0 0 18px rgba(125,255,106,.45); animation: alienGlow 2.4s ease-in-out infinite; }
+.atal.on { background: linear-gradient(180deg, rgba(160,120,30,.35), rgba(0,0,0,.35) 75%); box-shadow: inset 0 0 0 2px #ffd84a, 0 0 18px rgba(255,216,74,.45); animation: alienGlow 2.4s ease-in-out infinite; }
 .atal.on h4 { color: #b8ffa8; text-shadow: 0 0 8px rgba(125,255,106,.8); }
 .atal.on .head img { box-shadow: inset 0 0 0 2px #7dff6a, 0 0 10px rgba(125,255,106,.7); }
-@keyframes alienGlow { 50% { box-shadow: inset 0 0 0 2px #b8ffa8, 0 0 30px rgba(125,255,106,.75); } }
+@keyframes alienGlow { 50% { box-shadow: inset 0 0 0 2px #fff0a8, 0 0 30px rgba(255,216,74,.75); } }
 @media (prefers-reduced-motion: reduce) { .atal.on { animation: none; } }
 .sec-label { font-family: var(--font-num); font-size: 10px; letter-spacing: 1px; color: var(--dim); margin: 0 0 8px; }
 .slot { --rc: var(--line); position: relative; aspect-ratio: 1; max-width: 100%; cursor: pointer; padding: 0; background: rgba(0,0,0,.45); border: 2px solid #000; box-shadow: inset 0 0 0 2px var(--rc); display: grid; place-items: center; }
@@ -500,7 +505,7 @@ button { font: inherit; color: inherit; }
 @keyframes mkBreathe { 50% { text-shadow: 0 0 30px rgba(200,255,190,.85), 3px 3px 0 #000; } }
 .mk-sub { margin: 2px 0 0; font-size: 19px; color: #a8b898; font-style: italic; }
 #mk-body { display: grid; gap: 12px; max-height: calc(100vh - 170px); overflow-y: auto; overflow-x: hidden; padding-right: 2px; }   /* only her offers scroll; the aura stays clipped */
-.mk-ess { display: flex; align-items: center; gap: 8px; font-family: var(--font-num); font-size: 12px; color: #d8a8ff; text-shadow: 2px 2px 0 #000; }
+.mk-ess { display: flex; align-items: center; gap: 8px; font-family: var(--font-num); font-size: 12px; color: #ffb060; text-shadow: 2px 2px 0 #000; }   /* her price in Embers */
 .mk-ess img { width: 28px; height: 28px; image-rendering: pixelated; }
 .mk-sec { display: grid; gap: 8px; padding: 10px; background: rgba(0,0,0,.28); border: 2px solid #000; box-shadow: inset 0 0 0 1px #3a4a30; }
 .mk-sec.done { opacity: .6; }
@@ -543,6 +548,47 @@ button { font: inherit; color: inherit; }
 #intro-cap.on { opacity: 1; }
 #intro .iskip { position: absolute; right: 16px; bottom: calc(11vh - 30px); margin: 0; font-family: var(--font-num); font-size: 9px; color: #8a7a6a; }
 #intro-fade { position: absolute; inset: 0; background: #000; opacity: 0; transition: opacity .8s; pointer-events: none; }
+
+/* The bonfire (bonfire.js): a dark panel lit from below by a flickering fire, embers drifting up through it */
+.bonfire { position: relative; overflow: hidden; width: min(900px, 100%); display: grid; gap: 10px; padding: 18px;
+  background: radial-gradient(ellipse at 50% 120%, #6a2a0c, #2a140c 45%, #120a08 80%);
+  box-shadow: inset 0 0 0 2px #5a3a20, inset 0 0 0 4px #000, inset 0 -2px 0 4px #c8601a, 0 0 70px rgba(255,140,40,.25), 0 12px 40px rgba(0,0,0,.6); }
+.bonfire > * { position: relative; }
+.bonfire > .bf-glow { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 50% 110%, rgba(255,150,50,.38), transparent 60%); animation: bfFlicker 1.7s ease-in-out infinite alternate; }
+.bonfire > .bf-sparks { position: absolute; inset: 0; pointer-events: none; opacity: .75; animation: bfRise 9s linear infinite;
+  background-image: radial-gradient(circle, rgba(255,210,120,.9) 0 1.5px, transparent 2px), radial-gradient(circle, rgba(255,140,50,.8) 0 1px, transparent 1.6px), radial-gradient(circle, rgba(255,240,200,.6) 0 1px, transparent 1.4px);
+  background-size: 80px 120px, 50px 90px, 130px 150px; }
+@keyframes bfFlicker { 0% { opacity: .65; } 30% { opacity: .9; } 55% { opacity: .7; } 80% { opacity: 1; } 100% { opacity: .78; } }
+@keyframes bfRise { to { background-position: 10px -480px, -20px -360px, 0 -600px; } }
+.bonfire h2 { color: #ffd27a; text-shadow: 0 0 18px rgba(255,160,60,.6), 3px 3px 0 #000; }
+.bf-sub { margin: 2px 0 0; font-size: 19px; color: #c8a080; font-style: italic; }
+.bf-miracle { margin: 4px 0 2px; display: flex; align-items: center; justify-content: center; gap: 12px; font-family: var(--font-display); font-size: clamp(26px, 4.6vw, 42px); text-align: center;
+  background: linear-gradient(100deg, #b8862a 20%, #fff6c8 40%, #ffd84a 50%, #fff6c8 60%, #b8862a 80%); background-size: 250% 100%; -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 0 10px rgba(255,216,74,.65)) drop-shadow(2px 2px 0 #000); animation: bfShine 3.2s linear infinite; }
+.bf-miracle img { width: 34px; height: 34px; image-rendering: pixelated; animation: bfSun 6s linear infinite; }
+@keyframes bfShine { from { background-position: 125% 0; } to { background-position: -125% 0; } }
+@keyframes bfSun { to { transform: rotate(360deg); } }
+.bf-count { display: grid; grid-template-columns: 1fr minmax(60px, 1.2fr) 1fr; align-items: center; gap: 8px; }
+.bf-kills, .bf-emb { display: grid; justify-items: center; gap: 2px; padding: 10px 6px; background: rgba(0,0,0,.35); border: 2px solid #000; box-shadow: inset 0 0 0 1px #5a3a20; text-align: center; }
+.bf-kills img, .bf-emb img { width: 32px; height: 32px; image-rendering: pixelated; }
+.bf-kills b, .bf-emb b { font-family: var(--font-num); font-weight: 400; font-size: clamp(16px, 3vw, 24px); color: var(--bone); font-variant-numeric: tabular-nums; }
+.bf-emb b { color: #ffb050; text-shadow: 0 0 10px rgba(255,140,40,.6); }
+.bf-kills span, .bf-emb span { font-size: 17px; color: #c8a080; }
+.bf-flow { position: relative; height: 40px; }
+.bf-flow i { position: absolute; left: 0; top: 50%; width: 7px; height: 7px; border-radius: 50%; background: #ffb040; box-shadow: 0 0 8px #ff8a2a, 0 0 2px #fff0c0; opacity: 0; animation: bfFly 1s ease-in forwards; }
+@keyframes bfFly { 0% { transform: translate(0, 0); opacity: 0; } 15% { opacity: 1; } 55% { transform: translate(55%, var(--dy)); } 100% { left: 100%; transform: translate(-100%, 0) scale(.5); opacity: .2; } }
+.bonfire .otiles b { color: #ffd27a; }
+.bonfire .opanel { --s-one: #ff9a3a; --o-grid: rgba(200,140,80,.22); }
+.bf-gains { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 4px 12px; }
+.bf-gains li { display: flex; align-items: center; gap: 8px; font-size: 18px; color: var(--gc, var(--bone)); }
+.bf-gains img { width: 22px; height: 22px; image-rendering: pixelated; flex: none; }
+.bf-acts { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.bf-acts .btn.pray { font-size: 14px; padding: 12px 34px 10px; background: linear-gradient(#ffe8a0, #e8a830); color: var(--ink); box-shadow: 0 0 22px rgba(255,216,74,.55); }
+.bf-acts .btn.pray:hover, .bf-acts .btn.pray:focus-visible { background: linear-gradient(#fffbe8, #ffd84a); }
+.bf-acts .btn.spend { color: #ffe8a0; box-shadow: inset 0 0 0 2px #ffd84a; }
+#pray-fade { position: absolute; inset: 0; z-index: 50; background: #fffdf4; opacity: 0; pointer-events: none; }
+#pray-fade.on { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .bonfire > .bf-glow, .bonfire > .bf-sparks, .bf-miracle, .bf-miracle img { animation: none; } }
 
 /* Debug menu (P) */
 .dbg { width: min(980px, 100%); display: grid; gap: 10px; padding: 18px; }
@@ -668,8 +714,8 @@ button { font: inherit; color: inherit; }
       </div>
       <div class="hud-right">
         <div id="kills">0 KILLS</div>
-        <div id="ess" title="Essence: spend it at the workbench by the house"><img id="ess-img" alt=""><span id="ess-n">0 ESSENCE</span></div>
-        <div id="totems" title="Talent currency to spend in the talent tree (T)"><img id="tot-img" alt=""><span id="tot-n">0 TOTEMS</span><span id="spn" style="display:none"><img id="spn-img" alt=""><span id="spn-n">0 SPOONS</span></span></div>
+        <div id="ess" title="Embers: spend them at the workbench by the house"><img id="ess-img" alt=""><span id="ess-n">0 EMBERS</span></div>
+        <div id="totems" title="Talent currency to spend in the talent tree (T)"><img id="tot-img" alt=""><span id="tot-n">0 TOTEMS</span><span id="spn" style="display:none" title="Miracles: spend them on the Miracles tab (Y)"><img id="spn-img" alt=""><span id="spn-n">0 MIRACLES</span></span></div>
         <div class="hud-btns">
           <button class="hbtn" id="b-tal" title="Talent tree (T)" aria-label="Talents">TAL</button>
           <button class="hbtn" id="b-inv" title="Inventory and character (I)" aria-label="Inventory">BAG</button>
@@ -709,7 +755,8 @@ button { font: inherit; color: inherit; }
         <span><span class="kbd">I</span>/<span class="kbd">TAB</span>/<span class="kbd">C</span> ledger</span>
         <span><span class="kbd">B</span> stats</span>
         <span><span class="kbd">T</span> talents</span>
-        <span><span class="kbd">Y</span> alien talents</span>
+        <span><span class="kbd">Y</span> miracles</span>
+        <span><span class="kbd">E</span> use (bonfire, workbench, chests)</span>
         <span><span class="kbd">K</span> book of knowledge</span>
         <span><span class="kbd">C</span> over gear: scrap it</span>
         <span><span class="kbd">L-ALT</span> hold (pause, no menu)</span>
@@ -759,7 +806,7 @@ button { font: inherit; color: inherit; }
           <button class="btn" id="t-ledger" role="tab" data-tab="ledger">LEDGER <span class="kbd">I</span></button>
           <button class="btn" id="t-stats" role="tab" data-tab="stats">STATS <span class="kbd">B</span></button>
           <button class="btn" id="t-talents" role="tab" data-tab="talents">TALENTS <span class="kbd">T</span></button>
-          <button class="btn alien" id="t-alien" role="tab" data-tab="alien">ALIEN TALENTS <span class="kbd">Y</span></button>
+          <button class="btn alien" id="t-alien" role="tab" data-tab="alien">MIRACLES <span class="kbd">Y</span></button>
         </div>
         <button class="btn" id="b-inv-close">CLOSE <span class="kbd">ESC</span></button>
       </div>
@@ -807,7 +854,7 @@ button { font: inherit; color: inherit; }
       <div class="pv alien-view" id="alien-view" role="tabpanel" hidden>
         <div class="alien-top">
           <span id="alien-pts"></span>
-          <p class="sec-label" style="margin:0">POWERFUL TALENTS FOR ALIEN SPOONS · NO TREE, PICK ANY · 1 SPOON PER LEVEL</p>
+          <p class="sec-label" style="margin:0">GREAT TALENTS FOR MIRACLES · NO TREE, PICK ANY · ONE MIRACLE FROM EVERY NIGHT'S BONFIRE</p>
         </div>
         <div class="acols" id="acols"></div>
       </div>
@@ -826,7 +873,7 @@ button { font: inherit; color: inherit; }
         <button class="btn" id="b-bench-scrap">SCRAP EVERYTHING ON THE GROUND</button>
       </div>
       <div class="shop-head">
-        <p class="sec-label">BLESSINGS FOR ESSENCE · NEW STOCK EVERY DAWN</p>
+        <p class="sec-label">BLESSINGS FOR EMBERS · NEW STOCK EVERY NIGHT</p>
         <button class="btn" id="b-bench-reroll">REROLL</button>
       </div>
       <div class="shop" id="bench-shop"></div>
@@ -838,7 +885,7 @@ button { font: inherit; color: inherit; }
         <p class="sec-label">TRINKETS · USE THE ONE YOU CARRY WITH F · DUNGEON BOSSES GIVE NEW ONES</p>
       </div>
       <div class="trinkets" id="bench-trinkets"></div>
-      <p class="empty-note">Loot left on the ground is lost when you take the cellar trapdoor.</p>
+      <p class="empty-note">Loot left on the ground is lost when you pray at the bonfire.</p>
     </div>
   </section>
 
@@ -850,6 +897,22 @@ button { font: inherit; color: inherit; }
         <button class="btn" id="b-mk-close">LEAVE <span class="kbd">ESC</span></button>
       </div>
       <div id="mk-body"></div>
+    </div>
+  </section>
+
+  <section id="scr-bonfire" class="screen" hidden>
+    <div class="panel bonfire">
+      <div class="bf-glow" aria-hidden="true"></div><div class="bf-sparks" aria-hidden="true"></div>
+      <div class="inv-head">
+        <div><h2>The Bonfire</h2><p class="bf-sub" id="bf-sub"></p></div>
+        <button class="btn" id="b-bf-close">LEAVE <span class="kbd">ESC</span></button>
+      </div>
+      <p class="bf-miracle" id="bf-miracle" hidden></p>
+      <div id="bf-body" class="over-stats"></div>
+      <div class="bf-acts">
+        <button class="btn spend" id="b-bf-spend" hidden>SPEND YOUR MIRACLE <span class="kbd">Y</span></button>
+        <button class="btn pray" id="b-bf-pray">PRAY</button>
+      </div>
     </div>
   </section>
 
@@ -914,6 +977,7 @@ button { font: inherit; color: inherit; }
   <div id="touch" hidden><div id="joy"><div id="joy-knob"></div></div><button id="btn-dash" aria-label="Dash">DASH</button></div>
   <div id="tip" class="tip" hidden></div>
   <div id="over-tip" class="tip" hidden></div>
+  <div id="pray-fade" aria-hidden="true"></div>
   <div id="loading">LOADING THE FARM…</div>
 </div>
 
@@ -938,6 +1002,7 @@ button { font: inherit; color: inherit; }
 <script src="js/dungeon.js"></script>
 <script src="js/gaze.js"></script>
 <script src="js/darkness.js"></script>
+<script src="js/bonfire.js"></script>
 <script src="js/day.js"></script>
 <script src="js/intro.js"></script>
 <script src="js/select.js"></script>

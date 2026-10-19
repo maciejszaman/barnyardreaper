@@ -215,6 +215,15 @@
       g.add(M.mesh(P));
       g.add(M.mesh([M.p(box(0.04, 0.03, 0.02), 0xd8a0ff, [0.065, 0.45, 0.18]), M.p(box(0.04, 0.03, 0.02), 0xd8a0ff, [-0.065, 0.45, 0.18]), M.p(sph(0.06, 6, 4), 0xc080ff, [0, 0.27, 0.12], 0, [1.2, 1, 0.5]),
         M.p(new T.TorusGeometry(0.1, 0.012, 3, 12), 0xb86cff, [0, 0.27, 0.26]), M.p(new T.TorusGeometry(0.16, 0.012, 3, 14), 0x8a4ac8, [0, 0.27, 0.36])], true));
+    } else if (type === 'axe') {
+      // a bearded woodsman's axe: a long ash haft wrapped in leather, a wide head with a hooked beard and a
+      // bright honed edge, a square poll behind it
+      const P = [M.p(cyl(0.04, 0.05, 1.5, 6), C.wood, [0, 0.55, 0]), M.p(cyl(0.055, 0.055, 0.3, 6), 0x4a2a1a, [0, 0.02, 0]),
+        M.p(box(0.12, 0.08, 0.12), C.woodD, [0, -0.17, 0]), M.p(box(0.12, 0.2, 0.11), C.steelD, [0, 1.2, 0]),
+        M.p(box(0.13, 0.15, 0.1), C.steelD, [-0.1, 1.2, 0]),                                                      // the poll
+        M.p(box(0.3, 0.26, 0.05), C.steel, [0.2, 1.22, 0]), M.p(box(0.18, 0.2, 0.045), C.steel, [0.3, 1.06, 0], [0, 0, -0.5]),   // the cheek and its beard
+        M.p(box(0.07, 0.52, 0.05), 0xf4f8ff, [0.39, 1.14, 0], [0, 0, -0.12]), M.p(box(0.05, 0.14, 0.04), 0xf4f8ff, [0.33, 0.9, 0], [0, 0, 0.7])];   // the honed edge
+      g.add(M.mesh(P));
     }
     return g;
   };
@@ -1146,6 +1155,8 @@
     return M.merge([M.p(M.rockGeo(0.7, 3, 0, 0.35), 0x77736a)], 0.12);
   };
   M.gemGeo = () => M.merge([M.p(oct(0.2), 0xffffff, [0, 0, 0], 0, [1, 1.5, 1])], 0.15);
+  // Embers on the ground (combat.js PK, the code's "essence"): this crystal, drawn orange and 60% see-through.
+  M.EMBER = { color: 0xff8a1a, opacity: 0.6 };
   M.essenceGeo = () => M.merge([M.p(new T.TetrahedronGeometry(0.2, 0), 0xd890ff, [0, 0, 0], [0.6, 0, 0.6]), M.p(new T.TetrahedronGeometry(0.13, 0), 0xffffff, [0, 0.05, 0], [0, 0.8, 0])], 0.2);
   M.fish = () => M.mesh([M.p(sph(0.24, 6, 4), 0x8ab8d8, [0, 0, 0], 0, [0.55, 1, 1.8]), M.p(cone(0.2, 0.28, 3), 0x6a98b8, [0, 0, -0.5], [-Math.PI / 2, 0, 0], [0.4, 1, 1]), M.p(box(0.04, 0.05, 0.05), C.black, [0.12, 0.06, 0.25])], true);
   M.catnip = () => M.mesh([M.p(box(0.04, 0.5, 0.04), 0x4a8a2a, [0, 0.25, 0]), M.p(box(0.24, 0.03, 0.42), 0x8af060, [0.12, 0.42, 0], [0, 0, 0.5]), M.p(box(0.24, 0.03, 0.42), 0x7ae050, [-0.12, 0.32, 0], [0, 0, -0.5]), M.p(box(0.2, 0.03, 0.36), 0x9af070, [0, 0.55, 0.1], [0.4, 0, 0])], true);
@@ -1290,18 +1301,31 @@
     ],
     glow: [M.p(box(0.18, 0.24, 0.18), 0xffd27a, [-1.0, 1.15, 0.2])],
   });
-  M.trapdoor = () => ({
-    parts: [
-      M.p(box(2.6, 0.18, 0.2), 0x4a3a2c, [0, 0.09, 1.2]), M.p(box(2.6, 0.18, 0.2), 0x4a3a2c, [0, 0.09, -1.2]),
-      M.p(box(0.2, 0.18, 2.6), 0x4a3a2c, [1.2, 0.09, 0]), M.p(box(0.2, 0.18, 2.6), 0x4a3a2c, [-1.2, 0.09, 0]),
-      // the two door leaves stand open against the back edge, with iron bands
-      M.p(box(1.1, 2.2, 0.1), C.wood, [0.6, 1.12, -1.4], [-0.25, 0, 0]), M.p(box(1.1, 2.2, 0.1), C.wood, [-0.6, 1.12, -1.4], [-0.25, 0, 0]),
-      M.p(box(2.3, 0.12, 0.13), C.steelD, [0, 0.7, -1.29], [-0.25, 0, 0]), M.p(box(2.3, 0.12, 0.13), C.steelD, [0, 1.7, -1.55], [-0.25, 0, 0]),
-      M.p(box(0.1, 0.8, 0.1), C.wood, [0.5, 0.3, 0.9]), M.p(box(0.1, 0.8, 0.1), C.wood, [-0.5, 0.3, 0.9]), M.p(box(1.0, 0.08, 0.08), C.wood, [0, 0.55, 0.9]),
-    ],
-    dark: [M.p(box(2.2, 0.08, 2.2), 0x020202, [0, 0.03, 0])],
-    glow: [M.p(box(1.6, 0.04, 1.6), 0xffb050, [0, 0.01, 0])],
-  });
+  // ---------- the night's bonfire and the crosses around it (day.js) ----------
+  // The bonfire: a ring of soot-blackened stones, split logs leaning together in a teepee, coals glowing at
+  // its foot (glow), and the fire itself: tongues of flame (fire, drawn additively by day.js) that flicker.
+  M.bonfire = function () {
+    const P = [], GL = [], FI = [];
+    for (let i = 0; i < 11; i++) { const a = i / 11 * Math.PI * 2; P.push(rk(0.34 + (i % 3) * 0.06, 40 + i, i % 2 ? 0x4a4440 : 0x5e5650, [Math.cos(a) * 1.55, 0.18, Math.sin(a) * 1.55])); }
+    for (let i = 0; i < 7; i++) {
+      const a = i / 7 * Math.PI * 2 + 0.3, x = Math.cos(a), z = Math.sin(a);
+      P.push(M.beam([x * 1.05, 0.08, z * 1.05], [x * 0.16, 1.7, z * 0.16], 0.17, i % 2 ? 0x5a3a1c : 0x3a2414));
+    }
+    P.push(M.beam([-1.1, 0.14, 0.45], [1.0, 0.18, -0.3], 0.2, 0x4a2e18), M.beam([-0.6, 0.12, -0.95], [0.75, 0.16, 0.9], 0.2, 0x2e1c10));
+    GL.push(M.p(cyl(1.0, 1.15, 0.12, 10), 0xff6a1a, [0, 0.06, 0]), M.p(cyl(0.6, 0.8, 0.14, 9), 0xffb040, [0, 0.1, 0]),
+      ...[0, 1, 2, 3, 4, 5].map((i) => M.p(oct(0.12), i % 2 ? 0xffd060 : 0xff7a2a, [Math.cos(i * 1.1) * 0.7, 0.18, Math.sin(i * 1.1) * 0.7])));
+    // flame tongues, each its own mesh so it can flicker (day.js scales them)
+    const tongue = (r, h, x, z, c) => M.p(cone(r, h, 6), c, [x, h / 2 + 0.2, z]);
+    FI.push([tongue(0.95, 3.0, 0, 0, 0xff5a10), tongue(0.5, 2.0, 0.42, 0.2, 0xff7a1a), tongue(0.5, 2.2, -0.36, -0.28, 0xff6a14)],
+      [tongue(0.62, 2.6, 0, 0, 0xffa030), tongue(0.32, 1.6, -0.3, 0.36, 0xffb040), tongue(0.3, 1.4, 0.3, -0.36, 0xffa838)],
+      [tongue(0.34, 1.9, 0, 0, 0xffe6a0), tongue(0.18, 1.1, 0.16, 0.12, 0xfff4d0)]);
+    return { parts: P, glow: GL, fire: FI };
+  };
+  // A rough wooden cross, as tall as a man and a half, its arms lashed on with rope.
+  M.crossParts = (h = 2.6) => [
+    M.p(box(0.2, h, 0.18), 0x6a4626, [0, h / 2 - 0.15, 0]), M.p(box(1.3, 0.18, 0.16), 0x7a5230, [0, h * 0.72, 0.02]),
+    M.p(box(0.26, 0.24, 0.22), 0xb8a070, [0, h * 0.72, 0.02]), M.p(box(0.3, 0.12, 0.3), 0x3a2a1c, [0, 0.02, 0]),
+  ];
   // ---------- The Unexplainable: the demon ritual's sigil and the swamp decor ----------
   // The summoning sigil on the ground: rings, a five-pointed star and rune marks (all glow).
   M.sigil = function (r) {

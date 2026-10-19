@@ -73,9 +73,9 @@
     { id: 'damage', name: 'Damage types', icon: 'burst', render: damage },
     { id: 'items', name: 'Item types', icon: 'shield', render: items },
     { id: 'trinkets', name: 'Trinkets', icon: 'pocketwatch', render: trinkets },
-    { id: 'upgrades', name: 'Upgrades', icon: 'star', render: upgrades },
+    { id: 'upgrades', name: 'Blessings', icon: 'star', render: upgrades },   // ids kept: 'upgrades' = blessings, 'alien' = Miracles
     { id: 'talents', name: 'Talents', icon: 'totem', render: talents },
-    { id: 'alien', name: 'Alien Talents', icon: 'spoon', render: alien },
+    { id: 'alien', name: 'Miracles', icon: 'sun', render: alien },
     { id: 'workbench', name: 'Workbench', icon: 'hammer', render: workbench },
   ];
   BK.tabs = TABS;
@@ -84,31 +84,31 @@
     return intro('The farm was quiet once. Corn, a red barn, a well, a windmill that never stopped turning, and one barn cat who kept the mice honest.')
       + `<div class="bk-story">`
       + `<p><img src="${icon('moon')}" alt="">Then the caves opened. Four of them, one on every side of the fence, and every night something crawls out: feral dogs first, then crows, pumpkin-headed scarecrows and stone golems as big as the barn. The farmer is gone. The cat found Grandpa's old scythe in the barn, put on a straw hat, and decided to stay.</p>`
-      + `<p><img src="${icon('ufo')}" alt="">Below the cellar trapdoor there is more than a cellar. Each dawn the trapdoor leads somewhere worse: to a crash site where something fell from the sky and is still leaking, and past it to The Unexplainable, a drowned swamp of tiki totems, ancestral ghosts and witch doctors trying to call something up through a ritual sigil.</p>`
+      + `<p><img src="${icon('bonfire')}" alt="">Every night a bonfire burns in the middle of the farm, ringed by old wooden crosses that break its light. Pray there, and the light takes you somewhere worse by morning: to a crash site where something fell from the sky and is still leaking, and past it to The Unexplainable, a drowned swamp of tiki totems, ancestral ghosts and witch doctors trying to call something up through a ritual sigil.</p>`
       + `<p><img src="${icon('eye')}" alt="">And sometimes something opens its eye above the farm and simply looks. Nobody knows what it is. It is better not to stand in its light.</p>`
       + `<p><img src="${icon('eclipse')}" alt="">The last door opens on Eldritch Madness: the farm as something under the ground dreams it. The soil is cracked open on the void, eyes grow on stalks and watch you, stones float, and things with too many legs skitter out of the dark. Now and then the stars go out altogether, and only a circle of light keeps you.</p>`
       + `<p><img src="${icon('stairs')}" alt="">Old stairways open in the ground, too, leading down into mossy brick halls nobody remembers building. Whatever waits at the bottom on its pentagram guards a trinket. Grandpa had a lot of trinkets.</p>`
       + `<p><img src="${icon('goat')}" alt="">The cat is not alone anymore. One evening a black goat was standing at the fence, watching the caves before anything had crawled out of them: Gregory, who speaks softly, carries a blackened scythe and a belt of little bottles, and knows things he should not. He says he is here to help. Nobody knows how he knew the horde was coming, or what he means to get out of it.</p>`
-      + `<p><img src="${icon('paw')}" alt="">One cat, one goat, one scythe each. Choose who stands at the fence, and hold the farm until dawn, every dawn, for as long as you can.</p></div>`;
+      + `<p><img src="${icon('paw')}" alt="">One cat, one goat, one scythe each. Choose who stands at the fence, and hold the farm until nightfall, every night, for as long as you can.</p></div>`;
   }
 
   function objective() {
     const st = G.MAPS[0].stages, D = G.DAY_SECONDS, S = G.STAGE_SECONDS;
-    return intro(`Survive. Every day lasts ${U.fmtTime(D)}; the danger rises every ${U.fmtTime(S)}. At dawn the monsters crumble, and the cellar trapdoor leads to the next map. The run ends when your health hits zero.`)
+    return intro(`Survive. Every day lasts ${U.fmtTime(D)}; the danger rises every ${U.fmtTime(S)}. Then the monsters crumble and night falls: pray at the bonfire to wake on the next map. The run ends when your health hits zero.`)
       + sec('How a day goes', 'moon') + list([
         `Your weapon attacks on its own, aiming at the nearest monster. Move to stay alive and to stand where it hits the most.`,
-        `Killed monsters drop soul crystals (experience) and essence (the workbench's currency). Each level up offers a choice of blessings (see Upgrades).`,
+        `Killed monsters drop soul crystals (experience) and embers (the workbench's currency). Each level up offers a choice of blessings (see Blessings).`,
         `Every ${G.EVENTS.every} seconds an event happens (see Events), and every ${G.ALTAR.every} seconds an Altar of Power rises: its Totem of Power is a talent point, but taking it wakes rare golems.`,
         `Gear drops from monsters, chests, bosses and dungeons (see Item types). Equip it from the saddlebag (I).`,
-        `Dawn: the training dummy behind the barn shows your damage per second, the workbench restocks, and the cellar trapdoor takes you to the next map.`,
+        `Night: lamps light up, the training dummy behind the barn shows your damage per second and the workbench restocks. At the bonfire in the middle of the farm (E) you get a Miracle and ${G.BONFIRE.embersPerKill} embers for every monster you killed that day, and see what the day gave you. Praying there is the only way to the next map.`,
         `Past the last map the days go on, each one tougher, with better items.`,
       ])
       + sec('Danger stages (every day)', 'skull') + table(['Stage', 'Starts at', 'Monster health', 'Monster damage', 'Spawns'],
         st.map((x, i) => [esc(x.name), U.fmtTime(i * S), mult(x.hp), mult(x.dmg), mult(x.spawn)]))
       + sec('Controls', 'paw') + table(['Key', 'What it does'], [
-        [kbd('WASD') + ' / ' + kbd('ARROWS'), 'Move'], [kbd('SPACE'), 'Dash (through monsters, briefly untouchable)'], [kbd('F'), 'Use your trinket'], [kbd('E'), 'Workbench, paid chests, dungeon stairs'],
+        [kbd('WASD') + ' / ' + kbd('ARROWS'), 'Move'], [kbd('SPACE'), 'Dash (through monsters, briefly untouchable)'], [kbd('F'), 'Use your trinket'], [kbd('E'), 'Bonfire, workbench, paid chests, dungeon stairs'],
         [kbd('I') + ' / ' + kbd('TAB') + ' / ' + kbd('C'), 'Character panel: the ledger (gear and the cat)'], [kbd('B'), 'Character panel: every stat and blessing'], [kbd('T'), 'Character panel: talent tree'],
-        [kbd('Y'), 'Character panel: alien talents'], [kbd('C'), 'Over gear: scrap it for experience'], [kbd('1-3'), 'Pick a blessing'],
+        [kbd('Y'), 'Character panel: Miracles'], [kbd('C'), 'Over gear: scrap it for experience'], [kbd('1-3'), 'Pick a blessing'],
         [kbd('R'), 'Reroll the blessings on offer'], [kbd('K'), 'This book'], [kbd('M'), 'Music on / off'], [kbd('LEFT ALT'), 'Hold: stop the game to read things, no menu'], [kbd('ESC'), 'Pause menu'],
       ]);
   }
@@ -134,8 +134,8 @@
     const where = (k) => G.MAPS.filter((m) => eventsOf(m)[k] > 0).map((m) => m.name).join(', ') || 'nowhere yet';
     const pool = [
       { k: 'boss', icon: 'crown', text: `A boss from the map's list walks out of a cave after a ${E.bossWarning} second warning. At most ${E.maxBosses} at once. Every boss of the run is tougher than the one before. Bosses drop experience and items (no blessings: free levels only come from experience barrels and dungeons).` },
-      { k: 'rares', icon: 'star', text: `${R.count} rare monsters from the current spawn table climb out of a cave with monster modifiers (${mult(R.hp)} health, ${mult(R.damage)} damage). They drop much more experience and essence.` },
-      I && { k: 'invasion', icon: 'ufo', text: `A green pillar of light lands and burns across the farm, hurting you and monsters alike, while invaders spawn around it. Kill every invader to repel it: an Alien Spoon (alien talent point), experience and a rare item. Each invasion brings ${I.raresGrowth}× as many invaders as the last.` },
+      { k: 'rares', icon: 'star', text: `${R.count} rare monsters from the current spawn table climb out of a cave with monster modifiers (${mult(R.hp)} health, ${mult(R.damage)} damage). They drop much more experience and embers.` },
+      I && { k: 'invasion', icon: 'ufo', text: `A green pillar of light lands and burns across the farm, hurting you and monsters alike, while invaders spawn around it. Kill every invader to repel it: experience, a rare item and Alien Adrenaline. Each invasion brings ${I.raresGrowth}× as many invaders as the last.` },
       RT.doctor && { k: 'ritual', icon: 'skull', text: `${RT.doctors} witch doctors gather around a sigil to summon ${G.ENEMIES[RT.demon] ? G.ENEMIES[RT.demon].name : 'a demon'}. Every ${RT.stackEvery} seconds they channel, the demon gets ${pct(RT.stackHp)} more health. Kill them fast.` },
       CD.enemy && { k: 'cauldron', icon: 'flask', text: `A witch's cauldron bubbles up and spews monsters until you destroy it. At most ${CD.max} at once.` },
       Z.enemy && { k: 'gaze', icon: 'eye', text: `The ground tears open into a crater (${Z.radius} m), an orange eye peeking up through the stars inside. Stepping in deals ${pct(Z.damage)} of your max health (through armor and block) and throws you out. Every ${Z.waveEvery} seconds it pulses out a wave of ${esc(Object.keys(Z.waveWeights).map((k) => G.ENEMIES[k].name + 's').join(' and '))}, some elite with modifiers. Every ${Z.tentacle.everyWaves} waves an ${esc(G.ENEMIES[Z.tentacle.enemy] ? G.ENEMIES[Z.tentacle.enemy].name : 'eldritch tentacle')} bursts up: it slams where you stand and every ${Z.gurgleEvery} seconds its Eldritch Gurgle stuns you for ${Z.gurgleStun} seconds, until you kill it. After ${Z.tentacle.count} tentacles, ${esc(G.ENEMIES[Z.boss.enemy] ? G.ENEMIES[Z.boss.enemy].name : 'something')} rises from the crater and hunts you; killing it closes the crater.` },
@@ -145,9 +145,9 @@
     const always = [
       card({ title: 'Hordes', img: icon('door'), color: '#ff6a4a', text: `Every ${H.every[0]}–${H.every[1]} seconds a horde of ${H.size}+ monsters bursts out of one cave (a warning sound and a red glow first). Hordes grow with danger and time, up to ${H.maxSize}.` }),
       card({ title: 'Altars of Power', img: icon('totem'), color: '#8ff8ff', text: `First after ${AL.first} seconds, then every ${AL.every} seconds (follow the blue arrow). Walking into one gives a Totem of Power (talent point, at most ${G.TALENT_CAP.totem} per day) but wakes rare golems with modifiers: each altar wakes ${AL.summonGrowth}× as many as the last.` }),
-      card({ title: 'Chests', img: icon('chest'), color: '#ffd04a', text: `Every day starts with ${CH.freeAtStart} free chests beside you, the first a Weapon Chest. More turn up every ${CH.every[0]}–${CH.every[1]} seconds, costing ${CH.cost} essence plus ${CH.costPerMinute} per minute into the day (E to open). Each holds an item.` }),
+      card({ title: 'Chests', img: icon('chest'), color: '#ffd04a', text: `Every day starts with ${CH.freeAtStart} free chests beside you. More turn up every ${CH.every[0]}–${CH.every[1]} seconds, costing ${CH.cost} embers plus ${CH.costPerMinute} per minute into the day (E to open). Each holds an item.` }),
       card({ title: 'Shrines', img: icon('holycross'), color: '#ffe080', text: `The first rises ${G.SHRINES.first} seconds into every day, more every ${G.SHRINES.every[0]}–${G.SHRINES.every[1]} seconds. Walk into a Shrine of Mary for ${esc(G.BUFFS[G.SHRINES.faith.buff].name)} (${G.BUFFS[G.SHRINES.faith.buff].duration}s): armor doubled, +10% movement speed, and every hit you take sets monsters within ${G.SHRINES.faith.radius} m on holy fire. From ${esc(G.MAPS[0].stages[Math.min(G.SHRINES.nightFromStage, G.MAPS[0].stages.length - 1)].name)} on, ${pct(G.SHRINES.unholyChance)} of them are Unholy Shrines with a goat on the roof${G.MAPS.some((m) => m.shrines === 'unholy') ? ` (on ${esc(G.MAPS.filter((m) => m.shrines === 'unholy').map((m) => m.name).join(', '))}, all of them, all day)` : ''}: press E for ${esc(G.BUFFS[G.SHRINES.apostasy.buff].name)}: it drains ${pct(G.SHRINES.apostasy.drain)} of your health a second until it has had ${pct(G.SHRINES.apostasy.total)} (it never kills you); meanwhile your bleeds deal ×${G.SHRINES.apostasy.bleedMult} damage and always cripple, +30% attack speed, half the armor.` }),
-      card({ title: 'Mokosh', img: icon('mokosh'), color: '#a8e6b8', text: `First ${G.MOKOSH.first} seconds into every day, then every ${G.MOKOSH.every[0]}–${G.MOKOSH.every[1]} seconds, a carved totem of the mother goddess rises for ${G.MOKOSH.stay} seconds. Press E at it and she listens (the game waits): pay ${G.MOKOSH.ban.cost} essence to cut a thread (one blessing never comes up again this run, so every other one comes up more often), or ${G.MOKOSH.weave.prices.join(' / ')} essence by rarity to weave a thread twice (another copy of one of your blessings, for a different one of the same rarity). Each totem grants each favour once; every favour asked makes the next one ${Math.round(G.MOKOSH.ban.growth * 100)}% dearer.` }),
+      card({ title: 'Mokosh', img: icon('mokosh'), color: '#a8e6b8', text: `First ${G.MOKOSH.first} seconds into every day, then every ${G.MOKOSH.every[0]}–${G.MOKOSH.every[1]} seconds, a carved totem of the mother goddess rises for ${G.MOKOSH.stay} seconds. Press E at it and she listens (the game waits): pay ${G.MOKOSH.ban.cost} embers to cut a thread (one blessing never comes up again this run, so every other one comes up more often), or ${G.MOKOSH.weave.prices.join(' / ')} embers by rarity to weave a thread twice (another copy of one of your blessings, for a different one of the same rarity). Each totem grants each favour once; every favour asked makes the next one ${Math.round(G.MOKOSH.ban.growth * 100)}% dearer.` }),
       card({ title: 'Experience barrels', img: icon('barrel'), color: '#7dff6a', text: `First after ${B.first} seconds, then every ${B.every[0]}–${B.every[1]} seconds. Walk into one for ${B.levels} free level${B.levels === 1 ? '' : 's'}.` }),
       card({ title: 'Dungeons', img: icon('stairs'), color: '#b86cff', text: `On ${pct(DG.chance)} of days a stairway opens between ${U.fmtTime(DG.appearAt[0])} and ${U.fmtTime(DG.appearAt[1])} and stays ${DG.stay} seconds. Press E at it to go down. The day waits outside. Inside: ${DG.chambers} big chambers with ${DG.packs} dense packs of ${DG.packSize[0]}–${DG.packSize[1]} monsters carrying the dungeon's modifiers plus Abyssal (×${DG.hpMult} health, ×${DG.damageMult} damage), a free chest with a blue glow in every chamber (items ${DG.chestLevelBonus} item levels above the day's), then a boss on a pentagram. The boss drops a trinket you don't own and ${DG.items} items, and clearing the dungeon gives you ${DG.levels} free level${DG.levels === 1 ? '' : 's'}.` }),
     ];
@@ -203,8 +203,8 @@
       + `<p class="bk-note">Bonuses from different stats multiply: +50% weapon damage and +50% melee damage make a melee hit ×2.25. Damage taken from a hit (a bleed, holy fire, bonus elemental damage) keeps the hit's bonuses and only adds its own: Bleed damage and DoT damage for a bleed.</p>`
       + sec('Every source', 'crosshair') + grid(srcCards)
       + sec('Damage over time', 'hourglass') + grid([
-        card({ title: 'Bleeding', img: icon('blood'), color: '#ff5a4a', tags: ['physical', 'dot', 'bleed'], text: `Inflicted only by physical hits (Bleed chance). Deals ${pct(D.bleed.damage)} of the hit that caused it every second for ${D.bleed.duration} seconds. One bleed per monster: a weaker bleed never replaces a stronger one.` }),
-        card({ title: 'Poison', img: icon('poison'), color: '#8aef4a', tags: ['poison', 'dot'], text: `Inflicted by any physical hit (Poison chance), never by damage over time. Lasts ${D.poison.duration} seconds and stacks without limit; each stack deals ${pct(D.poison.maxHp)} of the monster's max health every second. The training dummy counts as ${n0(D.poison.dummyHp)}× the map's health multiplier.` }),
+        card({ title: 'Bleeding', img: icon('blood'), color: '#ff5a4a', tags: ['physical', 'dot', 'bleed'], text: `Inflicted only by physical hits (Bleed chance). Deals ${pct(D.bleed.damage)} of the hit that caused it every second for ${D.bleed.duration} seconds. ${D.bleed.maxStacks === 1 ? 'Bleeds do not stack: one per monster' : `Up to ${D.bleed.maxStacks} per monster`} (Bleed stacks add more), and a weaker bleed never replaces a stronger one. Bleed duration makes it last longer or shorter without changing its total damage: shorter bleeds hit harder.` }),
+        card({ title: 'Poison', img: icon('poison'), color: '#8aef4a', tags: ['poison', 'dot'], text: `Inflicted by any physical hit (Poison chance), and by elemental hits with a talent that allows it, never by damage over time. Lasts ${D.poison.duration} seconds and stacks without limit; each stack deals ${pct(D.poison.damage)} of the hit that caused it every second. Poison duration makes it last longer or shorter without changing its total damage (shorter poisons hit harder); Poison tick rate adds ticks of the same size.` }),
         card({ title: 'Holy fire', img: icon('holycross'), color: '#ffe080', tags: ['elemental', 'dot', 'holy'], text: `Stacks without limit, ${pct(D.holy.damage)} of the hit per second for ${D.holy.duration} seconds. A golden circle spreads it to monsters around; a monster dying with ${D.holy.explodeAt}+ stacks explodes for ${pct(D.holy.explode)} of its max health (the explosion does not spread holy fire).` }),
       ])
       + sec('Statuses', 'stars') + grid([
@@ -212,7 +212,7 @@
         st('slow', `${pct(S.slow.power)} slower. Inflicted by weapon hits (Slow chance).`), st('stun', 'Inflicted by weapon hits (Stun chance).'), st('root', 'Inflicted by weapon hits (Root chance).'),
       ])
       + sec('Damage you take', 'shield') + list([
-        `Armor: every item has some. Damage taken is reduced by armor / (armor + 100): 100 armor = 50% less, 300 = 75% less, at most ${pct(A.maxReduction)}.`,
+        `Armor: every item has some. Damage taken is reduced by armor / (armor + T), at most ${pct(A.maxReduction)}. T is the armor that halves damage: ${n0(A.threshold)} on the first stage of day 1, then ×${A.thresholdGrowth} every stage after (${G.MAPS.map((m, i) => `day ${i + 1}: ${n0(G.progress.armorThreshold(i * G.MAPS[0].stages.length))}`).join(', ')}), as fast as the armor on items grows. Gear at the item level that is dropping keeps giving about the same reduction; stacking Increased armor, armor talents and workbench upgrades is what raises it.`,
         'Block: block rating gives a chance to ignore a hit completely: 0.75 × rating / (rating + 100), at most 75%.',
         'Monsters\' poison and bleeding on you: damage over time that shields soak and block cannot stop.',
         'The Eldritch Gaze\'s madness ignores armor and block.',
@@ -260,14 +260,14 @@
       sub: u.weaponClass ? `${esc(u.weaponClass)} weapons only` : '',
       rows: R.map((r, i) => [r.name, `<span style="color:${r.color}">${esc(G.fmtVal(u.stat, u.vals[i]))}</span>`]),
     }));
-    return intro(`Every level up offers a choice of blessings (more with Curiosity), in ${R.length} rarities: ${R.map((r) => `<span style="color:${r.color}">${esc(r.name)}</span>`).join(', ')}. Luck makes rarer ones likelier. Rerolls (R) replace the offer. The workbench sells them for essence too.`) + grid(cards);
+    return intro(`Every level up offers a choice of blessings (more with Curiosity), in ${R.length} rarities: ${R.map((r) => `<span style="color:${r.color}">${esc(r.name)}</span>`).join(', ')}. Luck makes rarer ones likelier. Rerolls (R) replace the offer. The workbench sells them for embers too.`) + grid(cards);
   }
 
   function talentCard(t, tree) {
     const st = Object.keys(t.stats || {}).map((k) => G.fmtMod(k, t.stats[k])).join(', ');
     const cur = G.CURRENCIES[t.currency] || G.CURRENCIES.totem, g = tree && tree.groups.find((x) => x.id === t.group);
     return card({
-      title: t.name, img: icon(t.icon), color: tree ? tree.color(t) : '#7dff6a', titleColor: tree ? tree.color(t) : '#9dff8a',
+      title: t.name, img: icon(t.icon), color: tree ? tree.color(t) : G.CURRENCIES.spoon.color, titleColor: tree ? tree.color(t) : '#ffe8a0',
       sub: (t.start ? 'starting point' : `${t.cost} ${t.cost === 1 ? cur.name : cur.plural}`) + (g ? ` · ${esc(g.name)}` : '') + (tree && tree.segment(t) ? ` · <span style="color:${tree.segment(t).color}">${esc(tree.segment(t).name)}</span>` : '') + (t.big ? ' · big talent' : ''),
       tags: G.tagsFor(t.stats, t.effect && t.effect.id, t.ruleTags), text: [t.text, st].filter(Boolean).map(esc).join('<br>') + (t.downside ? `<br><span class="down">${esc(t.downside)}</span>` : ''),
     });
@@ -282,22 +282,22 @@
   }
   function alien() {
     const A = G.CHAR.alien;
-    return intro(`${esc(G.CHAR.heroName)}'s alien talents. Alien Spoons come from repelling alien invasions (at most ${G.TALENT_CAP.spoon} per day). Spend them on alien talents in the saddlebag (I > Alien Talents), in any order.`) + grid(A.talents.map((t) => talentCard(t, null)));
+    return intro(`${esc(G.CHAR.heroName)}'s Miracles: great talents with no tree. Every night the bonfire gives you a Miracle (at most ${G.TALENT_CAP.spoon} per day); spend it on the Miracles tab of the character panel (Y), in any order.`) + grid(A.talents.map((t) => talentCard(t, null)));
   }
 
   function workbench() {
     const SH = G.CAMP.shop, R = G.RARITY;
-    return intro('The workbench stands by the farmhouse all day: walk up to it and press E (it opens by itself at dawn).')
+    return intro('The workbench stands by the farmhouse all day: walk up to it and press E (at night it opens by itself).')
       + grid([
-        card({ title: 'Blessings for essence', img: icon('essence'), color: '#c8a0ff', text: `${SH.offers} blessings on offer, new stock every dawn. Every purchase makes the next one ${pct(SH.priceGrowth)} dearer, compounding.`,
-          rows: R.map((r, i) => [r.name, `<span style="color:${r.color}">${n0(SH.prices[i])} essence</span>`]) }),
-        card({ title: 'Reroll the stock', img: icon('dice'), color: '#c8a0ff', text: `Replaces the offer for ${SH.reroll} essence, ${SH.rerollGrowth} more each time. Essence Siphon makes rerolls cheaper.` }),
-        card({ title: 'Scrap', img: icon('pickaxe'), color: '#ffd27a', text: 'Scrap everything lying on the ground for experience. You can also scrap single items with C, or every downgrade in your saddlebag at once. Loot left on the ground is lost when you take the cellar trapdoor.' }),
+        card({ title: 'Blessings for embers', img: icon('essence'), color: '#ffa040', text: `${SH.offers} blessings on offer, new stock every night. Every purchase makes the next one ${pct(SH.priceGrowth)} dearer, compounding.`,
+          rows: R.map((r, i) => [r.name, `<span style="color:${r.color}">${n0(SH.prices[i])} embers</span>`]) }),
+        card({ title: 'Reroll the stock', img: icon('dice'), color: '#ffa040', text: `Replaces the offer for ${SH.reroll} embers, ${SH.rerollGrowth} more each time. Ember Siphon makes rerolls cheaper.` }),
+        card({ title: 'Scrap', img: icon('pickaxe'), color: '#ffd27a', text: 'Scrap everything lying on the ground for experience. You can also scrap single items with C, or every downgrade in your saddlebag at once. Loot left on the ground is lost when you pray at the bonfire.' }),
         card({ title: 'Upgrade item level', img: icon('hammer'), color: '#ffd27a', text: `Raise any item's level by up to ${G.CAMP.upgrade.levels} in all, and see every stat it would gain first (e.g. +20% poison damage → +26%). Each level costs ${G.CAMP.upgrade.cost} × (item level + 2) × the rarity's factor, ${pct(G.CAMP.upgrade.growth)} more for every level already added.`,
           rows: G.ITEM_RARITY.map((r, i) => [r.name, `<span style="color:${r.color}">×${G.CAMP.upgrade.rarity[i]}</span>`]) }),
         card({ title: 'Trinkets', img: icon('pocketwatch'), color: '#ffe080', text: 'Choose which of your trinkets to carry. New ones come from dungeon bosses.' }),
-        card({ title: 'Training dummy', img: icon('crosshair'), color: '#ffb070', text: 'At dawn a training dummy stands behind the barn: hit it to see your damage per second.' }),
-        card({ title: 'Cellar trapdoor', img: icon('door'), color: '#a08060', text: 'At dawn the trapdoor by the house opens: stand on it to travel to the next map.' }),
+        card({ title: 'Training dummy', img: icon('crosshair'), color: '#ffb070', text: 'At night a training dummy stands behind the barn, under a lamp: hit it to see your damage per second.' }),
+        card({ title: 'The bonfire', img: icon('bonfire'), color: '#ffa040', text: `At night a bonfire burns in the middle of the farm, its light broken by the wooden crosses around it. Press E at it: the first time each night it gives you ${G.BONFIRE.miracles} Miracle${G.BONFIRE.miracles === 1 ? '' : 's'} and ${G.BONFIRE.embersPerKill} embers for every monster you killed that day, and it shows you the day: the monsters slain, your damage per second and what you gained. Pray there to wake on the next map: it is the only way on.` }),
       ]);
   }
 

@@ -2,6 +2,8 @@
 // Talent effects that need their own state: cooldowns, stacks, shields, auras and trails (data.js
 // G.EFFECTS lists every effect and its numbers). Combat and the player system call the hooks below;
 // TF.chips() feeds the buff bar with every learned effect talent and its current state.
+// The Miracles (the old alien talents: baneOfLegends ... crippling in G.EFFECTS) live here too; their
+// currency id is 'spoon'. Bleeds may stack (C.addBleed): always go through C.addBleed / C.topBleed.
 (function () {
   const U = G.U, F = G.fx, A = G.audio, P = G.player, ES = G.enemySys, C = G.combat;
   const TF = G.tfx = {};
@@ -162,7 +164,7 @@
       let src = null;
       ES.query(P.x, P.z, B.near + 3, (e) => {
         if (e.dead || !e.bleed.length || Math.hypot(e.x - P.x, e.z - P.z) > B.near + e.r) return;
-        if (!src || e.bleed[0].dps > src.bleed[0].dps) src = e;
+        if (!src || G.combat.topBleed(e).dps > G.combat.topBleed(src).dps) src = e;
       });
       if (src) {
         startCd('bleedBlock', B.cooldown);
@@ -177,16 +179,20 @@
     TF.riposte = false;
     return fx().riposte || null;
   };
-  // Copies e's bleed onto every monster within r of it (never weakening a stronger bleed). Returns how many.
+  // Copies e's strongest bleed onto every monster within r of it (into a free bleed stack, or over a weaker
+  // bleed: never weakening a stronger one). Returns how many.
   TF.spreadBleed = function (e, r) {
-    const b = e.bleed[0] || e.lastBleed;
+    const b = G.combat.topBleed(e) || e.lastBleed;
     if (!b) return 0;
     let n = 0;
     F.ring(e.x, e.z, { r0: 0.4, r1: r, life: 0.45, color: 0xc01a10 });
     ES.query(e.x, e.z, r + 3, (o) => {
       if (o === e || o.dead || o.dotImmune || Math.hypot(o.x - e.x, o.z - e.z) > r + o.r) return;
-      if (o.bleed.length && o.bleed[0].dps >= b.dps) return;
-      o.bleed[0] = Object.assign({}, b, { t: Math.max(b.t, 1) }); o.lastBleed = o.bleed[0];
+      const top = G.combat.topBleed(o);
+      if (top && top.dps >= b.dps && o.bleed.length >= G.combat.bleedStacks()) return;
+      const nb = Object.assign({}, b, { t: Math.max(b.t, 1) });
+      if (!G.combat.addBleed(o, nb)) return;
+      o.lastBleed = nb;
       F.streak(e.x, 1, e.z, o.x, 1 + o.y, o.z, 0xc01a10, 0.3, 0.12);
       n++;
     });
@@ -283,9 +289,9 @@
     // Blood Inheritance: a boss that dies bleeding passes its bleed on to the nearest monster
     const BI = f.bossBleedSpread;
     if (BI && e.boss && e.bleed.length) {
-      const o = ES.nearest(e.x, e.z, BI.range, [e.id]);
-      if (o && !o.dotImmune && !(o.bleed.length && o.bleed[0].dps >= e.bleed[0].dps)) {
-        o.bleed[0] = Object.assign({}, e.bleed[0], { t: Math.max(e.bleed[0].t, 1) }); o.lastBleed = o.bleed[0];
+      const o = ES.nearest(e.x, e.z, BI.range, [e.id]), b = G.combat.topBleed(e), nb = Object.assign({}, b, { t: Math.max(b.t, 1) });
+      if (o && G.combat.addBleed(o, nb)) {
+        o.lastBleed = nb;
         F.streak(e.x, 1.5, e.z, o.x, 1 + o.y, o.z, 0xc01a10, 0.5, 0.2); F.num(o.x, 2.4 * o.scale + o.y, o.z, 'INHERITED', '#ff5a4a', 14);
       }
     }
@@ -391,7 +397,7 @@
         e.trailT = (e.trailT || 0) - dt;
         if (e.trailT <= 0 && Math.hypot(e.vx, e.vz) > 0.4 && e.y < 1.5 && C.puddles.length < 160) {
           e.trailT = 0.4;
-          C.puddles.push({ x: e.x, z: e.z, r: 0.9 * Math.max(1, e.scale), t: 3, tick: 0.5, dmg: e.bleed[0].dps * CR.trail * 0.5, blood: true, src: e.id });
+          C.puddles.push({ x: e.x, z: e.z, r: 0.9 * Math.max(1, e.scale), t: 3, tick: 0.5, dmg: G.combat.topBleed(e).dps * CR.trail * 0.5, blood: true, src: e.id });
           F.disc(e.x, e.z, 0.9 * Math.max(1, e.scale), 3, 0x7a0a06, 0.55);
         }
       }
@@ -421,7 +427,7 @@
     for (const t of TL.all()) {
       if (!t.effect || !TL.rank(t.id) || t.start) continue;
       const id = t.effect.id, E = t.effect, cd = TF.cd[id] || 0;
-      const c = { id: t.id, name: t.name, icon: t.icon, color: t.currency === 'spoon' ? '#7dff6a' : '#f2c04e', text: '', fill: 0, active: false, lines: [t.text] };
+      const c = { id: t.id, name: t.name, icon: t.icon, color: t.currency === 'spoon' ? G.CURRENCIES.spoon.color : '#f2c04e', text: '', fill: 0, active: false, lines: [t.text] };
       const cool = (total) => { if (cd > 0) { c.fill = cd / total; c.text = cd < 9.95 ? cd.toFixed(1) : String(Math.ceil(cd)); c.lines.push(`Recharging · ${cd.toFixed(1)}s`); } else { c.active = true; c.lines.push('Ready'); } };
       switch (id) {
         case 'lastStand': cool(E.cooldown); break;

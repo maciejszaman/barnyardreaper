@@ -3,6 +3,8 @@
 // the left (drag nodes, drag from a node's handle to link or to make a new talent, Ctrl+click to link),
 // the talent on the right: its fields, stats, built-in effect, and rules (js/rules.js) built from the
 // game's own vocabulary. Saving writes the file through tools/serve.py in the file's own style.
+// Names (CLAUDE.md): mode 'alien' / the file's "alien" section is the Miracles (currency id 'spoon');
+// rule values 'essence' are Embers and 'spoons' Miracles. Ids stay as saved; only labels change.
 (function () {
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -42,7 +44,7 @@
   const cur = () => (ED.sel.length ? find(ED.sel[ED.sel.length - 1]) : null);
   const gColor = (t) => { const g = groups().find((x) => x.id === t.group); return (g && g.color) || '#f1e6cf'; };
   // Segments: named sets of tree talents (any group) that glow in their own color, e.g. "Life stacking".
-  // The tree only: alien talents have none.
+  // The tree only: Miracles (the file's "alien" section, mode 'alien') have none.
   const segs = () => (ED.mode === 'tree' && Array.isArray(ED.doc.segments) ? ED.doc.segments : []);
   const segOf = (t) => (t && t.segment ? segs().find((s) => s.id === t.segment) || null : null);
   // A file's segments list, made right after its groups the first time one is added.
@@ -187,7 +189,7 @@
         else if (ids.has(t.id)) p('err', `id "${t.id}" is used twice`);
         ids.set(t.id, t);
         if (t.group != null && !gids.has(t.group)) p('warn', `unknown group "${t.group}"`);
-        if (t.segment != null && (free || !sids.has(t.segment))) p('warn', free ? 'alien talents have no segments' : `unknown segment "${t.segment}"`);
+        if (t.segment != null && (free || !sids.has(t.segment))) p('warn', free ? 'Miracles have no segments' : `unknown segment "${t.segment}"`);
         if (t.currency != null && !G.CURRENCIES[t.currency]) p('err', `unknown currency "${t.currency}"`);
         if (t.icon && !icons.has(t.icon)) p('warn', `unknown icon "${t.icon}"`);
         for (const k of Object.keys(t.stats || {})) { if (!G.STATS[k]) p('err', `unknown stat "${k}"`); else if (typeof t.stats[k] !== 'number') p('err', `stat "${k}" is not a number`); }
@@ -227,7 +229,7 @@
       for (const t of talents) visit(t.id, []);
     };
     check(ED.doc.talents, ED.doc.groups, false, '');
-    if (ED.doc.alien) check(ED.doc.alien.talents || [], ED.doc.alien.groups || [], true, 'Alien · ');
+    if (ED.doc.alien) check(ED.doc.alien.talents || [], ED.doc.alien.groups || [], true, 'Miracles · ');
     ED.probs = out;
     ED.bad = new Set(out.filter((x) => x.lvl === 'err').map((x) => x.mode + ':' + x.id));
   }
@@ -235,7 +237,7 @@
   // ---------- the tree ----------
   const svg = () => $('tree');
   const V = ED.view;
-  // Where each talent is drawn (cells). The tree: its x, y. Alien talents: a column per group.
+  // Where each talent is drawn (cells). The tree: its x, y. Miracles: a column per group.
   function cells() {
     const out = new Map();
     if (ED.mode === 'tree') { for (const t of list()) out.set(t.id, { x: Math.round(t.x || 0), y: Math.round(t.y || 0) }); return out; }
@@ -330,7 +332,7 @@
       if ((t.maxRank || 1) > 1) h += `<text class="n-rank" x="${s - 2}" y="${s - 3}" text-anchor="end">×${t.maxRank}</text>`;
       if (nr) h += `<text class="n-badge" x="${-s + 2}" y="${-s + 9}" fill="#8ff8ff">⚙${nr > 1 ? nr : ''}</text>`;
       else if (t.effect) h += `<text class="n-badge" x="${-s + 2}" y="${-s + 9}" fill="#ffd27a">★</text>`;
-      if (t.currency === 'spoon' && ED.mode === 'tree') h += `<text class="n-badge" x="${s - 2}" y="${-s + 9}" text-anchor="end" fill="#7dff6a">S</text>`;
+      if (t.currency === 'spoon' && ED.mode === 'tree') h += `<text class="n-badge" x="${s - 2}" y="${-s + 9}" text-anchor="end" fill="#ffd84a">M</text>`;
       if (showNames) { const nm = String(t.name || t.id); h += `<text class="n-name" y="${s + 13}" text-anchor="middle">${esc(nm.length > 12 ? nm.slice(0, 11).trim() + '…' : nm)}</text>`; }   // a cell is about 12 letters wide
       h += `<title>${esc(t.name || t.id)} (${esc(t.id)})${segOf(t) ? ` · ${esc(segOf(t).name || segOf(t).id)}` : ''}</title></g>`;
     }
@@ -458,7 +460,7 @@
     const where = x != null && ED.mode === 'tree' ? `<b>cell ${x}, ${y}</b>${t ? ` · ${esc(t.name || t.id)}` : ''}${segOf(t) ? ` · <b style="color:${esc(segOf(t).color)}">${esc(segOf(t).name || segOf(t).id)}</b>` : ''} · ` : '';
     return where + (ED.mode === 'tree'
       ? 'Drag a talent to move it (onto another to swap) · drag its <b>●</b> handle onto a talent to link it, or onto an empty spot for a new one · <b>Ctrl+click</b> a talent to link it under the selected one (<b>+Shift</b>: required) · double-click empty: new talent · drag empty: pan · <b>Shift+drag</b>: select an area · wheel: zoom · <b>Del</b> deletes · arrows nudge · <b>Ctrl+D</b> duplicates'
-      : 'Alien talents have no tree: drag one to another column to change its group, or up and down to reorder · Ctrl+click links (requires)');
+      : 'Miracles have no tree: drag one to another column to change its group, or up and down to reorder · Ctrl+click links (requires)');
   }
   // Moves talents by whole cells. One talent dropped on another swaps places with it; a group that would
   // land on others goes back.
@@ -707,7 +709,7 @@
     g.append(
       el('label', { class: 'f' }, ['Group', groupSelect(t.group || '', (v) => set('group', v))]),
       ED.mode === 'tree' ? el('label', { class: 'f', title: 'A named set of talents that glow in its color (the Segments tab)' }, ['Segment', segSelect(t.segment || '', (v) => (v === '+' ? addSegment([t.id]) : set('segment', v, true)))]) : null,
-      ED.mode === 'alien' ? el('label', { class: 'f' }, ['Currency', el('input', { value: G.CURRENCIES.spoon.name, disabled: true, title: 'Alien talents always cost Alien Spoons' })])
+      ED.mode === 'alien' ? el('label', { class: 'f' }, ['Currency', el('input', { value: G.CURRENCIES.spoon.name, disabled: true, title: 'Miracles always cost Miracles (currency id spoon)' })])
         : el('label', { class: 'f' }, ['Currency', el('select', { onchange: (e) => set('currency', e.target.value === 'totem' ? '' : e.target.value) }, Object.keys(G.CURRENCIES).map((k) => el('option', { value: k, text: G.CURRENCIES[k].name, selected: (t.currency || 'totem') === k })))]),
       numField('Cost per rank', t.cost, 1, (v) => set('cost', v === 1 ? '' : v), { min: 1, step: 1 }),
       numField('Max rank', t.maxRank, 1, (v) => set('maxRank', v === 1 ? '' : Math.max(1, Math.round(v))), { min: 1, step: 1 }),
@@ -965,6 +967,9 @@
   const ENUM_LABEL = {
     of: { hit: 'the hit', weapon: 'your hit damage', maxHp: 'your max health', targetMaxHp: 'its max health', targetHp: 'its health now', taken: 'damage taken', armor: 'your armor', level: 'your level', flat: 'a flat number' },
     at: { target: 'the monster', player: 'you', nearest: 'nearest monster', random: 'random monster', strongest: 'toughest nearby', weakest: 'weakest nearby' },
+    // saved ids keep their old names (CLAUDE.md): essence = Embers, spoons = Miracles
+    item: { essence: 'embers' },
+    what: { essence: 'embers', spoons: 'miracles' },
   };
   // q: the spec (rules.js), obj: the rule part holding the value, t: its talent (for its max rank).
   function paramField(q, obj, t, required) {
@@ -1061,7 +1066,7 @@
   // ---------- other tabs ----------
   function groupsTab() {
     const box = el('div'), gs = groups();
-    box.append(sec(ED.mode === 'alien' ? 'Alien talent groups (columns)' : 'Groups (colors of the tree)', el('button', { class: 'small', text: '+ Group', onclick: () => change('g-add', () => {
+    box.append(sec(ED.mode === 'alien' ? 'Miracle groups (columns)' : 'Groups (colors of the tree)', el('button', { class: 'small', text: '+ Group', onclick: () => change('g-add', () => {
       const arr = ED.mode === 'alien' ? (ED.doc.alien = ED.doc.alien || { groups: [], talents: [] }).groups : ED.doc.groups;
       const id = 'group' + (arr.length + 1);
       arr.push({ id, name: 'New Group', color: '#' + Math.floor(0x404040 + Math.random() * 0xbfbfbf).toString(16).padStart(6, '0') });
@@ -1081,7 +1086,7 @@
   }
   function segmentsTab() {
     const box = el('div');
-    if (ED.mode !== 'tree') { box.append(sec('Segments'), el('p', { class: 'empty', text: 'Segments belong to the tree: alien talents have none. Switch to Tree.' })); return box; }
+    if (ED.mode !== 'tree') { box.append(sec('Segments'), el('p', { class: 'empty', text: 'Segments belong to the tree: Miracles have none. Switch to Tree.' })); return box; }
     const ss = segs(), picked = ED.sel.filter(find);
     box.append(sec('Segments (glowing sets of talents)', el('button', { class: 'small', text: picked.length ? `+ Segment from ${picked.length} selected` : '+ Segment', onclick: () => addSegment(picked) })));
     ss.forEach((s, i) => {
@@ -1195,7 +1200,7 @@
         el('b', { text: `Send ${ids.length === 1 ? names[0] : `${ids.length} talents`}` }),
         el('div', { class: 'grid2', style: 'margin-top:6px' }, [
           el('label', { class: 'f' }, ['To', el('select', { onchange: (e) => { o.file = e.target.value; draw(); } }, files.map((f) => el('option', { value: f.value, text: f.textContent, selected: f.value === o.file })))]),
-          el('label', { class: 'f' }, ['Into', el('select', { onchange: (e) => { o.section = e.target.value; draw(); } }, [el('option', { value: 'tree', text: 'the tree', selected: o.section === 'tree' }), el('option', { value: 'alien', text: 'alien talents', selected: o.section === 'alien' })])]),
+          el('label', { class: 'f' }, ['Into', el('select', { onchange: (e) => { o.section = e.target.value; draw(); } }, [el('option', { value: 'tree', text: 'the tree', selected: o.section === 'tree' }), el('option', { value: 'alien', text: 'the Miracles', selected: o.section === 'alien' })])]),
           el('label', { class: 'f' }, ['Group there', el('select', { onchange: (e) => { o.group = e.target.value; } }, [el('option', { value: '', text: '(none)', selected: !o.group }), ...gs.map((g) => el('option', { value: g.id, text: g.name || g.id, selected: g.id === o.group }))])]),
           el('label', { class: 'chk', style: 'align-self:end' }, [el('input', { type: 'checkbox', checked: o.copy, onchange: (e) => { o.copy = e.target.checked; draw(); } }), 'Keep a copy here']),
         ]),
@@ -1234,7 +1239,7 @@
         else if (fromTree) { setKey(c, 'x', right + Math.round(t.x || 0) - x0); setKey(c, 'y', top + Math.round(t.y || 0) - y0); }
         else { setKey(c, 'x', right); setKey(c, 'y', top + i); }
         if (o.group) setKey(c, 'group', o.group); else delete c.group;
-        // its segment goes along (made there if that tree lacks it); alien talents have none
+        // its segment goes along (made there if that tree lacks it); Miracles have none
         const sg = o.section === 'alien' ? null : segOf(t);
         if (!sg) delete c.segment;
         else if (!segsIn(doc).some((x) => x.id === sg.id)) doc.segments.push(clone(sg));

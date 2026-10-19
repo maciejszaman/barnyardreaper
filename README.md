@@ -1,6 +1,6 @@
 ![alt text](showcase_images/title.png)
 
-## Barnyard Reaper v0.2.2
+## Barnyard Reaper v0.3.0
 
 ### Roguelike game with endless monsters
 
@@ -11,6 +11,7 @@
 - various weapons for different builds
 - item upgrade system
 - dungeons
+- 5-minute days, then a night at the bonfire: a Miracle, embers for every kill, a summary of the day, and a prayer to the next map
 
 ## Screenshots:
 
@@ -38,9 +39,10 @@ Starts the game and its tools (one local server: tools/serve.py) in the backgrou
 ./barnyard
 ```
 
-Tools for simulation / talent editor
+Tools: talent editor, balance simulation, and the showcase (every model and icon, downloadable as transparent PNGs)
 
 ```bash
 localhost:8000/tools/talents
-localhost:8000/tools/balance
+localhost:8000/tools/balance.html
+localhost:8000/tools/showcase/
 ```

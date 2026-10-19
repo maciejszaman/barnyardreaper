@@ -1,6 +1,7 @@
 'use strict';
-// Debug menu (P while playing): pauses the game and lets you give yourself levels, essence, talent
-// points and items, spawn monsters and events, skip time and turn on god mode, to test the late game.
+// Debug menu (P while playing): pauses the game and lets you give yourself levels, embers (DB.essence), talent
+// points (totems and Miracles, DB.points('spoon')) and items, spawn monsters and events, skip time and turn on
+// god mode, to test the late game.
 (function () {
   const U = G.U, F = G.fx, A = G.audio, W = G.world, P = G.player;
   const DB = G.debug = { god: false, count: 10, elite: false, wRarity: 2 };
@@ -104,7 +105,7 @@
     if (lv > 1) DB.levels(lv - G.level, true);
   };
   DB.nextStage = () => G.days.skipTo(Math.min(G.DAY_SECONDS - 0.05, (G.tier + 1) * G.STAGE_SECONDS));
-  DB.dawn = () => G.days.skipTo(G.DAY_SECONDS - 0.05);
+  DB.dawn = () => G.days.skipTo(G.DAY_SECONDS - 0.05);   // to nightfall (named from when the day ended at dawn)
 
   // ---------- menu ----------
   const btn = (label, fn, cls = '') => ({ label, fn, cls });
@@ -114,9 +115,9 @@
     return [
       ['LEVELS', [btn('+1 LEVEL', () => DB.levels(1)), btn('+5 LEVELS', () => DB.levels(5)), btn('+10 LEVELS', () => DB.levels(10)),
         btn('+10 LEVELS · AUTO-PICK', () => DB.levels(10, true)), btn('+50 LEVELS · AUTO-PICK', () => DB.levels(50, true))]],
-      ['ESSENCE', [btn('+100', () => DB.essence(100)), btn('+1,000', () => DB.essence(1000)), btn('+10,000', () => DB.essence(10000))]],
+      ['EMBERS', [btn('+100', () => DB.essence(100)), btn('+1,000', () => DB.essence(1000)), btn('+10,000', () => DB.essence(10000))]],
       ['TALENT POINTS (IGNORE THE PER-LEVEL CAP)', [btn('+1 TOTEM', () => DB.points('totem', 1)), btn('+5 TOTEMS', () => DB.points('totem', 5)), btn('+20 TOTEMS', () => DB.points('totem', 20)),
-        btn('+1 SPOON', () => DB.points('spoon', 1)), btn('+12 SPOONS', () => DB.points('spoon', 12))]],
+        btn('+1 MIRACLE', () => DB.points('spoon', 1)), btn('+12 MIRACLES', () => DB.points('spoon', 12))]],
       ['ITEMS (DROPPED AT YOUR FEET)', [btn('COMMON', () => DB.item(0)), btn('MAGIC', () => DB.item(1)), btn('RARE', () => DB.item(2)), btn('RARE WEAPON', () => DB.item(2, 'weapon'))]],
       [`WEAPONS (DROPPED AT YOUR FEET) · ${G.ITEM_RARITY[DB.wRarity].name.toUpperCase()}`, [
         ...G.ITEM_RARITY.map((r, i) => btn(r.name.toUpperCase(), () => { DB.wRarity = i; }, DB.wRarity === i ? 'on' : '')),
@@ -129,7 +130,7 @@
       ]],
       ['EVENTS' + (fight ? '' : ' (ONLY WHILE FIGHTING)'), [btn('BOSS', () => DB.event('boss')), btn('RARE MONSTERS', () => DB.event('rares')), btn('ALIEN INVASION', () => DB.event('invasion')),
         btn('ALTAR', () => DB.event('altar')), btn('CHEST', () => DB.event('chest')), btn('XP BARREL', () => DB.event('barrel')), btn('SHRINE', () => DB.event('shrine')), btn('UNHOLY SHRINE', () => DB.event('unholy')), btn('MOKOSH', () => DB.event('mokosh')), btn('DEMON RITUAL', () => DB.event('ritual')), btn('CAULDRON', () => DB.event('cauldron')), btn('ELDRITCH GAZE', () => DB.event('gaze')), btn('THE DARK', () => DB.event('darkness')), btn('DUNGEON', () => DB.event('dungeon'))]],
-      ['TIME', [btn('NEXT STAGE (+2 MIN)', DB.nextStage), btn('SKIP TO DAWN', DB.dawn), btn('NEXT MAP', () => G.days.skipDay())]],
+      ['TIME', [btn(`NEXT STAGE (+${Math.round(G.STAGE_SECONDS)}S)`, DB.nextStage), btn('SKIP TO NIGHT', DB.dawn), btn('NEXT MAP', () => G.days.skipDay())]],
       ['TRINKETS', [btn('GIVE ALL TRINKETS', () => { const R = G.run.trinket; for (const id in G.TRINKETS) if (!R.owned.includes(id)) R.owned.push(id); }),
         btn('RESET COOLDOWN', () => { G.run.trinket.cd = {}; G.run.trinket.ch = {}; }),
         ...Object.values(G.TRINKETS).map((t) => btn(t.name.toUpperCase(), () => { const R = G.run.trinket; if (!R.owned.includes(t.id)) R.owned.push(t.id); R.id = t.id; delete R.cd[t.id]; delete R.ch[t.id]; }, G.run.trinket && G.run.trinket.id === t.id ? 'on' : ''))]],
@@ -140,8 +141,8 @@
   }
   DB.render = function () {
     const r = G.run, TL = G.talents;
-    $('dbg-state').textContent = `Day ${G.day + 1} · ${G.map().name} · ${U.fmtTime(G.dayT)} · Level ${G.level} · ${Math.floor(r.essence)} essence · `
-      + `${TL.points('totem')} totems · ${TL.points('spoon')} spoons · ${ES().list.filter((e) => !e.dead).length} monsters${DB.god ? ' · GOD MODE' : ''}`;
+    $('dbg-state').textContent = `Day ${G.day + 1} · ${G.map().name} · ${U.fmtTime(G.dayT)} · Level ${G.level} · ${Math.floor(r.essence)} embers · `
+      + `${TL.points('totem')} totems · ${TL.points('spoon')} miracles · ${ES().list.filter((e) => !e.dead).length} monsters${DB.god ? ' · GOD MODE' : ''}`;
     const body = $('dbg-body');
     body.innerHTML = '';
     for (const [title, list] of sections()) {

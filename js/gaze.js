@@ -101,7 +101,7 @@
     G.ui.banner('The Eldritch Gaze', 'The ground tears open. Something looks up through it.', '#ff8a2a');
     return GZ.on;
   };
-  // Ends it (quiet: dawn or a new run; otherwise the crater closes over a moment).
+  // Ends it (quiet: nightfall or a new run; otherwise the crater closes over a moment).
   GZ.end = function (quiet) {
     const g = GZ.on;
     if (!g) return;

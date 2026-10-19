@@ -152,7 +152,7 @@
       F.ring(P.x, P.z, { r0: 0.5, r1: 6, life: 0.6, color: 0x8aef4a }); F.flash('#2a6a1a', 0.3); A.play('wheeze');
       if (n) F.num(P.x, 3.6, P.z, `${n} POISONED ×${E.mult}`, '#9dff6a', 14);
     },
-    // Dinner Bell: crystals and essence fly to you; monsters close by are blasted back and stunned.
+    // Dinner Bell: crystals and embers fly to you; monsters close by are blasted back and stunned.
     dinnerBell(E) {
       G.pickups.magnetAll();
       ES.query(P.x, P.z, E.radius + 3, (e) => {
@@ -183,8 +183,8 @@
     F.burst(e.x, 0.9 + e.y, e.z, { n: 10, color: [0xc01a10, 0x8a0c06, 0xff3a2a, 0x4a0404], speed: 7, life: 0.7, size: 0.2 * Math.max(1, e.scale), up: 1.1, grav: 14 });
     A.play('juicyPunch');
     if (e.boss || e.def.plate) {
-      const b = e.bleed[0], RB = G.stats.fx.ragingBull, bm = (RB && P.buffs[RB.buff] ? RB.bleedMult : 1) * G.chests.bleedMult();
-      const v = b ? b.dps * b.t * C.bleedRamp(b) * bm * E.bossMult : 0;
+      const RB = G.stats.fx.ragingBull, bm = (RB && P.buffs[RB.buff] ? RB.bleedMult : 1) * G.chests.bleedMult();
+      const v = e.bleed.reduce((a, b) => a + b.dps * b.t * C.bleedRamp(b), 0) * bm * E.bossMult;   // every bleed stack at once
       e.bleed.length = 0;
       if (v <= 0) return;
       C.damage(e, v, 'bleed', 'physical', 'bleed');

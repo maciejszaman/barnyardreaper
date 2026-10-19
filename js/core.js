@@ -30,7 +30,7 @@ window.G = window.G || {};
 
   // ---------- persistence ----------
   const KEY = 'barnyard-reaper-v1';
-  // Talents and their currencies (totems, spoons) last for one run, so they live in G.run, not here.
+  // Talents and their currencies (totems, and Miracles: the code's 'spoons') last for one run, so they live in G.run, not here.
   G.save = { best: { time: 0, level: 0, kills: 0 }, settings: { music: true, sfx: 0.8, res: 'ps2', shake: true } };
   G.store = {
     load() {
@@ -280,11 +280,11 @@ window.G = window.G || {};
     status: [250, () => { A.tone({ type: 'triangle', f: 330, f2: 220, dur: 0.14, vol: 0.07 }); A.tone({ type: 'square', f: 165, dur: 0.1, vol: 0.03, delay: 0.05, filt: 'lowpass', fq: 900 }); }],
     flame: [60, () => { A.noise({ dur: 0.18, vol: 0.09, filt: 'bandpass', fq: 700, fq2: 300, q: 0.8 }); }],
     smg: [55, () => { A.noise({ dur: 0.07, vol: 0.13, filt: 'highpass', fq: 1200 }); A.tone({ type: 'square', f: 220, f2: 70, dur: 0.05, vol: 0.06 }); }],
+    // an ember picked up (the sound's id is left from when Embers were Essence)
     essence: [45, () => { A.tone({ type: 'sine', f: 1320, f2: 1980, dur: 0.08, vol: 0.04 }); A.tone({ type: 'triangle', f: 2640, dur: 0.05, vol: 0.02, delay: 0.03 }); }],
     anchor: [600, () => { A.tone({ type: 'sawtooth', f: 160, f2: 120, dur: 0.9, vol: 0.12, filt: 'lowpass', fq: 900, vib: 9, vibAmt: 20 }); A.tone({ type: 'triangle', f: 880, dur: 0.4, vol: 0.06, delay: 0.1 }); }],
     tesla: [1000, () => { A.noise({ dur: 0.9, vol: 0.14, filt: 'bandpass', fq: 3000, fq2: 800, q: 4 }); A.tone({ type: 'sawtooth', f: 60, f2: 120, dur: 1, vol: 0.1, vib: 30, vibAmt: 10 }); }],
     dawn: [3000, () => { [392, 494, 587, 784].forEach((f, i) => A.tone({ type: 'sine', f, dur: 1.6, vol: 0.09, att: 0.2, delay: i * 0.18 })); }],
-    trapdoor: [1000, () => { A.tone({ type: 'sawtooth', f: 140, f2: 70, dur: 0.6, vol: 0.08, filt: 'lowpass', fq: 600 }); A.noise({ dur: 0.5, vol: 0.12, fq: 500, fq2: 120 }); }],
     bloodburst: [90, () => { A.noise({ dur: 0.35, vol: 0.3, fq: 900, fq2: 160 }); A.tone({ type: 'sawtooth', f: 180, f2: 45, dur: 0.3, vol: 0.12, filt: 'lowpass', fq: 700 }); A.noise({ dur: 0.18, vol: 0.14, fq: 2600, fq2: 900, delay: 0.05 }); }],
     holy: [400, () => { A.tone({ type: 'sine', f: 880, f2: 1320, dur: 0.5, vol: 0.07 }); A.tone({ type: 'triangle', f: 1320, f2: 1760, dur: 0.6, vol: 0.05, delay: 0.06 }); }],
     chest: [300, () => { A.tone({ type: 'triangle', f: 660, f2: 990, dur: 0.12, vol: 0.06 }); A.tone({ type: 'triangle', f: 990, f2: 1320, dur: 0.14, vol: 0.05, delay: 0.1 }); }],
@@ -363,6 +363,25 @@ window.G = window.G || {};
       A.noise({ dur: 2.8, vol: 0.32, fq: 300, fq2: 30, delay: 0.3 }); A.tone({ type: 'sine', f: 48, f2: 20, dur: 3, vol: 0.45, delay: 0.3 });
       for (let i = 0; i < 14; i++) A.noise({ dur: R(0.08, 0.22), vol: 0.04, filt: 'bandpass', fq: R(1400, 3600), q: R(4, 9), delay: 0.5 + Math.random() * 2.2 });
     }],
+    // ---- the night's bonfire (bonfire.js) ----
+    // one crackle of burning wood (p = loudness): a dry snap and a pop of sparks
+    crackle: [35, (p) => {
+      A.noise({ dur: R(0.015, 0.04), vol: 0.09 * p, filt: 'highpass', fq: R(1800, 4200) });
+      if (Math.random() < 0.5) A.noise({ dur: R(0.03, 0.07), vol: 0.05 * p, filt: 'bandpass', fq: R(700, 1600), q: 3, delay: R(0.01, 0.05) });
+      if (Math.random() < 0.25) A.tone({ type: 'triangle', f: R(2400, 3800), f2: R(1200, 2000), dur: 0.05, vol: 0.012 * p, delay: 0.02 });
+    }],
+    // the fire's roar underneath: a soft swell of low, breathing noise
+    fireBed: [1200, () => { A.noise({ dur: 3.2, vol: 0.09, filt: 'lowpass', fq: R(380, 520), fq2: R(260, 360), att: 1.1 }); A.noise({ dur: 2.6, vol: 0.03, filt: 'bandpass', fq: 900, fq2: 600, q: 0.8, att: 0.8, delay: 0.4 }); }],
+    // a Miracle given: a bright chord of bells over a warm hum
+    miracle: [1500, () => {
+      [523.25, 659.25, 783.99, 1046.5, 1318.5].forEach((f, i) => { A.tone({ type: 'sine', f, dur: 2.2, vol: 0.06, att: 0.01, delay: i * 0.09 }); A.tone({ type: 'sine', f: f * 2.76, dur: 1, vol: 0.012, delay: i * 0.09 }); });
+      A.tone({ type: 'triangle', f: 130.8, dur: 2.6, vol: 0.08, att: 0.5 });
+    }],
+    // praying: a choir swells as the light takes everything
+    prayer: [3000, () => {
+      for (const f of [261.63, 329.63, 392, 523.25]) for (const det of [0.996, 1.004]) A.tone({ type: 'square', f: f * det, dur: 3.6, vol: 0.013, att: 1.6, filt: 'bandpass', fq: 1000, q: 5, vib: 5, vibAmt: 3 });
+      A.tone({ type: 'sine', f: 1046.5, dur: 3.4, vol: 0.04, att: 2 }); A.noise({ dur: 3.4, vol: 0.05, filt: 'highpass', fq: 3000, fq2: 7000, att: 2.2 });
+    }],
     // ---- Mokosh ----
     // wind through the branches: a slow swell that rises and falls (her screen plays one every few seconds)
     windGust: [1500, () => {
@@ -409,7 +428,7 @@ window.G = window.G || {};
   };
 
   // ---------- procedural music: one song per map, darker every minute ----------
-  // A.setScene(song, dread) picks the song (farm, alien, spirit, madness, camp, title) and how far into the
+  // A.setScene(song, dread) picks the song (farm, alien = the crash site's, spirit, madness, camp = the night's, title) and how far into the
   // day it is (dread 0 = dawn of the fight, 1 = the end of Blood Moon). As dread rises every song
   // slows down and comes apart: the cheerful parts fade out, notes drift out of tune, and heartbeats,
   // whispers, far-off screams and wind creep in. All chip voices: square, triangle, saw and noise.
@@ -551,7 +570,7 @@ window.G = window.G || {};
     if (s16 === 2 && bar % 3 === 2 && Math.random() < 0.3 + dr * 0.3) farScream(t, d, 0.015 + dr * 0.02);
   }
 
-  // ---- dawn at the camp: a slow, tired lullaby on a music box over a drone ----
+  // ---- the night at the bonfire ("camp"): a slow, tired lullaby on a music box over a drone ----
   const LULLABY = [69, 72, 76, 74, 72, 71, 69, 64, 65, 69, 72, 71, 69, 68, 64, 69];
   function camp(step, t, dr, d) {
     const bar = Math.floor(step / 16), s16 = step % 16, barLen = 60 / MU.tempo * 4;

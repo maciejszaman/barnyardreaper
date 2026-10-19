@@ -2,9 +2,9 @@
 // Mokosh (data/stages.json > mokosh): now and then, like the chests, barrels and shrines, a carved wooden
 // totem of the Slavic mother goddess rises at a random spot of the farm. It stays `stay` seconds of fighting
 // and sinks back into the earth. Press E at it and she listens (the game waits while you choose):
-//   Cut a thread: pay essence to bar a blessing for the rest of the run. It never comes up again at level
+//   Cut a thread: pay embers (G.run.essence) to bar a blessing for the rest of the run. It never comes up again at level
 //     ups or at the workbench, so every other blessing comes up more often.
-//   Weave a thread twice: pay essence to gain another copy of one of your blessings, giving up a different
+//   Weave a thread twice: pay embers to gain another copy of one of your blessings, giving up a different
 //     blessing of the same rarity for it.
 // Each totem grants each favour once (when both are given she sinks as you leave), and every favour of a
 // kind asked this run makes the next one dearer. G.run.banned: the cut blessings; G.run.mokosh: { cut, weave }.
@@ -121,11 +121,11 @@
   function render() {
     const t = MK.at, S = MK.sel, es = Math.floor(G.run.essence), pool = G.progress.offerPool(), tot = pool.reduce((a, u) => a + u.w, 0) || 1;
     const chip = (attrs, u, rc, sub, on) => `<button class="mk-chip${on ? ' sel' : ''}" ${attrs} style="--rc:${rc}"><img src="${G.ui.icon(u.icon)}" alt="">${esc(u.name)}${sub ? ` <small>${sub}</small>` : ''}</button>`;
-    let h = `<div class="bench-top"><span class="mk-ess"><img src="${G.ui.icon('essence')}" alt="">${es} ESSENCE</span><span class="mk-note">She waits while you choose · ${Math.max(0, Math.ceil(t.life))}s more once you step away</span></div>`;
+    let h = `<div class="bench-top"><span class="mk-ess"><img src="${G.ui.icon('essence')}" alt="">${es} EMBERS</span><span class="mk-note">She waits while you choose · ${Math.max(0, Math.ceil(t.life))}s more once you step away</span></div>`;
     if (MK.said) h += `<p class="mk-said">${MK.said}</p>`;
     // cut a thread
     const cp = MK.cutPrice();
-    h += `<section class="mk-sec${t.cut ? ' done' : ''}"><p class="sec-label">CUT A THREAD · ${cp} ESSENCE</p>`;
+    h += `<section class="mk-sec${t.cut ? ' done' : ''}"><p class="sec-label">CUT A THREAD · ${cp} EMBERS</p>`;
     if (t.cut) h += '<p class="mk-note">She has cut a thread for you already. Find her again for another.</p>';
     else {
       h += '<p class="mk-note">Bar one blessing for the rest of the run: it never comes up again, at level ups or at the workbench, so every other one comes up more often. Each number is that blessing\'s share of the offers now.</p>'
@@ -140,7 +140,7 @@
     h += '</section>';
     // weave a thread twice
     const own = owned();
-    h += `<section class="mk-sec${t.woven ? ' done' : ''}"><p class="sec-label">WEAVE A THREAD TWICE · ${G.RARITY.map((r, i) => `<span style="color:${r.color}">${MK.weavePrice(i)}</span>`).join(' / ')} ESSENCE BY RARITY</p>`;
+    h += `<section class="mk-sec${t.woven ? ' done' : ''}"><p class="sec-label">WEAVE A THREAD TWICE · ${G.RARITY.map((r, i) => `<span style="color:${r.color}">${MK.weavePrice(i)}</span>`).join(' / ')} EMBERS BY RARITY</p>`;
     if (t.woven) h += '<p class="mk-note">She has woven for you already. Find her again for another.</p>';
     else if (!own.length) h += '<p class="mk-note">You have no blessings for her to weave yet.</p>';
     else {

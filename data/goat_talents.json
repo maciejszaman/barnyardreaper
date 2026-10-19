@@ -19,7 +19,8 @@
       "name": "Mitigation",
       "color": "#6f9bff",
       "glow": 0.2
-    }
+    },
+    { "id": "bloodlust", "name": "Bloodlust", "color": "#ffffff", "glow": 0.2 }
   ],
   "talents": [
     {
@@ -279,16 +280,17 @@
     {
       "id": "necrosis",
       "x": 15,
-      "y": 4,
+      "y": 11,
       "group": "venom",
       "name": "Necrosis",
       "icon": "hourglass",
+      "requiresAny": ["toxic_detonation"],
       "rules": [
         {
           "when": "poison",
           "chance": 0.03,
           "cooldown": 0.5,
-          "then": [{ "do": "bleed" }]
+          "then": [{ "do": "bleed", "mult": 5 }]
         }
       ],
       "desc": "The rot opens the skin from the inside."
@@ -300,8 +302,7 @@
       "group": "venom",
       "name": "Venomous Spit",
       "icon": "poison",
-      "maxRank": 3,
-      "stats": { "poisonChance": 0.12 },
+      "stats": { "poisonChance": 0.36 },
       "requiresAny": ["black_pact", "flurry"],
       "desc": "Goats will eat anything. Some things eat back."
     },
@@ -440,10 +441,10 @@
       "id": "cat_scratch_fever",
       "x": 10,
       "y": 9,
-      "group": "hemomancy",
+      "group": "venom",
       "name": "Cat Scratch Fever",
       "icon": "poison",
-      "requiresAny": ["slow_decay"],
+      "requiresAny": ["slow_decay", "plague_herald"],
       "effect": { "id": "poisonMaxHp", "share": 0.01 },
       "text": "Every poison stack you inflict also deals 1% of your max health per second.",
       "desc": "Something nasty under the claws."
@@ -468,7 +469,7 @@
       "big": true,
       "name": "Burst the rot",
       "icon": "venomvial",
-      "requiresAny": ["plague_herald"],
+      "requiresAny": ["plague_herald", "slow_decay"],
       "effect": {
         "id": "poisonBurst",
         "mult": 2,
@@ -481,7 +482,7 @@
     {
       "id": "toxic_touch",
       "x": 14,
-      "y": 0,
+      "y": 1,
       "group": "venom",
       "name": "Overloaded Toxicity",
       "icon": "poison",
@@ -492,33 +493,25 @@
       "desc": "Lick the blade. Don't ask."
     },
     {
-      "id": "rot_fumes",
-      "x": 10,
-      "y": 12,
-      "group": "hemomancy",
-      "name": "Rot Fumes",
-      "icon": "flask",
-      "stats": { "poisonDmg": 0.3 },
-      "requiresAny": ["slow_decay"]
+      "id": "venom_mirror",
+      "x": 15,
+      "y": -1,
+      "group": "venom",
+      "name": "Venom Mirror",
+      "icon": "venomvial",
+      "requiresAny": ["toxic_touch", "absorb_the_bad"],
+      "effect": { "id": "poisonReflect" },
+      "text": "Poisons you inflict are reflected back to you: every poison you inflict also poisons you (2% of your max health per second, for 2 seconds).",
+      "desc": "What you pour into them, you drink yourself."
     },
     {
       "id": "slow_decay",
-      "x": 13,
-      "y": 12,
-      "group": "hemomancy",
+      "x": 12,
+      "y": 11,
+      "group": "venom",
       "name": "Slow Decay",
       "icon": "hourglass",
       "stats": { "dotDmg": 0.3 }
-    },
-    {
-      "id": "nightshade",
-      "x": 10,
-      "y": 13,
-      "group": "hemomancy",
-      "name": "Nightshade Whiskers",
-      "icon": "poison",
-      "stats": { "poisonChance": 0.15 },
-      "requiresAny": ["slow_decay"]
     },
     {
       "id": "plague_feast",
@@ -656,8 +649,8 @@
     },
     {
       "id": "eldritch_blood",
-      "x": 16,
-      "y": 1,
+      "x": 15,
+      "y": -3,
       "group": "willpower",
       "name": "Eldritch blood",
       "icon": "anatheart",
@@ -707,8 +700,8 @@
     },
     {
       "id": "absorb_the_bad",
-      "x": 15,
-      "y": 2,
+      "x": 13,
+      "y": -2,
       "group": "willpower",
       "name": "Absorb the bad",
       "icon": "venomvial",
@@ -736,17 +729,6 @@
           ],
           "then": [{ "do": "shield", "mult": 0.3 }]
         }
-      ]
-    },
-    {
-      "id": "crocodile_burst",
-      "x": 14,
-      "y": 10,
-      "group": "venom",
-      "name": "Crocodile burst",
-      "icon": "blood",
-      "conditionalStats": [
-        { "if": [{ "check": "dashReady" }], "stats": { "atkSpeed": 0.2 } }
       ]
     },
     {
@@ -879,14 +861,15 @@
       "group": "venom",
       "name": "Many men",
       "icon": "moon",
-      "stats": { "projectiles": 1, "ricochetChance": 0.15 },
+      "stats": { "projectiles": 1, "ricochetChance": 0.3 },
       "requiresAny": ["flurry"]
     },
     {
       "id": "rage",
       "x": 10,
-      "y": 5,
+      "y": 3,
       "group": "venom",
+      "segment": "bloodlust",
       "name": "Rage",
       "icon": "bloodlust",
       "requiresAny": ["flurry"],
@@ -937,10 +920,82 @@
           "stats": { "armorInc": 0.2 }
         }
       ]
+    },
+    {
+      "id": "blood_frenzy",
+      "x": 7,
+      "y": 3,
+      "group": "hemomancy",
+      "segment": "bloodlust",
+      "name": "Blood frenzy",
+      "icon": "bloodlust",
+      "requiresAny": ["crushing_blow", "opened_veins"],
+      "rules": [
+        {
+          "when": "bleed",
+          "chance": 0.01,
+          "then": [
+            { "do": "knockback", "at": "player" },
+            { "do": "buff", "duration": 5 }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "unbreakable_will",
+      "x": 9,
+      "y": 4,
+      "group": "hemomancy",
+      "segment": "bloodlust",
+      "name": "Unbreakable will",
+      "icon": "bloodlust",
+      "requiresAny": ["blood_frenzy", "rage"],
+      "rules": [
+        {
+          "when": "block",
+          "cooldown": 2,
+          "if": [{ "check": "myBuff" }],
+          "then": [
+            { "do": "explode", "at": "player", "mult": 5, "type": "blood" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "born_in_blood",
+      "x": 9,
+      "y": 5,
+      "group": "hemomancy",
+      "segment": "bloodlust",
+      "big": true,
+      "name": "Born in blood",
+      "icon": "bloodlust",
+      "requiresAny": ["unbreakable_will"],
+      "hitBonus": [{ "if": [{ "check": "myBuff" }], "more": 0.5 }]
+    },
+    {
+      "id": "better_bloodflow",
+      "x": 13,
+      "y": -4,
+      "group": "willpower",
+      "name": "Better bloodflow",
+      "icon": "flame",
+      "requiresAny": ["absorb_the_bad"],
+      "conditionalStats": [
+        {
+          "if": [{ "check": "myStatus", "status": "poison" }],
+          "stats": {
+            "healTaken": 0.5,
+            "maxHpInc": 0.3,
+            "statusResist": 0.35,
+            "dotDmg": 0.5
+          }
+        }
+      ]
     }
   ],
   "alien": {
-    "_help": "Gregory's alien talents, bought with Alien Spoons on the Alien Talents tab (Y). They work like the cat's alien talents.",
+    "_help": "Gregory's Miracles (this 'alien' section), bought with Miracles from the bonfire on the Miracles tab (Y). They work like the cat's Miracles.",
     "groups": [
       { "id": "mind", "name": "Mind", "color": "#b86cff" },
       { "id": "body", "name": "Body", "color": "#d0302a" },

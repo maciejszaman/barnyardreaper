@@ -7,7 +7,7 @@
     "attackSpeed": "Attacks per second. Every attack speed bonus you collect multiplies it, so speed stacks best on fast weapons (scythe 1.0, shotgun 0.5, sword 1.5, MP5 3.0).",
     "crit": "Base critical strike chance (0.05 = 5%). This is the only source of base crit: increased crit chance from the weapon's own affix multiplies it first, then increased crit chance from everything else.",
     "dropWeight": "How often it drops compared with other weapons. 0 = never drops.",
-    "model": "3D model: scythe, sword, shotgun, revolver, flask, flamethrower, mp5, blowgun, obsidian, dagger, fan, tome (an open spellbook) or screamskull (a screaming skull on a bone handle).",
+    "model": "3D model: scythe, sword, shotgun, revolver, flask, flamethrower, mp5, blowgun, obsidian, dagger, fan, tome (an open spellbook), screamskull (a screaming skull on a bone handle) or axe (a bearded woodsman's axe).",
     "pose": "How the cat holds it: scythe, sword, shotgun (two-handed gun), revolver, flask or tome (held open in both paws, cast forward).",
     "aimRange": "Distance at which it picks a target to face.",
     "sound": "Attack sound: swing, shot, shotgun, throw, flame, smg, dart, fireball or shriek.",
@@ -23,8 +23,9 @@
     "alien": "true = same as \"tag\": \"alien\".",
     "tag": "Themed weapon: alien, spirit or eldritch. It only drops on maps that list the tag in their \"gear\" (stages.json).",
     "projectile.ring": "true = the projectiles fly out in a ring all around you instead of at a target (fan of knives).",
-    "implicit": "The weapon type's fixed modifier: on every item of that type, never rolled, never removed. text = the line shown on the item. stats = stats it grants (keys in characters.json). effect = {\"id\": ..., plus numbers}: bleedExplode (share = share of the monster's max health, radius: bleeding monsters explode when they die; this damage cannot cause bleeding), holyEvery (every: after every Nth attack the next attack sets monsters on holy fire), burstFire (every, shots, gap: every Nth attack fires shots times in a row, gap seconds apart), poisonDeathSpread (radius: monsters killed by your poison spread their poisons), dashBuff (buff from status_effects.json when you dash), bleedKillBuff (buff, duration, cooldown: killing a bleeding monster grants the buff), projChains (chains: every projectile jumps on to this many more monsters), pyroblast (every, mult, size, stun, bounces: the weapon fires one projectile at a time and every extra projectile gives it bounces more bounces instead; every Nth cast is a Greater Pyroblast with mult x the damage and size x the blast, stunning everything it hits for stun seconds; fireball weapons only), holyReaper (holy: holy fire you inflict while wielding it deals this many times the damage; faith: Empowered Faith from shrines lasts this many times as long; push: knockback of its melee slash). stacks: {\"buff\": id, \"falloff\": share}: while you wield it, that buff stacks instead of refreshing, each stack after the first falloff weaker than the one before (0.1 = 100%, 90%, 80%...).",
-    "class": "Weapon class: melee (scythes, swords, daggers, knives), firearm (shotguns, revolvers, the MP5, the flamethrower) or magic (flasks, blowguns, the Tome of Fireball, the Shrieking Scream). Its hits are tagged with it: melee hits are raised by Melee damage, firearm hits by Firearm damage, magic hits by Magic damage, and every weapon hit by Weapon damage and Damage bonus.",
+    "implicit": "The weapon type's fixed modifier: on every item of that type, never rolled, never removed. text = the line shown on the item. stats = stats it grants (keys in characters.json). effect = {\"id\": ..., plus numbers}: bleedExplode (share = share of the monster's max health, radius: bleeding monsters explode when they die; this damage cannot cause bleeding), holyEvery (every: after every Nth attack the next attack sets monsters on holy fire), burstFire (every, shots, gap: every Nth attack fires shots times in a row, gap seconds apart), poisonDeathSpread (radius: monsters killed by your poison spread their poisons), dashBuff (buff from status_effects.json when you dash), bleedKillBuff (buff, duration, cooldown: killing a bleeding monster grants the buff), projChains (chains: every projectile jumps on to this many more monsters), bloodlustWhirl (buff, area, bleedMore: while that buff is on you, every attack covers (1 + area) x the radius in a full circle around you, you spin with it, and the bleeds it causes deal (1 + bleedMore) x damage), pyroblast (every, mult, size, stun, bounces: the weapon fires one projectile at a time and every extra projectile gives it bounces more bounces instead; every Nth cast is a Greater Pyroblast with mult x the damage and size x the blast, stunning everything it hits for stun seconds; fireball weapons only), holyReaper (holy: holy fire you inflict while wielding it deals this many times the damage; faith: Empowered Faith from shrines lasts this many times as long; push: knockback of its melee slash). stacks: {\"buff\": id, \"falloff\": share}: while you wield it, that buff stacks instead of refreshing, each stack after the first falloff weaker than the one before (0.1 = 100%, 90%, 80%...).",
+    "projectile.none": "A melee weapon may set projectile.count to 0 (and perProjectile to 0): it only swings (the axe). Projectile blessings are not offered with it.",
+    "class": "Weapon class: melee (scythes, swords, daggers, knives, axes), firearm (shotguns, revolvers, the MP5, the flamethrower) or magic (flasks, blowguns, the Tome of Fireball, the Shrieking Scream). Its hits are tagged with it: melee hits are raised by Melee damage, firearm hits by Firearm damage, magic hits by Magic damage, and every weapon hit by Weapon damage and Damage bonus.",
     "block": "Block rating every item of this weapon has (it grows with item level). Weapons that swing (melee) default to 100; firearms, magic and thrown weapons have none. Block chance = 0.75 x rating / (rating + 100): 100 = 37.5%."
   },
   "weapons": {
@@ -36,25 +37,25 @@
         "text": "Holy fire you inflict while wielding it deals double damage, and Empowered Faith lasts twice as long. Its slash hurls monsters back (its thrown scythes don't).",
         "effect": { "id": "holyReaper", "holy": 2, "faith": 2, "push": 7 }
       },
-      "damage": [15, 25],
+      "damage": [25, 35],
       "attackSpeed": 1.0,
-      "crit": 0.05,
+      "crit": 0.07,
       "dropWeight": 1,
       "model": "scythe",
       "pose": "scythe",
       "aimRange": 16,
       "sound": "swing",
-      "melee": { "arc": 150, "range": 3.1, "color": "#e8f4ff", "pitch": 1 },
+      "melee": { "arc": 150, "range": 4.5, "color": "#e8f4ff", "pitch": 1 },
       "projectile": {
         "kind": "scythe",
-        "count": 1,
+        "count": 2,
         "speed": 15,
         "range": 13,
         "pierce": 2,
         "damageMult": 0.7
       },
       "perProjectile": 1,
-      "block": 100
+      "block": 60
     },
     "sword": {
       "name": "Sword",
@@ -64,7 +65,7 @@
         "text": "Attacks always ricochet.",
         "stats": { "ricochetChance": 1 }
       },
-      "damage": [6, 10],
+      "damage": [20, 25],
       "attackSpeed": 1.5,
       "crit": 0.1,
       "dropWeight": 2,
@@ -72,17 +73,17 @@
       "pose": "sword",
       "aimRange": 16,
       "sound": "swing",
-      "melee": { "arc": 115, "range": 3.5, "color": "#a8dcff", "pitch": 1.3 },
+      "melee": { "arc": 115, "range": 3.0, "color": "#a8dcff", "pitch": 1.3 },
       "projectile": {
         "kind": "wave",
-        "count": 1,
+        "count": 2,
         "speed": 19,
         "range": 9,
         "pierce": 4,
         "damageMult": 0.55
       },
       "perProjectile": 1,
-      "block": 100
+      "block": 60
     },
     "shotgun": {
       "name": "Shotgun",
@@ -92,7 +93,7 @@
         "text": "Every fifth attack, your next attack sets every monster it hits on holy fire.",
         "effect": { "id": "holyEvery", "every": 5 }
       },
-      "damage": [78, 82],
+      "damage": [60, 66],
       "attackSpeed": 0.5,
       "crit": 0.06,
       "dropWeight": 2,
@@ -104,13 +105,13 @@
       "shake": 0.1,
       "projectile": {
         "kind": "pellet",
-        "count": 6,
+        "count": 8,
         "spread": 0.62,
         "speed": 45,
-        "range": 11,
-        "pierce": 1,
+        "range": 15,
+        "pierce": 2,
         "damageMult": 1,
-        "knockback": 2.6
+        "knockback": 4.0
       },
       "perProjectile": 2
     },
@@ -122,9 +123,9 @@
         "text": "Every sixth attack, you fire six times in rapid succession.",
         "effect": { "id": "burstFire", "every": 6, "shots": 6, "gap": 0.08 }
       },
-      "damage": [40, 69],
+      "damage": [27, 37],
       "attackSpeed": 1.6,
-      "crit": 0.2,
+      "crit": 0.16,
       "dropWeight": 2,
       "model": "revolver",
       "pose": "revolver",
@@ -291,7 +292,7 @@
         "damageMult": 0.5
       },
       "perProjectile": 1,
-      "block": 100
+      "block": 60
     },
     "dagger": {
       "name": "Serrated Dagger",
@@ -321,7 +322,7 @@
         "damageMult": 0.4
       },
       "perProjectile": 1,
-      "block": 100
+      "block": 60
     },
     "fan": {
       "name": "Fan of Knives",
@@ -384,8 +385,8 @@
         "range": 18,
         "pierce": 1,
         "damageMult": 1,
-        "splash": 8.0,
-        "knockback": 1.5
+        "splash": 3.0,
+        "knockback": 3.0
       },
       "perProjectile": 1
     },
@@ -415,6 +416,32 @@
         "knockback": 6
       },
       "perProjectile": 1
+    },
+    "axe": {
+      "name": "Axe",
+      "class": "melee",
+      "desc": "A heavy woodsman's axe: slow chops that cleave a wide arc in front of you.",
+      "implicit": {
+        "text": "While Bloodlust is on you, your attacks cover 100% more radius in a full circle around you, you spin with every attack, and the bleeding they cause deals 100% more damage.",
+        "effect": {
+          "id": "bloodlustWhirl",
+          "buff": "bloodlust",
+          "area": 1,
+          "bleedMore": 1
+        }
+      },
+      "damage": [62, 94],
+      "attackSpeed": 0.65,
+      "crit": 0.07,
+      "dropWeight": 2,
+      "model": "axe",
+      "pose": "sword",
+      "aimRange": 14,
+      "sound": "swing",
+      "melee": { "arc": 160, "range": 4.0, "color": "#ffc8a8", "pitch": 0.7 },
+      "projectile": { "kind": "scythe", "count": 0 },
+      "perProjectile": 0,
+      "block": 60
     }
   }
 }

@@ -8,11 +8,11 @@
     "statuses.power": "slow: share of movement speed lost (0.4 = 40% slower). shock: extra damage YOU take while shocked (0.25 = +25%). stun and root ignore it.",
     "statuses.immunity": "Seconds after it wears off before it can hit you again (stops stun-locks).",
     "statuses.icon / color": "Shown in the status bar (top right) and over monsters. Icon names are listed in upgrades.json.",
-    "dots.poison": "Each poison is its own stack, without limit unless maxStacks is set, lasting duration seconds. A stack deals maxHpPerSecond of the monster's max health per second (0.01 = 1%), plus damage x the inflicting hit if damage is above 0. Poison is inflicted by physical hits. The training dummy counts as having dummyHp x the map's health multiplier. Raised by Damage bonus, Poison damage and DoT damage.",
+    "dots.poison": "Each poison is its own stack, without limit unless maxStacks is set, lasting duration seconds. A stack deals damage x the inflicting hit per second (0.3 = 30%; a poison with no hit behind it, like Nettle Snare's, uses your hit damage), plus maxHpPerSecond of the monster's max health per second if that is above 0 (the training dummy counts as having dummyHp x the map's health multiplier). Poison is inflicted by physical hits (and elemental hits with the elementalPoison talent effect). Raised by Damage bonus, Poison damage and DoT damage. Poison duration (stat) stretches or shortens a stack without changing its total damage; Poison tick rate (stat) adds ticks of the same size.",
     "dots.holy": "Holy fire, from any source (The Bible, the Holy Lantern, the shotgun's empowered shots, Divine Finale). Every application is its own stack, without limit, ticking every half second as elemental damage. damage = share of the inflicting hit dealt per second by a stack (where there is no hit, a share of your hit damage), duration = seconds per stack. Every burning monster has a golden circle of auraRadius meters that every half second adds a stack worth spread x its strongest stack to every monster in it. A monster that dies with at least explodeAt stacks explodes with holy energy for explode x its max health within explodeRadius (the explosion itself sets nothing on holy fire).",
-    "dots.bleed": "Physical damage over time. damage = share of the inflicting physical hit dealt every second (1.5 = 150%), for duration seconds. One bleed per monster: a new bleed only replaces the current one when it is stronger. Raised by Bleed damage and DoT damage (the hit's own bonuses are already in it).",
+    "dots.bleed": "Physical damage over time. damage = share of the inflicting physical hit dealt every second (2.1 = 210%), for duration seconds. maxStacks bleeds per monster (1: bleeds do not stack; the Bleed stacks stat adds more): when they are all taken, a new bleed only replaces the weakest when it is stronger. Raised by Bleed damage and DoT damage (the hit's own bonuses are already in it). Bleed duration (stat) stretches or shortens a bleed without changing its total damage.",
     "playerDots": "Damage over time on you: poison and bleed. Monsters put them on you through \"inflicts\" (toxic frogs, the Jagged Claws modifier) and purple hex shots (witch doctors, shamans, the Shamanic modifier). damage = share of the inflicting hit dealt per second, duration in seconds (shortened by statusResist). Getting it again refreshes it, keeping the stronger one. Ignores block and dodge; shields soak it.",
-    "buffs": "Temporary buffs on you. stats are added while the buff lasts (stat keys are listed in characters.json). They are triggered by: catnip (items.json pickups.catnipBuff), claiming a totem (stages.json altar.buff), an extra life saving you (characters.json reviveBuff) and repelling an invasion (stages.json invasion.reward.buff), talent effects (cat_talents.json: Raging Bull, dashing with Feline Swiftness) and trinkets (trinkets.json: The Bible, Bloodlust). Getting a buff again refreshes its duration.",
+    "buffs": "Temporary buffs on you. stats are added while the buff lasts (stat keys are listed in characters.json). bloodlust also turns the Axe's attacks into a whirl (weapons.json). They are triggered by: catnip (items.json pickups.catnipBuff), claiming a totem (stages.json altar.buff), an extra life saving you (characters.json reviveBuff) and repelling an invasion (stages.json invasion.reward.buff), talent effects (cat_talents.json: Raging Bull, dashing with Feline Swiftness) and trinkets (trinkets.json: The Bible, Bloodlust). Getting a buff again refreshes its duration.",
     "statuses.shock": "On monsters, shock makes them take more damage from every source: between minEffect and maxEffect, depending on the elemental hit that shocked it: maxEffect x sqrt(hit / (fullAt x the monster's max health)), so a hit worth fullAt of its max health (0.2 = 20%) shocks for the full maxEffect. A new shock keeps the stronger effect while the old one lasts."
   },
   "statuses": {
@@ -61,8 +61,8 @@
     }
   },
   "dots": {
-    "poison": { "damage": 0, "maxHpPerSecond": 0.01, "duration": 4, "maxStacks": 0, "dummyHp": 1000 },
-    "bleed": { "damage": 1.5, "duration": 5 },
+    "poison": { "damage": 0.3, "maxHpPerSecond": 0, "duration": 2, "maxStacks": 0, "dummyHp": 1000 },
+    "bleed": { "damage": 2.1, "duration": 5, "maxStacks": 1 },
     "holy": { "damage": 0.4, "duration": 3, "auraRadius": 1.0, "spread": 0.1, "explodeAt": 5, "explode": 0.5, "explodeRadius": 4.5 }
   },
   "playerDots": {
@@ -120,7 +120,7 @@
     },
     "alien_adrenaline": {
       "name": "Alien Adrenaline",
-      "desc": "Whatever was in that spoon, it works.",
+      "desc": "Whatever those little green things were made of, it works.",
       "icon": "spoon",
       "color": "#7dff6a",
       "duration": 30,
